@@ -1,0 +1,492 @@
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeart, faPlus, faShareAlt, faCheck, faStar, faPlay, faEnvelope, faLink, faTimes, faSpinner, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
+import { faWhatsapp, faXTwitter, faFacebook } from '@fortawesome/free-brands-svg-icons';
+import { Star, Heart } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+import ImageStack from './ImageStack';
+import MediaLightbox from './MediaLightbox';
+import CustomizationForm from '../CustomizationForm';
+import PageLoader from '../PageLoader';
+import AvailableOffers from './AvailableOffers';
+import { useAuth } from '../../context/AuthContext';
+import { useWishlist } from '../../context/WishlistContext';
+import toast from 'react-hot-toast';
+import SeoHead from '../SeoHead';
+
+const ReviewSection = dynamic(() => import('../ReviewSection'), { loading: () => <p className="text-center py-10">Loading Reviews...</p> });
+
+export default function ProductDetailView({ slug }) {
+    const router = useRouter();
+    // State
+    const [product, setProduct] = useState(null);
+    const [relatedProducts, setRelatedProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState(0);
+    const [selectedItemIndex, setSelectedItemIndex] = useState(0);
+    const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
+    const [showShareMenu, setShowShareMenu] = useState(false);
+    const [copySuccess, setCopySuccess] = useState(false);
+    const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
+    const [isCustomiseModalOpen, setIsCustomiseModalOpen] = useState(false);
+    const [customisationData, setCustomisationData] = useState({});
+    const [quantity, setQuantity] = useState(1);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+
+    const { user } = useAuth();
+    const { toggleWishlist, isInWishlist } = useWishlist();
+    const isWishlisted = isInWishlist(product?.products_id);
+
+    // Fetch Main Product Data
+    useEffect(() => {
+        if (!slug) return;
+
+        const fetchData = async () => {
+            setLoading(true);
+            setProduct(null);
+            window.scrollTo(0, 0);
+
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const res = await fetch(`${apiUrl}/api/products/${slug}`);
+                if (!res.ok) throw new Error('Product not found');
+                const data = await res.json();
+                setProduct(data);
+
+                // Fetch Related Products (Same Parent Category)
+                if (data.parentCategory?.category_id) {
+                    const relRes = await fetch(`${apiUrl}/api/products?parentCategory=${data.parentCategory.category_id}`);
+                    if (relRes.ok) {
+                        const relatedData = await relRes.json();
+                        setRelatedProducts(relatedData.filter(p => p.slug !== slug).slice(0, 4));
+                    }
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [slug]);
+
+    // Fetch Review Stats
+    useEffect(() => {
+        if (!product?.products_id) return;
+        const fetchReviewStats = async () => {
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const res = await fetch(`${apiUrl}/api/reviews/product/${product.products_id}`);
+                const data = await res.json();
+                if (data.success) {
+                    setReviewStats({
+                        averageRating: data.averageRating,
+                        totalReviews: data.totalReviews
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching review stats:', err);
+            }
+        };
+        fetchReviewStats();
+    }, [product?.products_id]);
+
+    if (loading) return (
+        <div className="min-h-screen bg-white">
+            <PageLoader />
+            <div className="h-[80vh] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        </div>
+    );
+
+    if (!product) return (
+        <div className="min-h-screen bg-white">
+            <div className="flex flex-col items-center justify-center h-[60vh]">
+                <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
+                <Link href="/shop" className="text-purple-600 hover:underline">Return to Shop</Link>
+            </div>
+        </div>
+    );
+
+    // Media Logic
+    const rawImages = Array.isArray(product.images) ? product.images.filter(url => url) : (product.images ? [product.images] : (product.thumbnail ? [product.thumbnail] : []));
+    const rawVideos = Array.isArray(product.video) ? product.video.filter(url => url) : (product.video ? [product.video] : []);
+    const isVideoUrl = (url) => /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+    const mediaItems = [...rawImages.map(src => ({ src, type: isVideoUrl(src) ? 'video' : 'image' })), ...rawVideos.map(src => ({ src, type: 'video' }))];
+    const seen = new Set();
+    let prodMedia = mediaItems.filter(item => { if (seen.has(item.src)) return false; seen.add(item.src); return true; });
+    prodMedia.sort((a, b) => (a.type === 'video' ? -1 : 1) - (b.type === 'video' ? -1 : 1));
+    if (prodMedia.length === 0) prodMedia = [{ src: 'https://via.placeholder.com/500', type: 'image' }];
+
+    // Sharing Logic
+    const getShareUrl = () => typeof window !== 'undefined' ? window.location.href : '';
+    const shareText = `Check out this ${product.title} on Adbuth Edits!`;
+    const handleShare = (platform) => {
+        const url = encodeURIComponent(getShareUrl());
+        const text = encodeURIComponent(shareText);
+        let shareLink = '';
+        switch (platform) {
+            case 'whatsapp': shareLink = `https://wa.me/?text=${text}%20${url}`; break;
+            case 'twitter': shareLink = `https://twitter.com/intent/tweet?text=${text}&url=${url}`; break;
+            case 'facebook': shareLink = `https://www.facebook.com/sharer/sharer.php?u=${url}`; break;
+            default: break;
+        }
+        if (shareLink) window.open(shareLink, '_blank');
+        setShowShareMenu(false);
+    };
+
+    const copyToClipboard = () => {
+        const url = getShareUrl();
+        navigator.clipboard.writeText(url).then(() => {
+            setCopySuccess(true);
+            setShowShareMenu(false);
+            setTimeout(() => setCopySuccess(false), 2000);
+        });
+    };
+
+    const handleAddToCart = async () => {
+        if (!user) {
+            const currentPath = window.location.pathname + window.location.search;
+            localStorage.setItem('intendedDestination', currentPath);
+            router.push('/login');
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+            // 1. Collect all raw File objects from customization data
+            const filesToUpload = [];
+            Object.values(customisationData).forEach(val => {
+                if (Array.isArray(val)) {
+                    val.forEach(item => { if (item instanceof File) filesToUpload.push(item); });
+                } else if (val instanceof File) {
+                    filesToUpload.push(val);
+                }
+            });
+
+            // 2. Upload unique files if any
+            const fileMap = new Map();
+            const uniqueFiles = Array.from(new Set(filesToUpload));
+
+            if (uniqueFiles.length > 0) {
+                await Promise.all(uniqueFiles.map(async (file) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const res = await fetch(`${apiUrl}/api/cart/upload-media`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.error || `Failed to upload ${file.name}`);
+                    }
+                    const data = await res.json();
+                    fileMap.set(file, { url: data.url, name: file.name });
+                }));
+            }
+
+            // 3. Prepare final customization payload with cloud URLs
+            const customizationGroups = typeof product.customization === 'string'
+                ? JSON.parse(product.customization)
+                : product.customization;
+
+            const finalCustomizations = [];
+            for (let i = 0; i < quantity; i++) {
+                const itemData = {};
+                if (Array.isArray(customizationGroups)) {
+                    customizationGroups.forEach(groupObj => {
+                        const groupName = Object.keys(groupObj)[0];
+                        const fields = groupObj[groupName];
+                        itemData[groupName] = {};
+                        fields.forEach(([label]) => {
+                            const fieldKey = `item_${i}_${groupName}_${label}`;
+                            const rawValue = customisationData[fieldKey];
+
+                            // Map local File objects to cloud result objects
+                            if (Array.isArray(rawValue)) {
+                                itemData[groupName][label] = rawValue.map(v => v instanceof File ? fileMap.get(v) : v).filter(Boolean);
+                            } else if (rawValue instanceof File) {
+                                itemData[groupName][label] = fileMap.get(rawValue);
+                            } else if (rawValue) {
+                                itemData[groupName][label] = rawValue;
+                            }
+                        });
+                    });
+                }
+                finalCustomizations.push(itemData);
+            }
+
+            // 4. Submit to Cart API
+            const res = await fetch(`${apiUrl}/api/cart`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ product_id: product.products_id, customization: finalCustomizations, quantity: quantity })
+            });
+
+            if (res.ok) {
+                toast.success('Added to cart successfully!');
+                setIsCustomiseModalOpen(false);
+                setSelectedItemIndex(0);
+                return true;
+            } else {
+                const err = await res.json();
+                throw new Error(err.message || 'Failed to add to cart');
+            }
+        } catch (error) {
+            console.error('Cart Error:', error);
+            toast.error(error.message || 'Something went wrong');
+            return false;
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleFieldChange = (group, label, value) => {
+        const fieldKey = `item_${selectedItemIndex}_${group}_${label}`;
+        setCustomisationData(prev => ({
+            ...prev,
+            [fieldKey]: value
+        }));
+    };
+
+    const parsedSchema = product?.customization
+        ? (typeof product.customization === 'string' ? JSON.parse(product.customization) : product.customization)
+        : [];
+
+    // Helper to get actual data for the current item in the nested format CustomizationForm expects
+    const getCurrentItemData = () => {
+        const itemData = {};
+        if (!Array.isArray(parsedSchema)) return {};
+
+        parsedSchema.forEach(groupObj => {
+            const groupName = Object.keys(groupObj)[0];
+            const fields = groupObj[groupName];
+            itemData[groupName] = {};
+            fields.forEach(([label]) => {
+                const fieldKey = `item_${selectedItemIndex}_${groupName}_${label}`;
+                itemData[groupName][label] = customisationData[fieldKey] || '';
+            });
+        });
+        return itemData;
+    };
+
+    return (
+        <div className="min-h-screen bg-white text-gray-800">
+            <SeoHead
+                data={{
+                    meta_title: product.meta_title,
+                    meta_description: product.meta_description,
+                    meta_keywords: product.meta_keywords || (product.tags ? Object.values(product.tags).join(', ') : ''),
+                    og_image: prodMedia[0]?.src,
+                    canonical_url: product.canonical_url
+                }}
+                title={`${product.title} | Adbuth Edits`}
+                description={product.description && product.description.substring(0, 160)}
+                image={prodMedia[0]?.src}
+            />
+
+            {/* Copy Success Notification */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: copySuccess ? 1 : 0, y: copySuccess ? 20 : -20 }}
+                className="fixed top-20 right-8 z-[1000] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 pointer-events-none"
+            >
+                <FontAwesomeIcon icon={faCheck} className="text-green-400" />
+                <span className="font-medium">Link copied to clipboard!</span>
+            </motion.div>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-10   md:mt-0 relative bg-[#fff]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-24 lg:mt-8 lg:mb-12">
+                    <div className="lg:sticky lg:top-24">
+                        <ImageStack media={prodMedia} layout="horizontal" productTitle={product.title} onCardClick={(i) => { setLightboxIndex(i); setLightboxOpen(true); }} />
+                    </div>
+
+                    <div className="space-y-3 sm:space-y-4 mb-4">
+                        <div>
+                            <div className="hidden lg:flex items-center flex-nowrap text-sm text-gray-500 font-medium whitespace-nowrap overflow-x-auto no-scrollbar">
+                                {product.parentCategory && (
+                                    <Link href={`/shop?parentCategory=${product.parentCategory?.slug || 'all'}`} className="hover:text-purple-700">{product.parentCategory?.category_name}</Link>
+                                )}
+                                {product.assetCategory && (
+                                    <>
+                                        <span className="mx-2 text-gray-400">&gt;</span>
+                                        <Link href={`/shop?parentCategory=${product.parentCategory?.slug || 'all'}&assetCategory=${product.assetCategory?.slug || 'templates'}`} className="hover:text-purple-700">{product.assetCategory?.name}</Link>
+                                    </>
+                                )}
+                                {product.assetSubCategory && (
+                                    <>
+                                        <span className="mx-2 text-gray-400">&gt;</span>
+                                        <Link href={`/shop?parentCategory=${product.parentCategory?.slug || 'all'}&assetCategory=${product.assetCategory?.slug || 'templates'}&assetSubCategory=${product.assetSubCategory?.slug || 'general'}`} className="hover:text-purple-700">{product.assetSubCategory?.name}</Link>
+                                    </>
+                                )}
+                                <span className="mx-2 text-gray-400">&gt;</span>
+                                <span className="text-gray-900 truncate max-w-[300px]"> {product.title}</span>
+                            </div>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mt-3 sm:mt-4 text-gray-900 leading-tight">{product.title}</h1>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-1">{product.internal_sku || product.slug}</p>
+                        </div>
+
+                        <div className="flex items-baseline gap-3 mb-6">
+                            <span className="text-3xl font-black text-gray-900 tracking-tight">₹{product.price}</span>
+                            {product.compare_at_price && (
+                                <span className="text-lg text-gray-400 line-through decoration-red-500/30">₹{product.compare_at_price}</span>
+                            )}
+                        </div>
+
+                        {/* Ratings */}
+                        <div className="flex items-center gap-3 mt-4">
+                            <span className="font-semibold text-gray-800">{Number(reviewStats.averageRating || 0).toFixed(1)}</span>
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <Star key={i} size={16} className={i <= Math.round(reviewStats.averageRating || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />
+                                ))}
+                            </div>
+                            <a href="#reviews" className="text-sm text-purple-600 font-medium hover:underline">({reviewStats.totalReviews} reviews)</a>
+                        </div>
+
+                        {/* Available Offers Section (Minimal Myntra Style) */}
+                        <AvailableOffers productId={product.products_id} />
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                            <div className="flex items-center gap-3 w-full sm:w-auto sm:flex-1">
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => toggleWishlist(product.products_id)}
+                                    className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full border transition ${isWishlisted ? 'bg-purple-700 border-purple-700' : 'bg-white border-gray-300 hover:border-purple-700'}`}
+                                >
+                                    <Heart size={18} className={`transition ${isWishlisted ? 'text-white fill-white' : 'text-gray-600'}`} />
+                                </motion.button>
+                                <button onClick={handleAddToCart} className="flex-1 bg-purple-700 hover:bg-purple-800 text-white px-5 sm:px-8 py-3.5 sm:py-3 rounded-full text-base font-medium shadow-lg transition active:scale-[0.98]">Add to Cart</button>
+                            </div>
+                            <button onClick={() => setIsCustomiseModalOpen(true)} className="w-full sm:flex-1 border border-purple-700 text-purple-700 px-5 sm:px-8 py-3.5 sm:py-3 rounded-full text-base font-medium hover:bg-purple-50 transition active:scale-[0.98]">Customise Now</button>
+                        </div>
+
+                        {/* About Section */}
+                        <div className="pt-3 sm:pt-6">
+                            <h2 className="text-xl sm:text-xl font-semibold mb-4 sm:mb-6 text-purple-700">About The Templates</h2>
+                            <div className="space-y-6">
+                                {product.summary ? (
+                                    Object.entries(product.summary).map(([key, value]) => (
+                                        <div key={key}>
+                                            <h3 className="font-bold text-gray-900 text-sm sm:text-base capitalize mb-2">{key.replace(/_/g, ' ')}</h3>
+                                            <ul className="space-y-2 text-sm sm:text-base text-gray-600 list-disc pl-5">
+                                                {Array.isArray(value) ? value.map((item, idx) => (
+                                                    <li key={idx} className="marker:text-gray-400 pl-1 leading-relaxed">{item}</li>
+                                                )) : <li className="marker:text-gray-400 pl-1 leading-relaxed">{value}</li>}
+                                            </ul>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <ul className="space-y-2 text-sm sm:text-base text-gray-600 list-disc pl-5">
+                                        {product.description?.split(product.description.includes(' / ') ? ' / ' : '\n').map((point, idx) => point.trim() && (
+                                            <li key={idx} className="marker:text-gray-400 pl-1 leading-relaxed">{point.trim()}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Sharing */}
+                        <div className="pt-4">
+                            <button onClick={() => setShowShareMenu(!showShareMenu)} className="text-gray-500 hover:text-purple-700 flex items-center gap-2 text-sm font-medium transition-colors">
+                                <FontAwesomeIcon icon={faShareAlt} /> Share this template
+                            </button>
+                            {showShareMenu && (
+                                <div className="absolute bg-white shadow-2xl rounded-2xl border border-gray-100 p-3 z-50 flex gap-4 mt-4">
+                                    {[{ id: 'whatsapp', icon: faWhatsapp, color: 'text-green-500' }, { id: 'facebook', icon: faFacebook, color: 'text-blue-600' }, { id: 'twitter', icon: faXTwitter, color: 'text-black' }, { id: 'email', icon: faEnvelope, color: 'text-gray-600' }].map((item) => (
+                                        <button key={item.id} onClick={() => handleShare(item.id)} className={`${item.color} hover:scale-110 transition-transform p-1`}><FontAwesomeIcon icon={item.icon} size="lg" /></button>
+                                    ))}
+                                    <button onClick={copyToClipboard} className="text-purple-600 hover:scale-110 transition-transform p-1"><FontAwesomeIcon icon={faLink} size="lg" /></button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Related Products */}
+                {relatedProducts.length > 0 && (
+                    <div className="py-16 border-t border-gray-100">
+                        <h2 className="text-2xl font-bold mb-8 text-gray-900">You Might Also Like</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {relatedProducts.map(p => (
+                                <ProductCard key={p.products_id} product={p} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className="max-w-7xl mx-auto px-0 bg-white pb-16">
+                    <div className="border-t border-gray-100 pt-10">
+                        <ReviewSection products_id={product.products_id} />
+                    </div>
+                </div>
+            </main>
+            <AnimatePresence>
+                {lightboxOpen && <MediaLightbox media={prodMedia} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
+            </AnimatePresence>
+
+            {/* Customisation Modal */}
+            <AnimatePresence>
+                {isCustomiseModalOpen && (
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-2 sm:p-4">
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsCustomiseModalOpen(false)} />
+                        <motion.div className="bg-white w-full max-w-6xl max-h-[95vh] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col">
+                            <div className="p-4 border-b flex justify-between items-center">
+                                <h2 className="font-bold">Customise Your Order</h2>
+                                <button onClick={() => setIsCustomiseModalOpen(false)}><FontAwesomeIcon icon={faTimes} /></button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-6">
+                                {quantity > 1 && (
+                                    <div className="mb-6 flex gap-2">
+                                        {Array.from({ length: quantity }).map((_, i) => (
+                                            <button key={i} onClick={() => setSelectedItemIndex(i)} className={`flex-1 h-2 rounded-full ${i === selectedItemIndex ? 'bg-purple-600' : 'bg-gray-200'}`} />
+                                        ))}
+                                    </div>
+                                )}
+
+                                <CustomizationForm
+                                    schema={parsedSchema}
+                                    data={getCurrentItemData()}
+                                    onChange={handleFieldChange}
+                                    index={selectedItemIndex}
+                                />
+
+                                <div className="mt-8 pt-6 border-t border-gray-100">
+                                    <button
+                                        onClick={handleAddToCart}
+                                        disabled={isUploading}
+                                        className="w-full bg-purple-600 text-white py-4 px-8 rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
+                                    >
+                                        {isUploading ? (
+                                            <><FontAwesomeIcon icon={faSpinner} spin className="text-lg" /> Confirming & Uploading...</>
+                                        ) : (
+                                            <>
+                                                <span className="whitespace-nowrap">Confirm & Add to Cart</span>
+                                                <FontAwesomeIcon icon={faCheck} className="group-hover:translate-x-1 transition-transform text-lg" />
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}

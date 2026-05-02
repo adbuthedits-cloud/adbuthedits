@@ -1,0 +1,3 @@
+title,slug,description,price,compared_price,parent_category,asset_type,asset_variant,asset_category,asset_sub_category,asset_orientation,serial_number,meta_title,meta_description,meta_keywords,summary,tags
+"Sample Product 1","sample-product-1","High quality invitation",999,1299,"Digital Invitations","PO","WI","PE","AN","HOR","1001","Meta Title","Description","Keywords","Summary","tag1, tag2"
+"Sample Product 2","sample-product-2","Modern video greeting",1499,1999,"Greetings","VI","WO","BI","BIR","VER","1002","Meta Title","Description","Keywords","Summary","tag1, tag2"

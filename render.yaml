@@ -1,0 +1,64 @@
+services:
+  # 1. Backend API (Web Service)
+  - type: web
+    name: adbuth-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: starter # Starter plan required for Redis/Postgres links usually
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: adbuth-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: adbuth-redis
+          property: connectionString
+      # Add other keys from your .env here
+      - fromGroup: adbuth-secrets
+
+  # 2. Main Site (Web Service)
+  - type: web
+    name: adbuth-main-site
+    env: node
+    rootDir: adbuth-site
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: adbuth-backend
+          property: host
+      - fromGroup: adbuth-secrets
+
+  # 3. Admin Panel (Web Service)
+  - type: web
+    name: adbuth-admin
+    env: node
+    rootDir: admin
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: adbuth-backend
+          property: host
+      - fromGroup: adbuth-secrets
+
+# 4. Managed PostgreSQL
+databases:
+  - name: adbuth-db
+    plan: starter
+
+# 5. Managed Redis
+redises:
+  - name: adbuth-redis
+    plan: starter
+    ipAllowList: [] # Only allow internal traffic

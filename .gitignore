@@ -1,0 +1,27 @@
+node_modules/
+.env
+.DS_Store
+.next/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.idea/
+.vscode/
+temp_prod.json
+dry-run.txt
+image-list.txt
+image-usages.txt
+replace-log.txt
+build_output.log
+wishlist_out.txt
+cloud folders structure/
+fix_page.js
+update_db.js
+adbuth-site/.env
+admin/.env
+backend/.env
+backend/uploads/
+backend/scratch/
