@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
-import TiltCard from "./creative/TiltCard";
 import ClipTypeStagger from "./creative/ClipTypeStagger";
 
 export default function Hero() {
@@ -44,50 +43,42 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="absolute -bottom-96 left-16 -translate-x-1/2 w-[68%] max-w-[320px] md:static md:transform-none md:w-full md:max-w-xs lg:max-w-sm md:translate-x-0 md:flex md:justify-end md:ml-auto"
         >
-          <TiltCard className="w-full">
-            <div className="relative w-full h-full" style={{ transformStyle: "preserve-3d" }}>
-              {/* Card Container with Glow */}
-              <div className="relative bg-[#0f0518] border border-purple-500 rounded-[2rem] p-6 lg:p-10 md:p-8 shadow-[0_0_30px_rgba(124,58,237,0.6)]" style={{ transformStyle: "preserve-3d" }}>
-                {/* Inner Glow Border Effect */}
-                <div className="absolute inset-0 rounded-[2rem] shadow-[inset_0_0_40px_rgba(124,58,237,0.25)] pointer-events-none"></div>
+          <div className="relative w-full h-full">
+            {/* Card Container with Glow */}
+            <div className="relative bg-[#0f0518] border border-purple-500 rounded-[2rem] p-6 lg:p-10 md:p-8 shadow-[0_0_30px_rgba(124,58,237,0.6)]">
+              {/* Inner Glow Border Effect */}
+              <div className="absolute inset-0 rounded-[2rem] shadow-[inset_0_0_40px_rgba(124,58,237,0.25)] pointer-events-none"></div>
 
-                <motion.div
-                  className="text-center mb-6 md:mb-6 lg:mb-8 relative z-10"
-                  style={{ transform: "translateZ(40px)" }}
-                >
-                  <p className="text-xs lg:text-lg md:text-sm font-medium text-white leading-relaxed">
-                    "Lights. Camera, Action!
-                    <br />
-                    I'm Adi, your creative assistant at
-                    <br />
-                    Adbuth Edits, Want help picking
-                    <br />
-                    the perfect service or just here
-                    <br />
-                    to explore our studio magic?'
-                  </p>
-                </motion.div>
+              <div className="text-center mb-6 md:mb-6 lg:mb-8 relative z-10">
+                <p className="text-xs lg:text-lg md:text-sm font-medium text-white leading-relaxed">
+                  "Lights. Camera, Action!
+                  <br />
+                  I'm Adi, your creative assistant at
+                  <br />
+                  Adbuth Edits, Want help picking
+                  <br />
+                  the perfect service or just here
+                  <br />
+                  to explore our studio magic?'
+                </p>
+              </div>
 
-                <motion.div
-                  className="flex flex-col gap-3 md:gap-4 relative z-10"
-                  style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }}
-                >
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "I want to edit a video" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
-                    I want to edit a video
-                  </button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "I want to design a 'Save the Date' card" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
-                    I want to design a 'Save the Date card
-                  </button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "Let's talk commercials & ads" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
-                    Let's talk commercials & ads
-                  </button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "I have a question for Adi" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
-                    Message Adi
-                  </button>
-                </motion.div>
+              <div className="flex flex-col gap-3 md:gap-4 relative z-10">
+                <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "I want to edit a video" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
+                  I want to edit a video
+                </button>
+                <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "I want to design a 'Save the Date' card" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
+                  I want to design a 'Save the Date card
+                </button>
+                <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "Let's talk commercials & ads" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
+                  Let's talk commercials & ads
+                </button>
+                <button onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget', { detail: { message: "I have a question for Adi" } }))} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[10px] lg:text-sm font-medium">
+                  Message Adi
+                </button>
               </div>
             </div>
-          </TiltCard>
+          </div>
         </motion.div>
       </div>
     </section>
