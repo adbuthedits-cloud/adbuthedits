@@ -8,7 +8,8 @@ const SeoHead = ({ page, data, title, description, image, author, loading = fals
     useEffect(() => {
         // If 'page' identifier is provided (e.g. 'home'), fetch global SEO settings
         if (page && !data) {
-            fetch('http://localhost:5000/api/seo/pages')
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            fetch(`${apiUrl}/api/seo/pages`)
                 .then(res => res.json())
                 .then(pages => {
                     const match = pages.find(p => p.page_identifier === page);

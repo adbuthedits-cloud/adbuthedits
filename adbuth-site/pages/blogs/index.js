@@ -27,9 +27,10 @@ export default function Blogs() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         const [blogsRes, catsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/blogs'),
-          axios.get('http://localhost:5000/api/blogs/categories')
+          axios.get(`${apiUrl}/api/blogs`),
+          axios.get(`${apiUrl}/api/blogs/categories`)
         ]);
         
         const fetchedCats = catsRes.data.map(c => c.name);

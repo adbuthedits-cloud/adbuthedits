@@ -23,7 +23,8 @@ export default function BlogPost() {
 
   const fetchBlog = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/blogs/${slug}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await axios.get(`${apiUrl}/api/blogs/${slug}`);
       setBlog(res.data);
     } catch (err) {
       console.error(err);

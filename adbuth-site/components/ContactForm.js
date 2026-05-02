@@ -52,7 +52,8 @@ export default function ContactForm() {
         service: 'General Inquiry',
       };
 
-      const response = await axios.post('http://localhost:5000/api/enquiry', submissionData);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await axios.post(`${apiUrl}/api/enquiry`, submissionData);
 
       if (response.data.success) {
         toast.success('Message sent successfully!');

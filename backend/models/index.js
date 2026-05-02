@@ -30,6 +30,9 @@ const AssetOrientation = require('./AssetOrientation');
 const ShopSetting = require('./ShopSetting');
 const AdminSession = require('./AdminSession');
 const OrderTimeline = require('./OrderTimeline');
+const AuditLog = require('./AuditLog');
+const Attribute = require('./Attribute');
+const SeoPage = require('./SeoPage');
 
 // Association Setup
 
@@ -188,5 +191,8 @@ module.exports = {
     ReviewVote,
     AdminSession,
     OrderTimeline,
+    AuditLog,
+    Attribute,
+    SeoPage,
     Sequelize
 };

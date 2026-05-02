@@ -155,7 +155,8 @@ export default function EnquiryForm() {
         });
 
         try {
-            const response = await axios.post('http://localhost:5000/api/enquiry', data, {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const response = await axios.post(`${apiUrl}/api/enquiry`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
