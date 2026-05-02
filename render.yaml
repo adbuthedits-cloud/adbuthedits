@@ -16,7 +16,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: adbuth-redis
           property: connectionString
       # Add other keys from your .env here
@@ -52,13 +52,13 @@ services:
           property: host
       - fromGroup: adbuth-secrets
 
-# 4. Managed PostgreSQL
+  # 4. Managed Redis (Key Value)
+  - type: keyvalue
+    name: adbuth-redis
+    plan: starter
+    ipAllowList: [] # Only allow internal traffic
+
+# 5. Managed PostgreSQL
 databases:
   - name: adbuth-db
     plan: starter
-
-# 5. Managed Redis
-redises:
-  - name: adbuth-redis
-    plan: starter
-    ipAllowList: [] # Only allow internal traffic
