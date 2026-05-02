@@ -1,0 +1,181 @@
+"use client";
+import withPermission from '../../../components/withPermission';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch, faSave, faGlobe, faPencilAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { getAuthToken } from '../../../utils/auth';
+import { useRouter } from 'next/navigation';
+import Button from '../../../components/Button';
+import GlobalLoader from '../../../components/GlobalLoader';
+
+function SeoDashboard() {
+    const router = useRouter();
+    const [pages, setPages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedPage, setSelectedPage] = useState(null); // For editing
+    const [saving, setSaving] = useState(false);
+
+    // Initial system pages to ensure exist (if not in DB)
+    const systemPages = [
+        { page_identifier: 'home', title: 'Home Page', path: '/' },
+        { page_identifier: 'shop', title: 'Shop Page', path: '/shop' },
+        { page_identifier: 'about', title: 'About Us', path: '/about' },
+        { page_identifier: 'contact', title: 'Contact Us', path: '/contact' },
+        { page_identifier: 'blogs', title: 'Blog Listing', path: '/blogs' },
+        { page_identifier: 'service-main', title: 'Services Main', path: '/services' },
+        { page_identifier: 'service-designing', title: 'Service: Designing', path: '/services/designing' },
+        { page_identifier: 'service-design-invitations', title: 'Service: E-Invitations', path: '/services/designing/adbuth-e-invitations' },
+        { page_identifier: 'service-learning', title: 'Service: Learning', path: '/services/learning' },
+        { page_identifier: 'service-learning-dam', title: 'Service: Adbuth DAM', path: '/services/learning/adbuth-dam' },
+        { page_identifier: 'service-videos', title: 'Service: Videos Main', path: '/services/videos' },
+        { page_identifier: 'service-video-ads', title: 'Service: Adbuth Ads', path: '/services/videos/adbuth-ads' },
+        { page_identifier: 'service-video-corporate', title: 'Service: Corporate', path: '/services/videos/adbuth-corporate' },
+        { page_identifier: 'service-video-edits', title: 'Service: Edits', path: '/services/videos/adbuth-edits' },
+        { page_identifier: 'service-video-music', title: 'Service: Music', path: '/services/videos/adbuth-music' },
+        { page_identifier: 'service-video-politics', title: 'Service: Politics', path: '/services/videos/adbuth-politics' },
+    ];
+
+    useEffect(() => {
+        fetchPages();
+    }, []);
+
+    const fetchPages = async () => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
+            if (!token) {
+                router.push('/login');
+                return;
+            }
+            const res = await axios.get(`${apiUrl}/api/seo/pages`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Merge system pages with DB results
+            const dbPages = res.data;
+            const merged = systemPages.map(sys => {
+                const found = dbPages.find(d => d.page_identifier === sys.page_identifier);
+                return found || sys;
+            });
+
+            // Also add any custom pages from DB that aren't in systemPages
+            const custom = dbPages.filter(d => !systemPages.find(s => s.page_identifier === d.page_identifier));
+
+            setPages([...merged, ...custom]);
+            setLoading(false);
+        } catch (error) {
+            console.error(error);
+            // If API fails (maybe route doesn't exist yet), just show system defaults
+            setPages(systemPages);
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
+            if (!token) {
+                router.push('/login');
+                return;
+            }
+            await axios.post(`${apiUrl}/api/seo/pages`, selectedPage, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchPages();
+            setSelectedPage(null);
+        } catch (error) {
+            alert('Failed to save SEO');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) return <div>Loading SEO...</div>;
+
+    return (
+        <>
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">SEO Management</h1>
+                    <p className="text-gray-400">Optimize search engine visibility for static pages</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pages.map((page, idx) => (
+                    <div key={idx} className="bg-[#1E1628] border border-[#2d1b4e] rounded-2xl p-6 hover:border-[#a78bfa]/50 transition-colors group">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-12 h-12 rounded-full bg-[#a78bfa]/10 flex items-center justify-center text-[#a78bfa]">
+                                <FontAwesomeIcon icon={faGlobe} className="text-xl" />
+                            </div>
+                            <button onClick={() => setSelectedPage(page)} className="text-gray-500 hover:text-white transition-colors">
+                                <FontAwesomeIcon icon={faPencilAlt} />
+                            </button>
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-1">{page.title || page.page_identifier}</h3>
+                        <p className="text-xs text-gray-500 font-mono mb-4">{page.path}</p>
+
+                        <div className="space-y-2">
+                            <div className="text-sm text-gray-400 truncate">
+                                <span className="text-gray-600 font-bold">Title:</span> {page.meta_title || page.title || 'Default'}
+                            </div>
+                            <div className="text-sm text-gray-400 truncate">
+                                <span className="text-gray-600 font-bold">Desc:</span> {page.meta_description || page.description || 'Default'}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Edit Modal */}
+            {selectedPage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-[#1E1628] border border-[#2d1b4e] rounded-2xl w-full max-w-2xl p-8 shadow-2xl animate-scaleIn">
+                        <h2 className="text-2xl font-bold text-white mb-6">Edit SEO: {selectedPage.title}</h2>
+
+                        <form onSubmit={handleSave} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-300">Meta Title</label>
+                                <input
+                                    value={selectedPage.meta_title || selectedPage.title || ''}
+                                    onChange={e => setSelectedPage({ ...selectedPage, meta_title: e.target.value, title: e.target.value })} // Handling both likely
+                                    className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa]"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-300">Meta Description</label>
+                                <textarea
+                                    value={selectedPage.meta_description || selectedPage.description || ''}
+                                    onChange={e => setSelectedPage({ ...selectedPage, meta_description: e.target.value, description: e.target.value })}
+                                    rows={4}
+                                    className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa] resize-none"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-300">Keywords</label>
+                                <input
+                                    value={selectedPage.keywords || selectedPage.meta_keywords || ''}
+                                    onChange={e => setSelectedPage({ ...selectedPage, keywords: e.target.value, meta_keywords: e.target.value })}
+                                    className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa]"
+                                    placeholder="keyword1, keyword2"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-4 pt-4">
+                                <button type="button" onClick={() => setSelectedPage(null)} className="text-gray-400 hover:text-white px-4 py-2">Cancel</button>
+                                <button type="submit" disabled={saving} className="bg-[#7C3AED] text-white px-8 py-2 rounded-xl font-bold hover:bg-[#6D28D9]">
+                                    {saving ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+export default withPermission(SeoDashboard, 'seo');
