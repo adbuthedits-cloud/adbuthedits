@@ -6,7 +6,7 @@ services:
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
-    plan: starter # Starter plan required for Redis/Postgres links usually
+    plan: starter
     envVars:
       - key: NODE_ENV
         value: production
@@ -26,6 +26,7 @@ services:
   - type: web
     name: adbuth-main-site
     env: node
+    plan: starter
     rootDir: adbuth-site
     buildCommand: npm install && npm run build
     startCommand: npm start
@@ -41,6 +42,7 @@ services:
   - type: web
     name: adbuth-admin
     env: node
+    plan: starter
     rootDir: admin
     buildCommand: npm install && npm run build
     startCommand: npm start
@@ -61,4 +63,4 @@ services:
 # 5. Managed PostgreSQL
 databases:
   - name: adbuth-db
-    plan: starter
+    plan: basic-256mb
