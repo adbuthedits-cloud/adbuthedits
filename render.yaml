@@ -35,7 +35,7 @@ services:
         fromService:
           type: web
           name: adbuth-backend
-          property: host
+          property: url
       - fromGroup: adbuth-secrets
 
   # 3. Admin Panel (Web Service)
@@ -51,7 +51,7 @@ services:
         fromService:
           type: web
           name: adbuth-backend
-          property: host
+          property: url
       - fromGroup: adbuth-secrets
 
   # 4. Managed Redis (Key Value)
