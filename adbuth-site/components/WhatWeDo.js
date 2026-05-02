@@ -85,7 +85,9 @@ const CardDesktop = ({ i, title, description, image, progress, total, color, ico
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
             </div>
             <div className="absolute bottom-0 left-0 w-full p-10 flex flex-col justify-end h-full z-10">
-                <img src={icons} className="w-10 h-10 mb-auto" alt="icons" />
+                <div className="relative w-10 h-10 mb-auto">
+                    <Image src={icons} fill alt="icons" className="object-contain" />
+                </div>
                 <h3 className="text-4xl font-bold text-white mb-4 leading-tight tracking-tight">{title}</h3>
                 <p className="text-[#E0E0E0] text-base leading-relaxed opacity-90">{description}</p>
             </div>
@@ -143,7 +145,9 @@ const CardMobile = ({ i, title, description, image, progress, total, color, icon
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
             </div>
             <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 flex flex-col justify-end h-full z-10">
-                <img src={icons} className="w-8 h-8 md:w-10 md:h-10 mb-auto" alt="icons" />
+                <div className="relative w-8 h-8 md:w-10 md:h-10 mb-auto">
+                    <Image src={icons} fill alt="icons" className="object-contain" />
+                </div>
                 <h3 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight tracking-tight">{title}</h3>
                 <p className="text-[#E0E0E0] text-xs md:text-base leading-relaxed opacity-90">{description}</p>
             </div>

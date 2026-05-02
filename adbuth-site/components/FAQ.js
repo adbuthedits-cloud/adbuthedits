@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import Image from "next/image";
 
 export default function FAQ({ questions = [] }) {
   const [openIndex, setOpenIndex] = useState(null);
@@ -11,7 +12,15 @@ export default function FAQ({ questions = [] }) {
   }
 
   return (
-    <section className="py-24 md:px-10 px-6 bg-[#E8E8E8] lg:bg-[#fff] text-black overflow-hidden relative min-h-screen bg-no-repeat lg:[background-image:var(--bg-img)]" style={{ '--bg-img': "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/faq-bg.png') " }}>
+    <section className="py-24 md:px-10 px-6 bg-[#E8E8E8] lg:bg-[#fff] text-black overflow-hidden relative min-h-screen">
+      <div className="absolute inset-0 z-0 hidden lg:block">
+        <Image
+          src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/faq-bg.png"
+          alt="FAQ Background"
+          fill
+          className="object-cover"
+        />
+      </div>
 
 
 
