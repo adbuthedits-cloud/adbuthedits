@@ -32,10 +32,7 @@ services:
     startCommand: npm start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: adbuth-backend
-          property: url
+        value: https://adbuth-backend.onrender.com
       - fromGroup: adbuth-secrets
 
   # 3. Admin Panel (Web Service)
@@ -48,10 +45,7 @@ services:
     startCommand: npm start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: adbuth-backend
-          property: url
+        value: https://adbuth-backend.onrender.com
       - fromGroup: adbuth-secrets
 
   # 4. Managed Redis (Key Value)
