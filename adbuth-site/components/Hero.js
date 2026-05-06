@@ -13,7 +13,8 @@ export default function Hero() {
           alt="Hero Background"
           fill
           priority
-          quality={90}
+          fetchPriority="high"
+          quality={80}
           className="object-cover"
         />
       </div>

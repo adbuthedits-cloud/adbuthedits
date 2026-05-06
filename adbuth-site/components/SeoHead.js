@@ -29,7 +29,7 @@ const SeoHead = ({ page, data, title, description, image, author, loading = fals
     const finalKeywords = meta.meta_keywords || meta.keywords || 'video editing, templates, adbuth, media';
     const finalImage = meta.og_image || image || 'https://adbuth.com/og-default.jpg';
     const finalAuthor = meta.author || author;
-    const finalCanonical = meta.canonical_url || (typeof window !== 'undefined' ? window.location.href : '');
+    const finalCanonical = meta.canonical_url || (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '');
 
     if (loading) return null;
 
