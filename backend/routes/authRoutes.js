@@ -147,7 +147,6 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// ─── Google OAuth ──────────────────────────────────────────────────────────────
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 router.get('/google/callback', 
