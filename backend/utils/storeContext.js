@@ -2,7 +2,7 @@ const { Product, Category, Coupon } = require('../models');
 
 // Hardcoded context regarding static site info
 const STATIC_CONTEXT = `
-**ABOUT ADBUTH MEDIA WORKS:**
+**ABOUT ADBUTH VERSE:**
 - **Who We Are:** A dynamic post-production studio transforming ideas into stunning visual stories.
 - **Founders:** Angilika Jaya Venkat Kiran & Venu Thorani (Managing Directors).
 - **Vision:** To be a symbol of limitless creativity and unwavering quality globally.

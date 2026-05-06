@@ -19,7 +19,7 @@ const generateChatResponse = async (history, context = "") => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const systemPrompt = `You are 'VideoAssist', the AI support bot for Adbuth Media Works.
+        const systemPrompt = `You are 'VideoAssist', the AI support bot for Adbuth Verse.
         Your goal is to help users with video editing services, pricing, and order status.
         
         CONTEXT FROM KNOWLEDGE BASE:
