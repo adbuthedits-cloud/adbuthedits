@@ -1,10 +1,80 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { getAuthToken, getAuthUser, hasPermission } from '../../../utils/auth';
 import withPermission from '../../../components/withPermission';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash, faSave, faTimes, faChevronDown, faChevronRight, faTag, faLayerGroup, faList, faImage, faCloudUploadAlt, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronRight, faEdit, faPlus, faSave, faTimes, faTrash, faImage, faCloudUploadAlt, faTag, faLayerGroup, faList, faEye, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
+
+// --- Media Library Modal ---
+function BannerLibraryModal({ isOpen, onClose, onSelect, banners = [] }) {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative w-full max-w-4xl max-h-[80vh] bg-[#1a1025] border border-[#2d1b4e] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-[#2d1b4e]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+                            <FontAwesomeIcon icon={faFolderOpen} />
+                        </div>
+                        <h3 className="text-white font-bold uppercase tracking-wider">Banner Media Library</h3>
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                        <FontAwesomeIcon icon={faTimes} size="lg" />
+                    </button>
+                </div>
+
+                {/* Grid */}
+                <div className="flex-1 overflow-y-auto p-6 custom-scroll">
+                    {banners.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-gray-500 italic">
+                            <FontAwesomeIcon icon={faImage} className="text-4xl mb-4 opacity-20" />
+                            <p>No previously uploaded banners found.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {banners.map((item, idx) => (
+                                <div 
+                                    key={idx} 
+                                    className="group relative aspect-video rounded-xl overflow-hidden border-2 border-transparent hover:border-purple-500 cursor-pointer transition-all bg-black/40"
+                                    onClick={() => {
+                                        onSelect(item.url, item.type);
+                                        onClose();
+                                    }}
+                                >
+                                    {item.type === 'video' ? (
+                                        <video src={item.url} className="w-full h-full object-cover" muted loop onMouseOver={e => e.target.play()} onMouseOut={e => e.target.pause()} />
+                                    ) : (
+                                        <Image src={item.url} alt="Library Item" fill sizes="200px" className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                                    )}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span className="bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">Select</span>
+                                    </div>
+                                    {item.type === 'video' && (
+                                        <div className="absolute top-2 right-2 w-5 h-5 rounded bg-black/60 flex items-center justify-center">
+                                            <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5" />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-[#2d1b4e] bg-black/20 flex justify-end">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mr-auto mt-2">Showing {banners.length} assets</p>
+                    <button onClick={onClose} className="px-6 py-2 bg-white/5 hover:bg-white/10 text-gray-400 text-xs font-bold rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -88,11 +158,21 @@ function EditableRow({ item, fields, onSave, onDelete, idField, variant }) {
                         )}
 
                         {editing && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity gap-3">
                                 <label className="cursor-pointer bg-white text-black px-4 py-2 rounded-full text-xs font-bold hover:scale-105 transition-transform">
-                                    {uploading ? 'Uploading...' : 'Change Media'}
+                                    {uploading ? 'Uploading...' : 'Upload New'}
                                     <input type="file" className="hidden" accept="image/*,video/*" onChange={e => onFileChange(e, 'banner_image')} />
                                 </label>
+                                <button 
+                                    type="button"
+                                    onClick={() => fields.find(f => f.key === 'banner_image')?.onLibraryClick((url, type) => {
+                                        setForm(p => ({ ...p, banner_image: url, banner_type: type }));
+                                    })}
+                                    className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-500 transition-colors shadow-lg"
+                                    title="Choose from Library"
+                                >
+                                    <FontAwesomeIcon icon={faFolderOpen} className="text-xs" />
+                                </button>
                             </div>
                         )}
                     </div>
@@ -218,12 +298,24 @@ function EditableRow({ item, fields, onSave, onDelete, idField, variant }) {
                                             onChange={e => onFileChange(e, f.key)}
                                             accept={f.key === 'banner_image' ? "image/*,video/*" : "image/*"}
                                         />
-                                        <label
-                                            htmlFor={`file-${item[idField]}-${f.key}`}
-                                            className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-center cursor-pointer hover:bg-white/10"
-                                        >
-                                            {uploading ? 'Uploading...' : 'Change File'}
-                                        </label>
+                                        <div className="flex flex-col gap-1.5 mt-1">
+                                            <label
+                                                htmlFor={`file-${item[idField]}-${f.key}`}
+                                                className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-center cursor-pointer hover:bg-white/10"
+                                            >
+                                                {uploading ? 'Uploading...' : 'Upload New'}
+                                            </label>
+                                            {f.hasLibrary && (
+                                                <button
+                                                    onClick={() => f.onLibraryClick((url, type) => {
+                                                        setForm(p => ({ ...p, [f.key]: url, banner_type: type }));
+                                                    })}
+                                                    className="px-2 py-1 bg-purple-600/10 border border-purple-500/20 rounded text-[10px] text-purple-400 text-center hover:bg-purple-600/20"
+                                                >
+                                                    Library
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 ) : (
                                     <input
@@ -349,13 +441,27 @@ function AddRowForm({ fields, onAdd, extraDefaults = {}, title = "Add New", vari
                                     <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Upload Banner</p>
                                 </div>
                             )}
+                             {uploading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs z-20">Uploading...</div>}
+                            
+                            {/* Library Toggle Overlay */}
+                            <div className="absolute bottom-2 right-2 flex flex-col gap-1 z-10">
+                                <button 
+                                    type="button"
+                                    onClick={() => fields.find(f => f.key === 'banner_image')?.onLibraryClick((url, type) => {
+                                        setForm(p => ({ ...p, banner_image: url, banner_type: type }));
+                                    })}
+                                    className="w-8 h-8 rounded bg-purple-600 text-white flex items-center justify-center shadow-lg hover:bg-purple-500 transition-colors"
+                                    title="Choose from Library"
+                                >
+                                    <FontAwesomeIcon icon={faFolderOpen} className="text-xs" />
+                                </button>
+                            </div>
                             <input
                                 type="file"
                                 accept="image/*,video/*"
                                 className="absolute inset-0 opacity-0 cursor-pointer"
                                 onChange={e => onFileChange(e, 'banner_image')}
                             />
-                            {uploading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs">Uploading...</div>}
                         </div>
                     </div>
 
@@ -447,7 +553,21 @@ function AddRowForm({ fields, onAdd, extraDefaults = {}, title = "Add New", vari
                                             onChange={e => onFileChange(e, f.key)}
                                         />
                                     </div>
-                                    {uploading && <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>}
+                                    <div className="flex flex-col gap-1">
+                                        {uploading && <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>}
+                                        {f.hasLibrary && (
+                                            <button 
+                                                type="button"
+                                                onClick={() => f.onLibraryClick((url, type) => {
+                                                    setForm(p => ({ ...p, [f.key]: url, banner_type: type }));
+                                                })}
+                                                className="w-7 h-7 rounded bg-purple-600/20 text-purple-400 flex items-center justify-center hover:bg-purple-600/40 transition-colors"
+                                                title="Media Library"
+                                            >
+                                                <FontAwesomeIcon icon={faFolderOpen} className="text-xs" />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -584,7 +704,7 @@ function AddSubCategoryForm({ categories, assetCategories, onAdd }) {
 }
 
 // --- Shop Settings Section ---
-function ShopSettingsSection({ settings, onUpdate }) {
+function ShopSettingsSection({ settings, onUpdate, onLibraryClick }) {
     const [form, setForm] = useState(settings || {});
     const [uploading, setUploading] = useState(false);
 
@@ -677,6 +797,20 @@ function ShopSettingsSection({ settings, onUpdate }) {
                         )}
                         <input type="file" accept="image/*,video/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={onFileChange} />
                         {uploading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-sm">Uploading...</div>}
+                        
+                        {/* Library Button Overlay */}
+                        <div className="absolute bottom-4 right-4 z-10">
+                            <button 
+                                type="button"
+                                onClick={() => onLibraryClick((url, type) => {
+                                    setForm(p => ({ ...p, shop_banner_image: url, shop_banner_type: type }));
+                                })}
+                                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-xl hover:bg-purple-500 transition-all"
+                            >
+                                <FontAwesomeIcon icon={faFolderOpen} />
+                                Library
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -719,6 +853,28 @@ function MasterDataPage() {
     const [loading, setLoading] = useState(true);
     const [activeSubCatFilter, setActiveSubCatFilter] = useState(null);
     const [subCatSearch, setSubCatSearch] = useState('');
+
+    // Media Library State
+    const [libraryOpen, setLibraryOpen] = useState(false);
+    const [libraryCallback, setLibraryCallback] = useState(null);
+
+    const existingBanners = useMemo(() => {
+        const map = new Map(); // URL -> type
+        // From parentCategories
+        data.parentCategories?.forEach(pc => {
+            if (pc.banner_image) map.set(pc.banner_image, pc.banner_type || 'image');
+        });
+        // From shopSettings
+        if (data.shopSettings?.shop_banner_image) {
+            map.set(data.shopSettings.shop_banner_image, data.shopSettings.shop_banner_type || 'image');
+        }
+        return Array.from(map.entries()).map(([url, type]) => ({ url, type }));
+    }, [data.parentCategories, data.shopSettings]);
+
+    const openLibrary = (callback) => {
+        setLibraryCallback(() => callback);
+        setLibraryOpen(true);
+    };
 
     const fetchAll = async () => {
         try {
@@ -853,6 +1009,7 @@ function MasterDataPage() {
 
                 <ShopSettingsSection
                     settings={data.shopSettings}
+                    onLibraryClick={openLibrary}
                     onUpdate={async (body) => {
                         await fetch(`${API_URL}/api/admin/master-data/shop-settings`, {
                             method: 'POST',
@@ -872,7 +1029,7 @@ function MasterDataPage() {
                             { key: 'slug', label: 'Slug (Auto-generated)' },
                             { key: 'banner_title', label: 'Banner Title', optional: true },
                             { key: 'banner_subtitle', label: 'Banner Subtitle', optional: true },
-                            { key: 'banner_image', label: 'Banner', type: 'file', optional: true },
+                            { key: 'banner_image', label: 'Banner', type: 'file', optional: true, hasLibrary: true, onLibraryClick: openLibrary },
                         ]}
                         idField="category_id"
                         crud={primaryCatCRUD}
@@ -884,7 +1041,7 @@ function MasterDataPage() {
                                 { key: 'category_name', label: 'Category Name', placeholder: 'Digital Invitations' },
                                 { key: 'banner_title', label: 'Banner Title', placeholder: 'Optional', optional: true },
                                 { key: 'banner_subtitle', label: 'Banner Subtitle', placeholder: 'Optional', optional: true },
-                                { key: 'banner_image', label: 'Banner', type: 'file', optional: true },
+                                { key: 'banner_image', label: 'Banner', type: 'file', optional: true, hasLibrary: true, onLibraryClick: openLibrary },
                             ]}
                             onAdd={primaryCatCRUD.add}
                             title="Add New Root Category"
@@ -892,6 +1049,13 @@ function MasterDataPage() {
                         />
                     )}
                 </SectionCard>
+
+                <BannerLibraryModal 
+                    isOpen={libraryOpen} 
+                    onClose={() => setLibraryOpen(false)} 
+                    onSelect={libraryCallback}
+                    banners={existingBanners}
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <SectionCard title="Asset Types" icon={faTag}>

@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const { Order, OrderItem, Product, Category, Cart, CartItem, Payment, Coupon, CouponUsage, AssetType, AssetVariant, AssetCategory, AssetSubCategory, AssetOrientation, ShopSetting, Review, User, Admin, Role, Blog, BlogCategory, ReviewSetting, AdminSession, Enquiry, OrderTimeline, sequelize } = require('../models');
 const { orderQueue } = require('../config/orderQueue');
@@ -2026,10 +2026,7 @@ router.post('/master-data/shop-settings', checkPermission('settings', 'edit'), a
     try {
         let settings = await ShopSetting.findOne();
         if (settings) {
-            // Cleanup old file if new one is provided
-            if (req.body.shop_banner_image && settings.shop_banner_image && req.body.shop_banner_image !== settings.shop_banner_image) {
-                await deleteCloudFile(settings.shop_banner_image);
-            }
+            // Old file is intentionally kept in cloud storage to allow reuse in the media library.
             await settings.update(req.body);
         } else {
             settings = await ShopSetting.create(req.body);
@@ -2243,11 +2240,7 @@ router.put('/master-data/primary-categories/:id', checkPermission('settings', 'e
         const category = await Category.findByPk(req.params.id);
         if (!category) return res.status(404).json({ error: 'Category not found' });
 
-        // Cleanup old banner if changed
-        if (req.body.banner_image && category.banner_image && req.body.banner_image !== category.banner_image) {
-            await deleteCloudFile(category.banner_image);
-        }
-
+        // Old file is intentionally kept in cloud storage to allow reuse in the media library.
         const slug = slugify(category_name);
         await category.update({
             category_name,

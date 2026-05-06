@@ -15,9 +15,56 @@ import useSeo from '../hooks/useSeo';
 const Beams = dynamic(() => import('../components/ui/Beams'), { ssr: false });
 
 const countryOptions = [
-    { code: '+91', country: 'IN', placeholder: '98765 43210' },
-    { code: '+1', country: 'US', placeholder: '123 456 7890' },
+    { code: '+91', country: 'India', placeholder: '98765 43210' },
+    { code: '+1', country: 'USA/Canada', placeholder: '123 456 7890' },
     { code: '+44', country: 'UK', placeholder: '7700 900077' },
+    { code: '+61', country: 'Australia', placeholder: '412 345 678' },
+    { code: '+971', country: 'UAE', placeholder: '50 123 4567' },
+    { code: '+65', country: 'Singapore', placeholder: '8123 4567' },
+    { code: '+49', country: 'Germany', placeholder: '151 23456789' },
+    { code: '+33', country: 'France', placeholder: '6 12 34 56 78' },
+    { code: '+81', country: 'Japan', placeholder: '90 1234 5678' },
+    { code: '+86', country: 'China', placeholder: '138 1234 5678' },
+    { code: '+7', country: 'Russia', placeholder: '912 345 67 89' },
+    { code: '+39', country: 'Italy', placeholder: '312 345 6789' },
+    { code: '+34', country: 'Spain', placeholder: '612 345 678' },
+    { code: '+55', country: 'Brazil', placeholder: '11 91234 5678' },
+    { code: '+27', country: 'South Africa', placeholder: '82 123 4567' },
+    { code: '+234', country: 'Nigeria', placeholder: '803 123 4567' },
+    { code: '+92', country: 'Pakistan', placeholder: '300 1234567' },
+    { code: '+880', country: 'Bangladesh', placeholder: '1712 345678' },
+    { code: '+60', country: 'Malaysia', placeholder: '12 345 6789' },
+    { code: '+62', country: 'Indonesia', placeholder: '812 3456 789' },
+    { code: '+63', country: 'Philippines', placeholder: '912 345 6789' },
+    { code: '+66', country: 'Thailand', placeholder: '81 234 5678' },
+    { code: '+84', country: 'Vietnam', placeholder: '91 234 5678' },
+    { code: '+90', country: 'Turkey', placeholder: '532 123 45 67' },
+    { code: '+966', country: 'Saudi Arabia', placeholder: '50 123 4567' },
+    { code: '+965', country: 'Kuwait', placeholder: '5123 4567' },
+    { code: '+974', country: 'Qatar', placeholder: '5512 3456' },
+    { code: '+9 Oman', country: 'Oman', placeholder: '9123 4567' },
+    { code: '+973', country: 'Bahrain', placeholder: '3123 4567' },
+    { code: '+20', country: 'Egypt', placeholder: '10 1234 5678' },
+    { code: '+212', country: 'Morocco', placeholder: '612 345678' },
+    { code: '+31', country: 'Netherlands', placeholder: '6 12345678' },
+    { code: '+32', country: 'Belgium', placeholder: '412 34 56 78' },
+    { code: '+41', country: 'Switzerland', placeholder: '71 234 56 78' },
+    { code: '+43', country: 'Austria', placeholder: '664 1234567' },
+    { code: '+46', country: 'Sweden', placeholder: '70 123 45 67' },
+    { code: '+47', country: 'Norway', placeholder: '912 34 567' },
+    { code: '+45', country: 'Denmark', placeholder: '12 34 56 78' },
+    { code: '+353', country: 'Ireland', placeholder: '83 123 4567' },
+    { code: '+64', country: 'New Zealand', placeholder: '21 123 4567' },
+    { code: '+852', country: 'Hong Kong', placeholder: '9123 4567' },
+    { code: '+886', country: 'Taiwan', placeholder: '912 345 678' },
+    { code: '+82', country: 'South Korea', placeholder: '10 1234 5678' },
+    { code: '+52', country: 'Mexico', placeholder: '55 1234 5678' },
+    { code: '+54', country: 'Argentina', placeholder: '11 1234 5678' },
+    { code: '+56', country: 'Chile', placeholder: '9 1234 5678' },
+    { code: '+57', country: 'Colombia', placeholder: '312 345 6789' },
+    { code: '+51', country: 'Peru', placeholder: '912 345 678' },
+    { code: '+94', country: 'Sri Lanka', placeholder: '71 234 5678' },
+    { code: '+977', country: 'Nepal', placeholder: '984 1234567' },
 ];
 
 export default function Signup() {
@@ -95,7 +142,10 @@ export default function Signup() {
     };
 
     const validatePhone = (num) => {
-        return /^\d{10}$/.test(String(num));
+        // Strip spaces, dashes, and parentheses for validation
+        const cleanNum = String(num).replace(/[\s\-\(\)]/g, '');
+        // Global phone numbers range from 7 to 15 digits
+        return /^\d{7,15}$/.test(cleanNum);
     };
 
     const handleBlur = (field) => {
@@ -272,13 +322,13 @@ export default function Signup() {
                                 <div>
                                     <div className="flex gap-4 items-end">
                                         <select
-                                            className="bg-transparent border-b border-white/20 text-white py-1 focus:border-purple-500 outline-none [&>option]:text-black w-20 text-sm md:text-base lg:text-sm"
+                                            className="bg-transparent border-b border-white/20 text-white py-1 focus:border-purple-500 outline-none [&>option]:text-black w-24 text-sm md:text-base lg:text-sm cursor-pointer"
                                             value={countryCode}
                                             onChange={(e) => setCountryCode(e.target.value)}
                                         >
                                             {countryOptions.map(opt => (
                                                 <option key={opt.code} value={opt.code}>
-                                                    {opt.code}
+                                                    {opt.country} ({opt.code})
                                                 </option>
                                             ))}
                                         </select>
