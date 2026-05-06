@@ -275,9 +275,11 @@ const DigitalInvitations = () => {
                         Bring your celebrations to life with digital cards that are beautiful, meaningful, and uniquely yours.
                     </p>
                     <div className="flex flex-col md:flex-row items-center justify-start gap-6">
-                        <button className="bg-white text-black px-12 py-5 rounded-full text-xl font-semibold hover:bg-[#b0aaaa] transition-all">
-                            Explore Templates
-                        </button>
+                        <Link href="/shop">
+                            <button className="bg-white text-black px-12 py-5 rounded-full text-xl font-semibold hover:bg-[#b0aaaa] transition-all">
+                                Explore Templates
+                            </button>
+                        </Link>
                     </div>
                 </div>
 

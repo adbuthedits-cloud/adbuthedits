@@ -328,42 +328,42 @@ export default function AdbuthLearning() {
                 {/* Our Offerings Section */}
                 <section className="py-24 px-6 md:px-12 lg:px-20 bg-white">
                     <div className="max-w-7xl mx-auto">
-                        <h2 className="text-4xl w-fit md:text-5xl font-bold mb-16 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent ">Our Offerings</h2>
+                        <h2 className="text-4xl w-fit md:text-5xl font-bold mb-16 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent pb-2">Our Offerings</h2>
 
-                        <div className="grid lg:grid-cols-2 lg:ml-16 gap-12  ">
+                        <div className="grid lg:grid-cols-2 lg:ml-16 gap-16  ">
                             {/* Card 1 */}
-                            <div className="flex flex-col">
+                            <Link href="/services/learning/adbuth-dam" className="flex flex-col group cursor-pointer block">
                                 <div className="w-full aspect-[4/3] md:aspect-video lg:aspect-square lg:w-[400px] lg:h-[400px] relative mb-6 overflow-hidden">
                                     <Image
                                         src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-dam.png"
                                         alt="Adbuth DAM"
                                         fill
                                         sizes="(max-width: 768px) 100vw, 400px"
-                                        className="object-cover hover:scale-105 transition-transform duration-500"
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                 </div>
-                                <h3 className="text-2xl font-bold mb-3 text-black">Adbuth DAM</h3>
+                                <h3 className="text-2xl font-bold mb-3 text-black group-hover:text-purple-700 transition-colors">Adbuth DAM</h3>
                                 <p className="text-gray-500 text-base leading-relaxed max-w-lg">
                                     Centralize your digital assets with AI-powered search, workflow automation, and effortless sharing. Simplify creative collaboration like never before.
                                 </p>
-                            </div>
+                            </Link>
 
                             {/* Card 2 */}
-                            <div className="flex flex-col">
+                            <Link href="/services/learning/adbuth-e-learning" className="flex flex-col group cursor-pointer block">
                                 <div className="w-full aspect-[4/3] md:aspect-video lg:aspect-square lg:w-[400px] lg:h-[400px] relative mb-6 overflow-hidden">
                                     <Image
                                         src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-e-learning.png"
                                         alt="Adbuth Learnings"
                                         fill
                                         sizes="(max-width: 768px) 100vw, 400px"
-                                        className="object-cover hover:scale-105 transition-transform duration-500"
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                 </div>
-                                <h3 className="text-2xl font-bold mb-3 text-black">Adbuth Learnings</h3>
+                                <h3 className="text-2xl font-bold mb-3 text-black group-hover:text-purple-700 transition-colors">Adbuth Learnings</h3>
                                 <p className="text-gray-500 text-base leading-relaxed max-w-lg">
                                     Training programs and masterclasses designed for editors, designers, and creators blending real world projects with future focused skills.
                                 </p>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 </section>

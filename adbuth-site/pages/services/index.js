@@ -21,7 +21,8 @@ const servicesData = [
       { title: 'Adbuth Corporate', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-coporate.png', link: '/services/videos/adbuth-corporate' },
       { title: 'Adbuth Ads', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-ads.png', link: '/services/videos/adbuth-ads' },
       { title: 'Adbuth Politics', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-politics.png', link: '/services/videos/adbuth-politics' },
-      { title: 'Adbuth Music', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-music.png', link: '/services/videos/adbuth-music' }
+      { title: 'Adbuth Music', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-music.png', link: '/services/videos/adbuth-music' },
+      { title: 'Adbuth Movies', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-movies.png', link: '/services/videos/adbuth-movies' }
     ]
   },
   {
@@ -31,19 +32,19 @@ const servicesData = [
     img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/service-design.png',
     mainLink: '/services/design',
     subServices: [
-      { title: 'Adbuth E-Invitations', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/services-e-invitation.png', link: '/services/design/adbuth-e-invitations' },
-      { title: 'Adbuth Graphics', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/services-graphics.png', link: '/services/design/adbuth-graphics' }
+      { title: 'Adbuth E-Invitations', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/services-e-invitation.png', link: '/services/designing/adbuth-e-invitations' },
+      { title: 'Adbuth Graphics', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/services-graphics.png', link: '/services/designing/adbuth-graphics' }
     ]
   },
   {
-    id: 'commercial',
-    title: 'COMMERCIAL',
+    id: 'learning',
+    title: 'LEARNING',
     description: 'Strategic solutions to elevate your business presence.',
     img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/service-commercial.png',
-    mainLink: '/services/commercial',
+    mainLink: '/services/learning',
     subServices: [
-      { title: 'Adbuth DAM', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-dam.png', link: '/services/commercial/adbuth-dam' },
-      { title: 'Adbuth Learnings', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-e-learning.png', link: '/services/commercial/adbuth-learnings' }
+      { title: 'Adbuth DAM', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-dam.png', link: '/services/learning/adbuth-dam' },
+      { title: 'Adbuth Learnings', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-e-learning.png', link: '/services/learning/adbuth-e-learning' }
     ]
   }
 ];

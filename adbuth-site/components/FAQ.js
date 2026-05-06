@@ -12,7 +12,7 @@ export default function FAQ({ questions = [] }) {
   }
 
   return (
-    <section className="py-24 md:px-10 px-6 bg-[#E8E8E8] lg:bg-[#fff] text-black overflow-hidden relative min-h-screen">
+    <section className="py-24 -mt-24 md:mt-0 md:px-10 px-6 bg-[#E8E8E8] lg:bg-[#fff] text-black overflow-hidden relative min-h-screen">
       <div className="absolute inset-0 z-0 hidden lg:block">
         <Image
           src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/faq-bg.png"
@@ -29,7 +29,7 @@ export default function FAQ({ questions = [] }) {
         <div className="text-center mb-16">
           <h3 className="text-6xl font-medium mb-4 tracking-tight">FAQs</h3>
           <p className="text-gray-500 text-lg">
-            Everything You Need to Know Before <br /> Saying 'Action!
+            Everything You Need to Know Before <br /> Saying Action!
           </p>
         </div>
 

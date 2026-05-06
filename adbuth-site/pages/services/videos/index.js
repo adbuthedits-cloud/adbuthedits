@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import SeoHead from '../../../components/SeoHead';
 import useSeo from '../../../hooks/useSeo';
@@ -19,35 +19,89 @@ const videoServices = [
     {
         id: 'corporate',
         title: 'Adbuth Corporate',
-        subtitle: 'Brand & Business',
-        description: 'Professional corporate videos that elevate your brand identity. From internal communications to promotional content, we deliver polished visuals.',
+        subtitle: 'Business Films & Brand Stories',
+        description: 'From corporate profiles to employee training modules, we create videos that strengthen your brand identity and enhance internal communication.',
         videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
     },
     {
         id: 'adds',
         title: 'Adbuth Adds',
-        subtitle: 'Commercial & Social',
-        description: 'High-impact commercials and social media ads designed to grab attention and convert viewers. Short, punchy, and effective.',
+        subtitle: 'Commercial Advertising for TV & Digital',
+        description: 'High-impact ad films designed for television, OTT, and social media campaigns crafted to grab attention and drive conversions.',
         videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
     },
     {
         id: 'politics',
         title: 'Adbuth Politics',
-        subtitle: 'Campaigns & Outreach',
-        description: 'Strategic video content for political campaigns and public outreach. Communicate your message clearly and powerfully.',
+        subtitle: 'Political Campaigns & Constituency Stories',
+        description: 'Strategic storytelling for leaders and campaigns. We design constituency videos, campaign promos, and result-driven communication material.',
         videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
     },
     {
         id: 'music',
         title: 'Adbuth Music',
-        subtitle: 'Music Videos & Lyric Videos',
-        description: 'Creative visualizers and full-scale music video production to match the vibe of your tracks.',
+        subtitle: 'Original Music, Jingles & Sound Design',
+        description: 'Music that moves people. From original jingles to professional voiceovers and BGM, we give your videos the sound they deserve.',
+        videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
+    },
+    {
+        id: 'movies',
+        title: 'Adbuth Movies',
+        subtitle: 'Cinematic Post-Production',
+        description: 'Cinematic editing and finishing for films. Transform raw footage into compelling narratives with precision, visual depth, and storytelling impact.',
         videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
     }
 ];
 
+const heroServices = [
+    {
+        name: "Adbuth Edits",
+        desc: "We craft polished, professional video editing services for brand storytelling that communicates your brand’s message with clarity, impact and enhanced user engagement."
+    },
+    {
+        name: "Adbuth Corporate",
+        desc: "We create refined, professional corporate video solutions that communicate your brand vision with clarity, credibility, and strong business impact."
+    },
+    {
+        name: "Adbuth Ads",
+        desc: "We produce high-impact advertising videos that capture attention instantly, deliver your message clearly, and drive meaningful audience engagement."
+    },
+    {
+        name: "Adbuth Politics",
+        desc: "We craft strategic political video content that communicates vision, builds trust, and connects effectively with the public and target audience."
+    },
+    {
+        name: "Adbuth Music",
+        desc: "We create immersive music visuals and audio experiences that enhance storytelling, elevate emotion, and leave a lasting impression."
+    },
+    {
+        name: "Adbuth Movies",
+        desc: "We deliver cinematic post-production services that transform raw footage into compelling narratives with precision, depth, and visual excellence."
+    }
+];
+
+const TypingEffect = ({ text }) => {
+    const [displayedText, setDisplayedText] = useState('');
+
+    useEffect(() => {
+        setDisplayedText('');
+        let i = 0;
+        const intervalId = setInterval(() => {
+            setDisplayedText(text.slice(0, i + 1));
+            i++;
+            if (i >= text.length) {
+                clearInterval(intervalId);
+            }
+        }, 15); // Typing speed
+        return () => clearInterval(intervalId);
+    }, [text]);
+
+    return <>{displayedText}</>;
+};
+
 export default function Videos() {
     const [activeService, setActiveService] = useState('adbuth-edits');
+    const [selectedHeroService, setSelectedHeroService] = useState(heroServices[0]);
     const { seoData } = useSeo('videos');
 
 
@@ -118,10 +172,17 @@ export default function Videos() {
                                 <div className="mb-6">
                                     <label className="block md:text-md text-xs  mb-3 text-white">Select Video Type</label>
                                     <div className="relative">
-                                        <select className="w-full bg-[#231638] border border-[#fff] rounded-lg md:p-4 p-2 appearance-none focus:outline-none focus:border-[#d946ef] text-white md:text-sm text-xs">
-                                            <option>Adbuth Edits</option>
-                                            <option>Corporate</option>
-                                            <option>Ads</option>
+                                        <select
+                                            className="w-full bg-[#231638] border border-[#fff] rounded-lg md:p-4 p-2 appearance-none focus:outline-none focus:border-[#d946ef] text-white md:text-sm text-xs"
+                                            value={selectedHeroService.name}
+                                            onChange={(e) => {
+                                                const service = heroServices.find(s => s.name === e.target.value);
+                                                if (service) setSelectedHeroService(service);
+                                            }}
+                                        >
+                                            {heroServices.map((service) => (
+                                                <option key={service.name} value={service.name}>{service.name}</option>
+                                            ))}
                                         </select>
                                         <FontAwesomeIcon icon={faChevronDown} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs pointer-events-none text-gray-400" />
                                     </div>
@@ -129,8 +190,8 @@ export default function Videos() {
 
                                 <div className="mb-8">
                                     <label className="block md:text-md text-xs mb-3 text-white">What We Do</label>
-                                    <div className="bg-[#231638] border border-[#fff] rounded-lg p-4 text-[10px] text-gray-300 leading-relaxed min-h-[100px] md:text-sm">
-                                        We craft polished, professional video editing services for brand storytelling that communicates your brand's message with clarity, impact and enhanced user engagement.
+                                    <div className="bg-[#231638] border border-[#fff] rounded-lg p-4 text-[10px] text-gray-300 leading-relaxed min-h-[140px] md:text-sm">
+                                        <TypingEffect text={selectedHeroService.desc} />
                                     </div>
                                 </div>
 

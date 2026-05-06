@@ -18,11 +18,13 @@ export default function AdbuthPolitics() {
     const servicesList = [
         {
             title: "Political Campaign Films",
-            desc: "From campaign launch videos to manifesto explainers. We create high-impact films that showcase your leadership vision, party values, and achievements designed to emotionally engage and energize supporters. Perfect for rallies, social media, and TV ads."
+            desc: "From campaign launch videos to manifesto explainers. We create high-impact films that showcase your leadership vision, party values, and achievements designed to emotionally engage and energize supporters. Perfect for rallies, social media, and TV ads.",
+            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/Political%20Campaign%20Films.png"
         },
         {
             title: "Constituency Videos",
-            desc: "Every voter wants to know what their leader does. Our constituency videos highlight ground-level development, public interactions, and your role in driving change within the community. These videos strengthen your local reputation and help you stay connected with your people regularly."
+            desc: "Every voter wants to know what their leader does. Our constituency videos highlight ground-level development, public interactions, and your role in driving change within the community. These videos strengthen your local reputation and help you stay connected with your people regularly.",
+            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/Constituency%20Videos.png"
         }
     ];
 
@@ -246,7 +248,13 @@ export default function AdbuthPolitics() {
                             className="text-center group px-12"
                         >
                             <div className="h-[350px] w-full max-w-[280px] mx-auto bg-gray-200 mb-6 overflow-hidden relative shadow-sm">
-                                <div className="absolute inset-0 bg-gray-300 group-hover:scale-105 transition-transform duration-500"></div>
+                                <Image
+                                    src={servicesList[currentService].image}
+                                    alt={servicesList[currentService].title}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 280px"
+                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
                             </div>
                             <h3 className="text-2xl font-bold mb-3">{servicesList[currentService].title}</h3>
                             <p className="text-[#7D287E] text-sm max-w-sm mx-auto leading-relaxed">
@@ -274,8 +282,13 @@ export default function AdbuthPolitics() {
                                 className="text-center group cursor-pointer"
                             >
                                 <div className="h-[400px] w-[300px] md:h-[300px] md:w-[240px] lg:h-[400px] lg:w-[300px] mx-auto bg-gray-200 mb-6 overflow-hidden relative shadow-sm">
-                                    {/* Image Placeholder */}
-                                    <div className="absolute inset-0 bg-gray-300 group-hover:scale-105 transition-transform duration-500"></div>
+                                    <Image
+                                        src={service.image}
+                                        alt={service.title}
+                                        fill
+                                        sizes="(max-width: 1024px) 240px, 300px"
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
                                 </div>
                                 <h3 className="text-2xl md:text-xl lg:text-2xl font-bold mb-3">{service.title}</h3>
                                 <p className="text-[#7D287E] text-sm md:text-xs lg:text-sm max-w-sm mx-auto leading-relaxed">

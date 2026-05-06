@@ -22,7 +22,7 @@ export default function ServiceDrawer({ subServices, isActive }) {
                         style={{ backgroundImage: `url(${sub.img})` }}
                     />
                     <Link href={sub.link}>
-                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/0 transition-colors duration-500" />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors duration-500" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
                         <div className="absolute bottom-0 left-0 w-full p-6">

@@ -50,7 +50,7 @@ function MyApp({ Component, pageProps }) {
 
           <ErrorBoundary>
             <AnimatePresence>
-              <Component {...pageProps} key={router.asPath} />
+              <Component {...pageProps} key={router.pathname} />
             </AnimatePresence>
           </ErrorBoundary>
 

@@ -84,7 +84,7 @@ export default function AdbuthMusic() {
             </section>
 
             {/* Infinite Marquee "Vibe Elevated" */}
-            <div className="overflow-hidden h-[150px] md:h-[250px] absolute bottom-52 md:-bottom-24  w-full z-20">
+            {/* <div className="overflow-hidden h-[150px] md:h-[250px] absolute bottom-52 md:-bottom-24  w-full z-20">
                 <div className="relative  top-12 md:top-24 left-0 py-8 md:py-12 z-20  md:bg-[#7D287E85] bg-[#7D287E80] w-full " style={{ fontFamily: "DM Sans, sans-serif" }}>
                 </div>
 
@@ -112,7 +112,7 @@ export default function AdbuthMusic() {
                         </motion.div>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Services Section (Sticky Scroll) */}
             <div className="hidden lg:block">

@@ -13,7 +13,7 @@ export default function Footer() {
           <div className="space-y-4 md:col-span-1 ">
             <Link href="/" className="flex items-center gap-2 justify-center md:justify-start ">
               <span className="font-bold text-md md:text-lg lg:text-xl tracking-wide text-[#7D287E] ">
-                ADBUTH <span className="text-[#7D287E] font-bold text-[#FCD804]">Media Works</span>
+                ADBUTH <span className="text-[#7D287E] font-bold text-[#FCD804]">VERSE</span>
               </span>
             </Link>
             <p className="text-xs text-gray-500 leading-relaxed w-full  lg:px-0  lg:max-w-xs text-center md:text-left">

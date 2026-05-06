@@ -65,9 +65,44 @@ const CraftCard = ({ card, index }) => (
     </motion.div>
 );
 
+const memoryTypes = [
+    {
+        name: "Wedding Films",
+        desc: "We craft cinematic wedding films that beautifully capture the essence of your big day. From emotional vows to candid laughter, we make sure every moment is told with elegance, artistry, and heart."
+    },
+    {
+        name: "Surprise Edits",
+        desc: "We craft heartfelt surprise videos that bring emotions to life. From hidden messages to special moments, we create edits that truly touch and delight your loved ones."
+    },
+    {
+        name: "Personal Stories",
+        desc: "We turn your memories into meaningful visual stories. From life journeys to special milestones, we create films that reflect your experiences with emotion, clarity, and authenticity."
+    }
+];
+
+const TypingEffect = ({ text }) => {
+    const [displayedText, setDisplayedText] = useState('');
+
+    useEffect(() => {
+        setDisplayedText('');
+        let i = 0;
+        const intervalId = setInterval(() => {
+            setDisplayedText(text.slice(0, i + 1));
+            i++;
+            if (i >= text.length) {
+                clearInterval(intervalId);
+            }
+        }, 15); // Typing speed
+        return () => clearInterval(intervalId);
+    }, [text]);
+
+    return <>{displayedText}</>;
+};
+
 export default function AdbuthEdits() {
     const { seoData } = useSeo('adbuth-edits');
     const [activeService, setActiveService] = useState('wedding');
+    const [selectedMemoryType, setSelectedMemoryType] = useState(memoryTypes[0]);
     const activeServiceData = craftServices.find(s => s.id === activeService);
 
     // Auto-play for mobile view
@@ -152,11 +187,15 @@ export default function AdbuthEdits() {
                                         <div className="relative">
                                             <select
                                                 className="w-full bg-transparent border md:text-xs lg:text-sm text-xs border-white rounded-full md:p-3 p-2 md:px-6 px-3 text-white focus:border-[#d946ef] focus:outline-none appearance-none cursor-pointer"
-                                                defaultValue="Wedding Films"
+                                                value={selectedMemoryType.name}
+                                                onChange={(e) => {
+                                                    const mType = memoryTypes.find(m => m.name === e.target.value);
+                                                    if (mType) setSelectedMemoryType(mType);
+                                                }}
                                             >
-                                                <option value="Wedding Films" className="bg-[#130a1f]">Wedding Films</option>
-                                                <option value="Surprise Edits" className="bg-[#130a1f]">Surprise Edits</option>
-                                                <option value="Personal Stories" className="bg-[#130a1f]">Personal Stories</option>
+                                                {memoryTypes.map((mType) => (
+                                                    <option key={mType.name} value={mType.name} className="bg-[#130a1f]">{mType.name}</option>
+                                                ))}
                                             </select>
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                                 <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -168,8 +207,8 @@ export default function AdbuthEdits() {
 
                                     <div className="md:mb-8 mb-4 text-left">
                                         <label className="block text-xs md:text-xs font-bold mb-2 text-white md:text-gray-300 md:uppercase md:tracking-wider">What We Do</label>
-                                        <div className="bg-transparent border border-white rounded-xl md:p-6 p-3 text-xs md:text-xs text-white/90 leading-relaxed shadow-sm">
-                                            We craft cinematic wedding films that beautifully capture the essence of your big day. From emotional vows to candid laughter, we make sure every moment is told with elegance, artistry, and heart.
+                                        <div className="bg-transparent border border-white rounded-xl md:p-6 p-3 text-xs md:text-xs text-white/90 leading-relaxed shadow-sm min-h-[120px] md:min-h-[140px]">
+                                            <TypingEffect text={selectedMemoryType.desc} />
                                         </div>
                                     </div>
 

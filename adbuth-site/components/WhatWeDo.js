@@ -2,6 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import ClipTypeStagger from "./creative/ClipTypeStagger";
 
 const services = [
@@ -10,21 +11,24 @@ const services = [
         description: "Our video-editing services team has the perfect touch to amplify your story. Whether it's a corporate video, a cinematic masterpiece, or a social media content, we tailor every edit to your unique goals ensuring complete satisfaction.",
         image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/video-editing.png",
         color: "#E1CE78",
-        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/video-editing-icon.svg"
+        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/video-editing-icon.svg",
+        link: "/services/videos"
     },
     {
         title: "Designing",
         description: "From logos to social media creatives, our design team crafts visual identities that resonate with your audience. We blend creativity with strategy to deliver designs that stand out.",
         image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/designing.png",
         color: "#23423F",
-        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/designing-icon.svg"
+        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/designing-icon.svg",
+        link: "/services/designing"
     },
     {
-        title: "Commercial Ads",
+        title: "Learning",
         description: "We create compelling commercial advertisements that drive action. From concept to final cut, we handle everything to ensure your brand message is delivered effectively.",
         image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/commercial.png",
         color: "#442F2B",
-        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/commercial-icon.svg"
+        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/commercial-icon.svg",
+        link: "/services/learning"
     }
 ];
 
@@ -41,7 +45,7 @@ const useIsMobile = () => {
 };
 
 // Desktop Card Component (Only for XL screens now)
-const CardDesktop = ({ i, title, description, image, progress, total, color, icons }) => {
+const CardDesktop = ({ i, title, description, image, progress, total, color, icons, link }) => {
     const activeIndex = useTransform(progress, [0, 1], [0, total - 1]);
 
     const y = useTransform(activeIndex, (current) => {
@@ -67,48 +71,46 @@ const CardDesktop = ({ i, title, description, image, progress, total, color, ico
     const zIndex = total - i;
 
     return (
-        <motion.div
-            style={{ y, scale, opacity, zIndex, top: `calc(50% - 250px)`, borderColor: color, willChange: 'transform, opacity' }}
-            className={`absolute left-0 right-0 mx-auto w-[500px] aspect-square rounded-3xl overflow-hidden  origin-top border-[3px] `}
-        >
-            <div className="absolute inset-0">
-                <div className="relative w-full h-full">
-                    <Image
-                        src={image}
-                        alt={title}
-                        fill
-                        sizes="(max-width: 1280px) 100vw, 500px"
-                        priority={i === 0}
-                        className="object-cover transition-transform duration-700 hover:scale-105"
-                    />
+        <Link href={link}>
+            <motion.div
+                style={{ y, scale, opacity, zIndex, top: `calc(50% - 250px)`, borderColor: color, willChange: 'transform, opacity' }}
+                className={`absolute left-0 right-0 mx-auto w-[500px] aspect-square rounded-3xl overflow-hidden  origin-top border-[3px] cursor-pointer `}
+            >
+                <div className="absolute inset-0">
+                    <div className="relative w-full h-full">
+                        <Image
+                            src={image}
+                            alt={title}
+                            fill
+                            sizes="(max-width: 1280px) 100vw, 500px"
+                            priority={i === 0}
+                            className="object-cover transition-transform duration-700 hover:scale-105"
+                        />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-            </div>
-            <div className="absolute bottom-0 left-0 w-full p-10 flex flex-col justify-end h-full z-10">
-                <div className="relative w-10 h-10 mb-auto">
-                    <Image src={icons} fill alt="icons" className="object-contain" />
+                <div className="absolute bottom-0 left-0 w-full p-10 flex flex-col justify-end h-full z-10">
+                    <div className="relative w-10 h-10 mb-auto">
+                        <Image src={icons} fill alt="icons" className="object-contain" />
+                    </div>
+                    <h3 className="text-4xl font-bold text-white mb-4 leading-tight tracking-tight">{title}</h3>
+                    <p className="text-[#E0E0E0] text-base leading-relaxed opacity-90">{description}</p>
                 </div>
-                <h3 className="text-4xl font-bold text-white mb-4 leading-tight tracking-tight">{title}</h3>
-                <p className="text-[#E0E0E0] text-base leading-relaxed opacity-90">{description}</p>
-            </div>
-        </motion.div>
+            </motion.div>
+        </Link>
     );
 };
 
 // Mobile/Tablet Card Component (Vertical Stack)
-const CardMobile = ({ i, title, description, image, progress, total, color, icons, isPureMobile }) => {
+const CardMobile = ({ i, title, description, image, progress, total, color, icons, isPureMobile, link }) => {
     const activeIndex = useTransform(progress, [0, 1], [0, total - 1]);
-
-    // Step size responsive
-    // Tablet (500px card): Needs ~600px step for gap.
-    // Mobile (350px card): Needs ~470px step for gap.
-    const stepSize = isPureMobile ? 470 : 800;
 
     const y = useTransform(activeIndex, (current) => {
         const diff = i - current;
-        if (diff <= 0) return `${diff * stepSize}px`;
-        if (current < 0.1) return `${diff * -15}px`; // Tighter stack
-        return `${diff * stepSize}px`;
+        // Using percentage (%) instead of px to keep gaps proportional to card size
+        if (diff <= 0) return `${diff * 115}%`;
+        if (current < 0.1) return `${diff * -3}%`; // Proportional stack
+        return `${diff * 115}%`;
     });
 
     const scale = useTransform(activeIndex, (current) => {
@@ -127,31 +129,33 @@ const CardMobile = ({ i, title, description, image, progress, total, color, icon
     const zIndex = -10 + (total - i);
 
     return (
-        <motion.div
-            style={{ y, scale, opacity, zIndex, top: `30px`, borderColor: color, willChange: 'transform, opacity' }} // Fixed top
-            className={`absolute left-0 right-0 mx-auto  w-[98%]  aspect-square md:w-[80%]   rounded-3xl overflow-hidden  origin-top border-[3px] `}
-        >
-            <div className="absolute inset-0">
-                <div className="relative w-full h-full">
-                    <Image
-                        src={image}
-                        alt={title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 80vw"
-                        priority={i === 0}
-                        className="object-cover"
-                    />
+        <Link href={link}>
+            <motion.div
+                style={{ y, scale, opacity, zIndex, top: `30px`, borderColor: color, willChange: 'transform, opacity' }} // Fixed top
+                className={`absolute left-0 right-0 mx-auto  w-[98%]  aspect-square md:w-[80%]   rounded-3xl overflow-hidden  origin-top border-[3px] cursor-pointer `}
+            >
+                <div className="absolute inset-0">
+                    <div className="relative w-full h-full">
+                        <Image
+                            src={image}
+                            alt={title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 80vw"
+                            priority={i === 0}
+                            className="object-cover"
+                        />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-            </div>
-            <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 flex flex-col justify-end h-full z-10">
-                <div className="relative w-8 h-8 md:w-10 md:h-10 mb-auto">
-                    <Image src={icons} fill alt="icons" className="object-contain" />
+                <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 flex flex-col justify-end h-full z-10">
+                    <div className="relative w-8 h-8 md:w-10 md:h-10 mb-auto">
+                        <Image src={icons} fill alt="icons" className="object-contain" />
+                    </div>
+                    <h3 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight tracking-tight">{title}</h3>
+                    <p className="text-[#E0E0E0] text-xs md:text-base leading-relaxed opacity-90">{description}</p>
                 </div>
-                <h3 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight tracking-tight">{title}</h3>
-                <p className="text-[#E0E0E0] text-xs md:text-base leading-relaxed opacity-90">{description}</p>
-            </div>
-        </motion.div>
+            </motion.div>
+        </Link>
     );
 };
 
@@ -174,11 +178,15 @@ const WhatWeDoDesktop = () => {
                                         WHAT WE DO
                                     </ClipTypeStagger>
                                 </h2>
-                                <div className="text-gray-800 text-lg font-medium leading-tight mb-8">
-                                    <ClipTypeStagger mode="word" delay={0.3} duration={1} stagger={0.02}>
-                                        At Adbuth Media works post production studio, we don’t just edit videos; we curate experiences. With state-of-the-art technology and a team of skilled professionals, our studio offers a comprehensive range of top-notch services. Our company provide three major services
-                                    </ClipTypeStagger>
-                                </div>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.3, duration: 0.8 }}
+                                    className="text-gray-800 text-lg font-medium leading-tight mb-8"
+                                >
+                                    At Adbuth Media works post production studio, we don’t just edit videos; we curate experiences. With state-of-the-art technology and a team of skilled professionals, our studio offers a comprehensive range of top-notch services. Our company provide three major services
+                                </motion.div>
                             </div>
                         </div>
                         <div className="relative h-full flex items-center justify-start  pt-20">
@@ -217,7 +225,7 @@ const WhatWeDoMobile = () => {
 
     return (
         // Vertical Layout for Mobile AND Tablet
-        <div ref={container} className="h-[250vh] relative">
+        <div ref={container} className="h-[180vh] relative">
             <div className="sticky top-0 h-screen  overflow-hidden flex flex-col items-center justify-start ">
                 <div className="container mx-auto px-6 relative z-10 text-center bg-white pt-10 pb-6  md:pt-10" >
                     <h2 className="text-[6vh] md:text-7xl font-black uppercase tracking-tighter leading-none text-black mb-4">
@@ -225,12 +233,16 @@ const WhatWeDoMobile = () => {
                             WHAT WE DO
                         </ClipTypeStagger>
                     </h2>
-                    <div className="text-gray-800 text-[2vh] md:text-xl font-medium leading-relaxed mb-8 max-w-xs md:max-w-xl mx-auto">
-                        <ClipTypeStagger mode="word" delay={0.3} duration={1} stagger={0.02}>
-                            At Adbuth Media works post production studio, we don't just edit videos; we curate experiences.
-                            We provide comprehensive top-notch services tailored to your goals.
-                        </ClipTypeStagger>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3, duration: 0.8 }}
+                        className="text-gray-800 text-sm md:text-xl font-medium leading-relaxed mb-8 max-w-md md:max-w-xl mx-auto"
+                    >
+                        At Adbuth Media works post production studio, we don't just edit videos; we curate experiences.
+                        We provide comprehensive top-notch services tailored to your goals.
+                    </motion.div>
                 </div>
 
                 {/* Card Area */}
@@ -238,7 +250,7 @@ const WhatWeDoMobile = () => {
                     {/* Blur Overlay */}
                     <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white to-transparent z-20 pointer-events-none"></div>
 
-                    <div className="relative w-full h-[350px]  flex justify-center mt-4">
+                    <div className="relative w-full aspect-square max-w-sm flex justify-center mt-4">
                         {services.map((service, i) => (
                             <CardMobile key={i} i={i} {...service} progress={scrollYProgress} total={services.length} isPureMobile={isPureMobile} />
                         ))}

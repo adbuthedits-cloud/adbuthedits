@@ -14,6 +14,7 @@ import MediaLightbox from './MediaLightbox';
 import CustomizationForm from '../CustomizationForm';
 import PageLoader from '../PageLoader';
 import AvailableOffers from './AvailableOffers';
+import ProductCard from './ProductCard';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import toast from 'react-hot-toast';
@@ -39,6 +40,7 @@ export default function ProductDetailView({ slug }) {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const [occasionGroups, setOccasionGroups] = useState([]);
 
     const { user } = useAuth();
     const { toggleWishlist, isInWishlist } = useWishlist();
@@ -60,12 +62,58 @@ export default function ProductDetailView({ slug }) {
                 const data = await res.json();
                 setProduct(data);
 
-                // Fetch Related Products (Same Parent Category)
-                if (data.parentCategory?.category_id) {
+                // Fetch Related Products (Priority: assetCategory, Fallback: parentCategory)
+                let related = [];
+                
+                // 1. Try Sub-Category (assetCategory)
+                if (data.assetCategory?.asset_category_id) {
+                    const relRes = await fetch(`${apiUrl}/api/products?assetCategory=${data.assetCategory.asset_category_id}`);
+                    if (relRes.ok) related = await relRes.json();
+                }
+
+                // 2. Fallback to Parent Category if few results
+                if (related.length < 5 && data.parentCategory?.category_id) {
                     const relRes = await fetch(`${apiUrl}/api/products?parentCategory=${data.parentCategory.category_id}`);
                     if (relRes.ok) {
-                        const relatedData = await relRes.json();
-                        setRelatedProducts(relatedData.filter(p => p.slug !== slug).slice(0, 4));
+                        const parentRelated = await relRes.json();
+                        const seenIds = new Set(related.map(p => p.products_id));
+                        parentRelated.forEach(p => {
+                            if (!seenIds.has(p.products_id)) related.push(p);
+                        });
+                    }
+                }
+
+                setRelatedProducts(related.filter(p => p.slug !== slug).slice(0, 10));
+
+                // ─── Fetch & Group by Occasion (for section below reviews) ───
+                if (data.assetCategory?.asset_category_id) {
+                    const occRes = await fetch(`${apiUrl}/api/products?assetCategory=${data.assetCategory.asset_category_id}&limit=200`);
+                    if (occRes.ok) {
+                        const allRelated = await occRes.json();
+                        
+                        // Group by sub-category name
+                        const groupsMap = {};
+                        allRelated.forEach(p => {
+                            if (p.slug === slug) return; // skip current
+                            const subCat = p.assetSubCategory?.name || 'Other';
+                            const subCatSlug = p.assetSubCategory?.slug || '';
+                            if (!groupsMap[subCat]) {
+                                groupsMap[subCat] = { name: subCat, slug: subCatSlug, products: [] };
+                            }
+                            if (groupsMap[subCat].products.length < 20) {
+                                groupsMap[subCat].products.push(p);
+                            }
+                        });
+
+                        // Sort: current product's occasion first, then others
+                        const currentOccasionName = data.assetSubCategory?.name || 'Other';
+                        const sortedGroups = Object.values(groupsMap).sort((a, b) => {
+                            if (a.name === currentOccasionName) return -1;
+                            if (b.name === currentOccasionName) return 1;
+                            return 0;
+                        });
+
+                        setOccasionGroups(sortedGroups.slice(0, 5));
                     }
                 }
             } catch (error) {
@@ -376,12 +424,22 @@ export default function ProductDetailView({ slug }) {
                             <button onClick={() => setIsCustomiseModalOpen(true)} className="w-full sm:flex-1 border border-purple-700 text-purple-700 px-5 sm:px-8 py-3.5 sm:py-3 rounded-full text-base font-medium hover:bg-purple-50 transition active:scale-[0.98]">Customise Now</button>
                         </div>
 
-                        {/* About Section */}
-                        <div className="pt-3 sm:pt-6">
-                            <h2 className="text-xl sm:text-xl font-semibold mb-4 sm:mb-6 text-purple-700">About The Templates</h2>
-                            <div className="space-y-6">
-                                {product.summary ? (
-                                    Object.entries(product.summary).map(([key, value]) => (
+                        {/* Description Section */}
+                        {product.description && (
+                            <div className="pt-6 sm:pt-8 border-t border-gray-100 mt-6">
+                                <h2 className="text-lg font-bold text-purple-700 mb-3 uppercase tracking-tight">Product Description</h2>
+                                <div className="text-gray-600 leading-relaxed text-sm sm:text-base whitespace-pre-line">
+                                    {product.description}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* About Section - Only show if summary exists */}
+                        {product.summary && Object.keys(product.summary).length > 0 && (
+                            <div className="pt-3 sm:pt-6">
+                                <h2 className="text-xl sm:text-xl font-semibold mb-4 sm:mb-6 text-purple-700">About The Templates</h2>
+                                <div className="space-y-6">
+                                    {Object.entries(product.summary).map(([key, value]) => (
                                         <div key={key}>
                                             <h3 className="font-bold text-gray-900 text-sm sm:text-base capitalize mb-2">{key.replace(/_/g, ' ')}</h3>
                                             <ul className="space-y-2 text-sm sm:text-base text-gray-600 list-disc pl-5">
@@ -390,19 +448,13 @@ export default function ProductDetailView({ slug }) {
                                                 )) : <li className="marker:text-gray-400 pl-1 leading-relaxed">{value}</li>}
                                             </ul>
                                         </div>
-                                    ))
-                                ) : (
-                                    <ul className="space-y-2 text-sm sm:text-base text-gray-600 list-disc pl-5">
-                                        {product.description?.split(product.description.includes(' / ') ? ' / ' : '\n').map((point, idx) => point.trim() && (
-                                            <li key={idx} className="marker:text-gray-400 pl-1 leading-relaxed">{point.trim()}</li>
-                                        ))}
-                                    </ul>
-                                )}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Sharing */}
-                        <div className="pt-4">
+                        <div className="pt-4 pb-8">
                             <button onClick={() => setShowShareMenu(!showShareMenu)} className="text-gray-500 hover:text-purple-700 flex items-center gap-2 text-sm font-medium transition-colors">
                                 <FontAwesomeIcon icon={faShareAlt} /> Share this template
                             </button>
@@ -415,25 +467,62 @@ export default function ProductDetailView({ slug }) {
                                 </div>
                             )}
                         </div>
+
+                        {/* Related Products Slider (Compact for Sidebar area) */}
+                        {relatedProducts.length > 0 && (
+                            <div className="pt-10 mt-6 border-t border-gray-100">
+                                <h3 className="text-lg font-bold text-gray-900 mb-6 uppercase tracking-tight">Recommended For You</h3>
+                                <div className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+                                    {relatedProducts.map(p => (
+                                        <div key={p.products_id} className="min-w-[200px] sm:min-w-[240px] snap-start">
+                                            <ProductCard product={p} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Related Products */}
-                {relatedProducts.length > 0 && (
-                    <div className="py-16 border-t border-gray-100">
-                        <h2 className="text-2xl font-bold mb-8 text-gray-900">You Might Also Like</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                            {relatedProducts.map(p => (
-                                <ProductCard key={p.products_id} product={p} />
-                            ))}
-                        </div>
-                    </div>
-                )}
+
 
                 <div className="max-w-7xl mx-auto px-0 bg-white pb-16">
                     <div className="border-t border-gray-100 pt-10">
                         <ReviewSection products_id={product.products_id} />
                     </div>
+
+                    {/* Occasion-based Recommendations */}
+                    {occasionGroups.length > 0 && (
+                        <div className="mt-20 space-y-16 px-4 sm:px-6 lg:px-8">
+                            {occasionGroups.map((group, idx) => (
+                                <div key={group.name} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
+                                    <div className="flex items-end justify-between mb-8">
+                                        <div>
+                                            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter uppercase">
+                                                {group.name}
+                                            </h2>
+                                            <div className="h-1 w-12 bg-purple-600 mt-2" />
+                                        </div>
+                                        <Link 
+                                            href={`/shop?parentCategory=${product.parentCategory?.slug || 'all'}&assetCategory=${product.assetCategory?.slug || ''}&assetSubCategory=${group.slug}`}
+                                            className="text-sm font-bold text-purple-700 hover:text-purple-900 flex items-center gap-2 group transition-all"
+                                        >
+                                            VIEW ALL
+                                            <span className="group-hover:translate-x-1 transition-transform">→</span>
+                                        </Link>
+                                    </div>
+
+                                    <div className="flex overflow-x-auto gap-6 pb-8 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+                                        {group.products.map(p => (
+                                            <div key={p.products_id} className="min-w-[240px] sm:min-w-[280px] snap-start">
+                                                <ProductCard product={p} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </main>
             <AnimatePresence>

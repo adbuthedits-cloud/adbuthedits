@@ -114,16 +114,9 @@ const AnimatedCoreFeatures = () => {
                     {/* Desktop Left Side: Text Content (Hidden on Mobile) */}
                     <div className="hidden md:block space-y-10 order-1">
                         <div className="relative">
-                            <ScrollReveal
-                                baseOpacity={0.1}
-                                enableBlur
-                                baseRotation={3}
-                                blurStrength={4}
-                                containerClassName="my-0"
-                                textClassName="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight !leading-tight text-[#7D287E] !text-left"
-                            >
+                            <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight !leading-tight text-[#7D287E] !text-left">
                                 One Centralized Hub For All Your Assets
-                            </ScrollReveal>
+                            </h2>
                         </div>
                         <motion.p
                             className="text-lg md:text-2xl text-gray-500 max-w-xl leading-relaxed"
@@ -333,11 +326,7 @@ export default function AdbuthDAM() {
                                         Get a Quote
                                     </button>
                                 </Link>
-                                <Link href="/enquiry-form">
-                                    <button className="border border-white text-white px-8 py-3 rounded-full font-bold hover:bg-white/10 transition-all hover:scale-105">
-                                        Request for Demo
-                                    </button>
-                                </Link>
+
                             </motion.div>
                         </div>
 

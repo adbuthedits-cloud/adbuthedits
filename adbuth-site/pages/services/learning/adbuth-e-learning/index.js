@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SeoHead from '../../../../components/SeoHead';
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
+import Image from 'next/image';
+import Link from 'next/link';
 
 // Icons using SVG directly for portability
 const ChevronLeftIcon = () => (
@@ -127,6 +129,13 @@ const InfiniteCarousel = ({ children, gap = 16, cardWidth = "calc(100% - 32px)",
 };
 
 export default function AdbuthELearning() {
+    const scrollToPricing = () => {
+        const section = document.getElementById('pricing-section');
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     // Animation Variants
     const fadeInUp = {
         hidden: { opacity: 0, y: 30 },
@@ -148,7 +157,8 @@ export default function AdbuthELearning() {
             btnBorder: "border-[#1FAF65]",
             btnTextCol: "text-[#1FAF65]",
             btnHover: "hover:bg-[#1FAF65] hover:text-white",
-            headAreaColor: "bg-[#1FAF65]"
+            headAreaColor: "bg-[#1FAF65]",
+            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/digital-course.png"
         },
         {
             title: "Video Editing Courses",
@@ -159,7 +169,8 @@ export default function AdbuthELearning() {
             btnBorder: "border-[#F6A440]",
             btnTextCol: "text-[#F6A440]",
             btnHover: "hover:bg-[#F6A440] hover:text-white",
-            headAreaColor: "bg-[#F6A440]"
+            headAreaColor: "bg-[#F6A440]",
+            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/video-editing-courses.png"
         },
         {
             title: "AI for Content Creation",
@@ -170,7 +181,8 @@ export default function AdbuthELearning() {
             btnBorder: "border-[#FF66EB]",
             btnTextCol: "text-[#FF66EB]",
             btnHover: "hover:bg-[#FF66EB] hover:text-white",
-            headAreaColor: "bg-[#FF66EB]"
+            headAreaColor: "bg-[#FF66EB]",
+            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/ai-for-content-creation.png"
         }
     ];
 
@@ -235,26 +247,38 @@ export default function AdbuthELearning() {
             <main className="pt-24 md:pt-24 pb-0">
 
                 {/* HERO SECTION */}
-                <section className="relative bg-[#FBF9F5] py-24 px-6 md:px-12 lg:px-24  overflow-hidden flex flex-col lg:flex-row items-start justify-between min-h-[70vh] lg:min-h-[90vh]">
+                <section className="relative bg-[#FBF9F5] py-24 px-6 md:px-12 lg:px-24  overflow-hidden flex flex-col lg:flex-row items-start justify-between min-h-[70vh] lg:min-h-[100vh]">
 
                     {/* Background Abstract Shapes (Future Images Placeholders) */}
-                    <div className="absolute flex flex-col gap-[2px] lg:right-[-10%] right-[-50%] lg:top-[25%] top-[40%]  z-0 pointer-events-none rotate-[-30deg] opacity-80">
+                    <div className="absolute flex flex-col gap-[2px] lg:right-[-10%] right-[-50%] lg:top-[20%] top-[40%]  z-0 pointer-events-none rotate-[-30deg] opacity-100">
                         <div className="relative w-full h-full flex  items-center gap-[2px] justify-center ">
 
                             {/* Round Shape */}
-                            <div className=" w-[180px] h-[180px] aspect-circle sm:w-[240px] sm:h-[240px] rounded-full bg-[#D9D9D9] overflow-hidden" />
+                            <div className="relative w-[220px] h-[220px] aspect-circle sm:w-[300px] sm:h-[300px] rounded-full  overflow-hidden">
+                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-1.png" alt="Shape 1" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover " />
+                            </div>
                             {/* Rounded Edge Square Shape */}
-                            <div className=" w-[180px] h-[180px] aspect-square sm:w-[240px] sm:h-[240px] rounded-[40px] sm:rounded-[60px] bg-[#E5E5E5] overflow-hidden" />
+                            <div className="relative w-[220px] h-[220px] aspect-square sm:w-[300px] sm:h-[300px] rounded-[40px] sm:rounded-[60px]  overflow-hidden">
+                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-2.png" alt="Shape 2" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover " />
+                            </div>
                             {/* Round Shape */}
-                            <div className=" w-[180px] h-[180px] aspect-circle sm:w-[240px] sm:h-[240px] rounded-full bg-[#D9D9D9] overflow-hidden" />
+                            <div className="relative w-[220px] h-[220px] aspect-circle sm:w-[300px] sm:h-[300px] rounded-full overflow-hidden">
+                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-3.png" alt="Shape 3" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                            </div>
                         </div>
                         <div className="relative w-full h-full flex  items-center gap-[2px] justify-center ">
                             {/* Rounded Edge Square Shape */}
-                            <div className=" w-[180px] h-[180px] aspect-square sm:w-[240px] sm:h-[240px] rounded-[40px] sm:rounded-[60px] bg-[#E5E5E5] overflow-hidden" />
+                            <div className="relative w-[220px] h-[220px] aspect-square sm:w-[300px] sm:h-[300px] rounded-[40px] sm:rounded-[60px]  overflow-hidden">
+                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-4.png" alt="Shape 4" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                            </div>
                             {/* Round Shape */}
-                            <div className=" w-[180px] h-[180px] aspect-circle sm:w-[240px] sm:h-[240px] rounded-full bg-[#D9D9D9] overflow-hidden" />
+                            <div className="relative w-[220px] h-[220px] aspect-circle sm:w-[300px] sm:h-[300px] rounded-full overflow-hidden">
+                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-5.png" alt="Shape 5" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                            </div>
                             {/* Rounded Edge Square Shape */}
-                            <div className=" w-[180px] h-[180px] aspect-square sm:w-[240px] sm:h-[240px] rounded-[40px] sm:rounded-[60px] bg-[#E5E5E5] overflow-hidden" />
+                            <div className="relative w-[220px] h-[220px] aspect-square sm:w-[300px] sm:h-[300px] rounded-[40px] sm:rounded-[60px]  overflow-hidden">
+                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-6.png" alt="Shape 6" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                            </div>
                         </div>
                     </div>
 
@@ -322,8 +346,12 @@ export default function AdbuthELearning() {
                                     <div key={idx} className="w-full h-full flex justify-center py-2">
                                         <div className="bg-white rounded-[15px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col w-full h-full p-[14px] mx-auto md:h-[500px] max-w-[340px] md:max-w-[480px]" >
                                             {/* Image placeholder */}
-                                            <div className="w-full aspect-[4/3] rounded-[15px] mb-3 bg-[#D9D9D9] flex items-center justify-center overflow-hidden">
-                                                <span className="text-gray-400 text-xs font-medium">Image Placeholder</span>
+                                            <div className="w-full aspect-[4/3] rounded-[15px] mb-3 bg-[#D9D9D9] flex items-center justify-center overflow-hidden relative">
+                                                {path.image ? (
+                                                    <Image src={path.image} alt={path.title} fill sizes="(max-width: 1024px) 100vw, 400px" className="object-cover" />
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs font-medium">Image Placeholder</span>
+                                                )}
                                             </div>
 
                                             {/* Content Area - Colored Box */}
@@ -339,7 +367,9 @@ export default function AdbuthELearning() {
 
                                             {/* Bottom Button */}
                                             <div className="pb-2">
-                                                <button className="w-full py-1 rounded-full border-2 border-transparent font-bold text-[13px] tracking-wide text-black hover:opacity-90 transition-all text-center relative overflow-hidden shadow-sm"
+                                                <button
+                                                    onClick={scrollToPricing}
+                                                    className="w-full py-1 rounded-full border-2 border-transparent font-bold text-[13px] tracking-wide text-black hover:opacity-90 transition-all text-center relative overflow-hidden shadow-sm"
                                                     style={{
                                                         background: 'linear-gradient(white, white) padding-box, linear-gradient(to right, #DA3FB0, #8A2ED7, #4AB3E2) border-box'
                                                     }}
@@ -365,8 +395,12 @@ export default function AdbuthELearning() {
                                     className="bg-white rounded-[40px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col h-full hover:shadow-xl transition-all p-[14px]"
                                 >
                                     {/* Image placeholder */}
-                                    <div className="w-full aspect-[4/3] rounded-[28px] mb-3 bg-[#D9D9D9] flex items-center justify-center overflow-hidden">
-                                        <span className="text-gray-400 text-sm font-medium">Image Placeholder</span>
+                                    <div className="w-full aspect-[4/3] rounded-[28px] mb-3 bg-[#D9D9D9] flex items-center justify-center overflow-hidden relative">
+                                        {path.image ? (
+                                            <Image src={path.image} alt={path.title} fill sizes="(max-width: 1024px) 100vw, 400px" className="object-cover" />
+                                        ) : (
+                                            <span className="text-gray-400 text-sm font-medium">Image Placeholder</span>
+                                        )}
                                     </div>
 
                                     {/* Content Area - Colored Box */}
@@ -382,7 +416,9 @@ export default function AdbuthELearning() {
 
                                     {/* Bottom Button */}
                                     <div className="pb-2">
-                                        <button className="w-full py-4 rounded-full border-2 border-transparent font-bold text-[14px] tracking-wide text-black hover:opacity-90 transition-all text-center relative overflow-hidden shadow-sm"
+                                        <button
+                                            onClick={scrollToPricing}
+                                            className="w-full py-4 rounded-full border-2 border-transparent font-bold text-[14px] tracking-wide text-black hover:opacity-90 transition-all text-center relative overflow-hidden shadow-sm"
                                             style={{
                                                 background: 'linear-gradient(white, white) padding-box, linear-gradient(to right, #DA3FB0, #8A2ED7, #4AB3E2) border-box'
                                             }}
@@ -397,7 +433,7 @@ export default function AdbuthELearning() {
                 </section>
 
                 {/* --- OUR PRICING SECTION --- */}
-                <section className="pt-16 md:pt-24 px-6 md:px-12 lg:px-24 bg-[#FBF9F5]">
+                <section id="pricing-section" className="pt-16 md:pt-24 px-6 md:px-12 lg:px-24 bg-[#FBF9F5]">
                     <div className="max-w-7xl mx-auto">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -414,17 +450,23 @@ export default function AdbuthELearning() {
                         <div className="block lg:hidden">
                             <InfiniteCarousel cardWidth="calc(100% - 24px)">
                                 {pricingData.map((pricing, idx) => (
-                                    <div key={idx} className="w-full h-full md:h-[500px] flex justify-center">
-                                        <div className="bg-white rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.20)] border border-gray-100 p-6 md:p-8 flex flex-col w-full h-full mx-auto" style={{ maxWidth: '380px', minHeight: '340px' }}>
-                                            <h3 className="text-xl md:text-2xl font-bold text-black mb-8 w-1/2 leading-tight">{pricing.category}</h3>
-                                            <div className="space-y-3 w-full">
-                                                {pricing.courses.map((course, cIdx) => (
-                                                    <button key={cIdx} className="w-full bg-[#FBF9F5] border border-gray-100 hover:border-gray-200 transition-colors rounded-xl p-4 flex justify-between items-center text-sm shadow-sm hover:shadow-xl transition-all duration-300">
-                                                        <span className="font-semibold text-gray-800 text-left leading-tight pr-4">{course.name}</span>
-                                                        <span className="text-gray-400">-</span>
-                                                        <span className="font-bold text-black ml-4 whitespace-nowrap">{course.price}</span>
-                                                    </button>
-                                                ))}
+                                    <div key={idx} className="w-full h-full md:h-[500px] flex justify-center pb-8 pt-4">
+                                        <div className="relative bg-white rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 p-6 md:p-8 flex flex-col w-full h-full mx-auto overflow-hidden" style={{ maxWidth: '380px', minHeight: '340px' }}>
+                                            <div className="absolute  inset-0 z-0">
+                                                <Image src={learningPaths[idx]?.image} alt={pricing.category} fill className="object-cover opacity-50" />
+                                                <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/60 to-white/95"></div>
+                                            </div>
+                                            <div className="relative z-10 flex flex-col h-full">
+                                                <h3 className="text-[28px] md:text-3xl font-bold text-black mb-8 w-[70%] leading-tight">{pricing.category}</h3>
+                                                <div className="space-y-3 w-full mb-auto">
+                                                    {pricing.courses.map((course, cIdx) => (
+                                                        <button key={cIdx} className="w-full bg-[#FBF9F5] backdrop-blur-sm border border-white hover:bg-white rounded-xl p-3.5 flex justify-between items-center text-[13px] md:text-sm shadow-md hover:shadow-lg transition-all duration-300">
+                                                            <span className="font-semibold text-gray-800 text-left leading-tight pr-2">{course.name}</span>
+                                                            <span className="text-gray-800 font-bold mx-2">-</span>
+                                                            <span className="font-bold text-black whitespace-nowrap">{course.price}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -441,17 +483,23 @@ export default function AdbuthELearning() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: idx * 0.15 }}
-                                    className="bg-white rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.20)] border border-gray-100 p-8 flex flex-col h-full hover:-translate-y-2 transition-transform duration-300"
+                                    className="relative bg-white rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 p-8 flex flex-col h-full hover:-translate-y-2 transition-transform duration-300 overflow-hidden aspect-square"
                                 >
-                                    <h3 className="text-2xl  font-bold text-black mb-8 w-1/2">{pricing.category}</h3>
-                                    <div className="space-y-3 ">
-                                        {pricing.courses.map((course, cIdx) => (
-                                            <button key={cIdx} className="w-full bg-[#FBF9F5] border border-gray-100 hover:border-gray-200 transition-colors rounded-xl p-4 flex justify-between items-center text-sm hover:shadow-xl shadow-sm transition-transform duration-300  shadow-black/80">
-                                                <span className="font-semibold text-gray-800 text-left max-w-[60%]">{course.name}</span>
-                                                <span className="text-gray-400">-</span>
-                                                <span className="font-bold text-black">{course.price}</span>
-                                            </button>
-                                        ))}
+                                    <div className="absolute inset-0 z-0">
+                                        <Image src={learningPaths[idx]?.image} alt={pricing.category} fill className="object-cover opacity-50" />
+                                        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/60 to-white/95"></div>
+                                    </div>
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        <h3 className="text-3xl font-bold text-black h-24 w-[70%] leading-tight">{pricing.category}</h3>
+                                        <div className="space-y-3 mb-auto">
+                                            {pricing.courses.map((course, cIdx) => (
+                                                <button key={cIdx} className="w-full bg-white/95 backdrop-blur-sm border border-white hover:bg-white rounded-xl p-4 flex justify-between items-center text-sm shadow-md hover:shadow-lg transition-all duration-300">
+                                                    <span className=" text-gray-800 text-left">{course.name}</span>
+                                                    <span className="text-gray-800  mx-2">-</span>
+                                                    <span className=" text-black">{course.price}</span>
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </motion.div>
                             ))}
@@ -537,7 +585,7 @@ export default function AdbuthELearning() {
                                                 {bundle.desc}
                                             </p>
                                         </div>
-                                        <button className="w-full bg-[#1FAF65] text-white py-3.5 rounded-full font-bold text-base">
+                                        <button className="w-full bg-[#1FAF65] text-black py-3.5 rounded-full font-bold text-base">
                                             {bundle.price}
                                         </button>
                                     </motion.div>
@@ -576,9 +624,11 @@ export default function AdbuthELearning() {
                             transition={{ delay: 0.2 }}
                             className="w-[180px] md:w-[220px]"
                         >
-                            <button className="w-full bg-white text-black py-3.5 md:py-4 rounded-full font-bold text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg">
-                                Enroll Now
-                            </button>
+                            <Link href="/enquiry-form">
+                                <button className="w-full bg-white text-black py-3.5 md:py-4 rounded-full font-bold text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg">
+                                    Enroll Now
+                                </button>
+                            </Link>
                         </motion.div>
                     </div>
                 </section>
