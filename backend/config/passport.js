@@ -1,8 +1,9 @@
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { User } = require('../models');
 const { Op } = require('sequelize');
-
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const TwitterStrategy = require('passport-twitter-oauth2').Strategy;
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -11,19 +12,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       proxy: process.env.NODE_ENV === 'production'
     },
     async (accessToken, refreshToken, profile, done) => {
-      console.log('[Passport] Attempting Google Login. Callback URL:', `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`);
       try {
           const email = profile.emails[0].value;
           const googleId = profile.id;
-  
-          let user = await User.findOne({ 
-              where: { 
-                  [Op.or]: [
-                      { google_id: googleId },
-                      { email: email }
-                  ]
-              } 
-          });
+          let user = await User.findOne({ where: { [Op.or]: [{ google_id: googleId }, { email: email }] } });
   
           if (user) {
               if (!user.google_id) {
@@ -42,13 +34,99 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
               auth_provider: 'google'
           });
           return done(null, user);
-      } catch (err) {
-          return done(err, null);
-      }
+      } catch (err) { return done(err, null); }
     }
   ));
-} else {
-  console.warn('[Passport] Google OAuth keys missing. Google Login will be disabled.');
+}
+
+// Facebook Strategy
+if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+  passport.use(new FacebookStrategy({
+      clientID: process.env.FACEBOOK_APP_ID,
+      clientSecret: process.env.FACEBOOK_APP_SECRET,
+      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/facebook/callback`,
+      profileFields: ['id', 'emails', 'name'],
+      proxy: process.env.NODE_ENV === 'production'
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+          const email = profile.emails ? profile.emails[0].value : null;
+          const facebookId = profile.id;
+
+          let user = await User.findOne({ 
+              where: { 
+                  [Op.or]: [
+                      { facebook_id: facebookId },
+                      ...(email ? [{ email: email }] : [])
+                  ]
+              } 
+          });
+
+          if (user) {
+              if (!user.facebook_id) {
+                  user.facebook_id = facebookId;
+                  user.auth_provider = 'facebook';
+                  await user.save();
+              }
+              return done(null, user);
+          }
+
+          user = await User.create({
+              facebook_id: facebookId,
+              email: email,
+              first_name: profile.name.givenName,
+              last_name: profile.name.familyName,
+              auth_provider: 'facebook'
+          });
+          return done(null, user);
+      } catch (err) { return done(err, null); }
+    }
+  ));
+}
+
+// Twitter Strategy (OAuth 2.0)
+if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
+  passport.use(new TwitterStrategy({
+      clientID: process.env.TWITTER_CLIENT_ID,
+      clientSecret: process.env.TWITTER_CLIENT_SECRET,
+      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/twitter/callback`,
+      clientType: 'confidential',
+      proxy: process.env.NODE_ENV === 'production'
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+          const twitterId = profile.id;
+          const email = profile.emails ? profile.emails[0].value : null;
+
+          let user = await User.findOne({ 
+              where: { 
+                  [Op.or]: [
+                      { twitter_id: twitterId },
+                      ...(email ? [{ email: email }] : [])
+                  ]
+              } 
+          });
+
+          if (user) {
+              if (!user.twitter_id) {
+                  user.twitter_id = twitterId;
+                  user.auth_provider = 'twitter';
+                  await user.save();
+              }
+              return done(null, user);
+          }
+
+          user = await User.create({
+              twitter_id: twitterId,
+              email: email,
+              first_name: profile.displayName.split(' ')[0],
+              last_name: profile.displayName.split(' ')[1] || '',
+              auth_provider: 'twitter'
+          });
+          return done(null, user);
+      } catch (err) { return done(err, null); }
+    }
+  ));
 }
 
 passport.serializeUser((user, done) => {
