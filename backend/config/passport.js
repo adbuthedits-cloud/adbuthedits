@@ -90,6 +90,8 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
       clientID: process.env.TWITTER_CLIENT_ID,
       clientSecret: process.env.TWITTER_CLIENT_SECRET,
       callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/twitter/callback`,
+      authorizationURL: 'https://twitter.com/i/oauth2/authorize',
+      tokenURL: 'https://api.twitter.com/2/oauth2/token',
       clientType: 'confidential',
       proxy: process.env.NODE_ENV === 'production',
       scope: ['users.read', 'tweet.read', 'offline.access']
