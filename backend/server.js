@@ -6,6 +6,8 @@ const redisClient = require('./config/redisClient');
 const cron = require('node-cron');
 const cleanupUserUploads = require('./scripts/userUploadCleanup');
 const { startWorkers } = require('./config/orderQueue');
+const passport = require('./config/passport');
+const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +20,16 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Passport & Session Middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'adbuth_secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Schedule cleanup task to run every day at midnight
 cron.schedule('0 0 * * *', async () => {

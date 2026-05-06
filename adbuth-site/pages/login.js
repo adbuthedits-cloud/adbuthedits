@@ -43,6 +43,22 @@ export default function Login() {
     }, [user, authLoading]);
 
     useEffect(() => {
+        const { token, error } = router.query;
+        if (token) {
+            localStorage.setItem('token', token);
+            window.location.href = '/'; // Full reload to refresh auth state
+        }
+        if (error) {
+            setError(error === 'google_failed' ? 'Google authentication failed' : 'Social login error');
+        }
+    }, [router.query]);
+
+    const handleGoogleLogin = () => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        window.location.href = `${apiUrl}/api/auth/google`;
+    };
+
+    useEffect(() => {
         const handleResize = () => {
             const width = window.innerWidth;
             if (width < 640) { // Mobile
@@ -265,7 +281,10 @@ export default function Login() {
                                         <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">
                                             <FontAwesomeIcon icon={faFacebookF} className="text-lg" />
                                         </button>
-                                        <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">
+                                        <button 
+                                            onClick={handleGoogleLogin}
+                                            className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
+                                        >
                                             <FontAwesomeIcon icon={faGoogle} className="text-lg" />
                                         </button>
                                         <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">

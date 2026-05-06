@@ -133,6 +133,11 @@ export default function Signup() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    const handleGoogleLogin = () => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        window.location.href = `${apiUrl}/api/auth/google`;
+    };
+
     const validateEmail = (email) => {
         return String(email)
             .toLowerCase()
@@ -388,7 +393,10 @@ export default function Signup() {
                                         <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">
                                             <FontAwesomeIcon icon={faFacebookF} className="text-lg" />
                                         </button>
-                                        <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">
+                                        <button 
+                                            onClick={handleGoogleLogin}
+                                            className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
+                                        >
                                             <FontAwesomeIcon icon={faGoogle} className="text-lg" />
                                         </button>
                                         <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">

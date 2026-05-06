@@ -6,6 +6,7 @@ const { User, Admin, Role, AdminSession, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
+const passport = require('../config/passport');
 
 // PUT /api/auth/change-password
 router.put('/change-password', authMiddleware, async (req, res) => {
@@ -145,6 +146,32 @@ router.post('/register', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+// ─── Google OAuth ──────────────────────────────────────────────────────────────
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback', 
+    passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_failed`, session: false }),
+    (req, res) => {
+        const payload = {
+            user: {
+                id: req.user.user_id,
+                role: req.user.role,
+                type: 'customer'
+            }
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET || 'secretkey',
+            { expiresIn: '24h' },
+            (err, token) => {
+                if (err) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=jwt_failed`);
+                res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?token=${token}`);
+            }
+        );
+    }
+);
 
 // POST /api/auth/admin/login
 router.post('/admin/login', async (req, res) => {

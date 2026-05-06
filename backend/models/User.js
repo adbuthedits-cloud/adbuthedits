@@ -30,7 +30,26 @@ const User = sequelize.define('User', {
     },
     password_hash: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // Social users might not have a password initially
+    },
+    google_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+    },
+    facebook_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+    },
+    twitter_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+    },
+    auth_provider: {
+        type: DataTypes.ENUM('local', 'google', 'facebook', 'twitter'),
+        defaultValue: 'local',
     },
     role: {
         type: DataTypes.ENUM('customer'),
