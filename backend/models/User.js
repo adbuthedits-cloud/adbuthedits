@@ -18,7 +18,7 @@ const User = sequelize.define('User', {
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // Social users might not provide an email
         unique: true,
         validate: {
             isEmail: true,
