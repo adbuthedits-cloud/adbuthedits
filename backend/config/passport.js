@@ -94,6 +94,8 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
       tokenURL: 'https://api.twitter.com/2/oauth2/token',
       clientType: 'confidential',
       proxy: process.env.NODE_ENV === 'production',
+      state: true,
+      pkce: true,
       scope: ['users.read', 'tweet.read']
     },
     async (accessToken, refreshToken, profile, done) => {
