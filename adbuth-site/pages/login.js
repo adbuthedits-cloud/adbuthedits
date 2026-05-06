@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faEnvelope, faLock, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import { faFacebookF, faGoogle, faTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faFacebookF, faGoogle, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Beams from '../components/ui/Beams';
@@ -288,7 +288,7 @@ export default function Login() {
                                 <div className="text-center mt-2">
                                     <p className="text-white/60 text-xs mb-3">Sign up with Social Networks</p>
                                     <div className="flex justify-center gap-6">
-                                        <button 
+                                        <button
                                             onClick={handleFacebookLogin}
                                             className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
                                         >
@@ -300,11 +300,11 @@ export default function Login() {
                                         >
                                             <FontAwesomeIcon icon={faGoogle} className="text-lg" />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={handleTwitterLogin}
                                             className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
                                         >
-                                            <FontAwesomeIcon icon={faTwitter} className="text-lg" />
+                                            <FontAwesomeIcon icon={faXTwitter} className="text-lg" />
                                         </button>
                                     </div>
                                 </div>
