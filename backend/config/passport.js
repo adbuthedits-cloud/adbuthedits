@@ -86,12 +86,13 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
 
 // Twitter Strategy (OAuth 2.0)
 if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
-  passport.use(new TwitterStrategy({
+  passport.use('twitter', new TwitterStrategy({
       clientID: process.env.TWITTER_CLIENT_ID,
       clientSecret: process.env.TWITTER_CLIENT_SECRET,
       callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/twitter/callback`,
       clientType: 'confidential',
-      proxy: process.env.NODE_ENV === 'production'
+      proxy: process.env.NODE_ENV === 'production',
+      scope: ['users.read', 'tweet.read', 'offline.access']
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
