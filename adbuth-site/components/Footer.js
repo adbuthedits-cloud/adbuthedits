@@ -52,7 +52,7 @@ export default function Footer() {
               </div>
               <div className="flex gap-4 mt-10 md:mt-6 justify-center md:justify-start">
                 <a href="#" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
-                  <FontAwesomeIcon icon={faTwitter} className="text-xs" />
+                  <FontAwesomeIcon icon={faXTwitter} className="text-xs" />
                 </a>
                 <a href="#" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
                   <FontAwesomeIcon icon={faFacebook} className="text-xs" />

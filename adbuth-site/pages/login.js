@@ -54,8 +54,18 @@ export default function Login() {
     }, [router.query]);
 
     const handleGoogleLogin = () => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        window.location.href = `${apiUrl}/api/auth/google`;
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        window.location.href = `${backendUrl}/api/auth/google`;
+    };
+
+    const handleFacebookLogin = () => {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        window.location.href = `${backendUrl}/api/auth/facebook`;
+    };
+
+    const handleTwitterLogin = () => {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        window.location.href = `${backendUrl}/api/auth/twitter`;
     };
 
     useEffect(() => {
@@ -278,16 +288,22 @@ export default function Login() {
                                 <div className="text-center mt-2">
                                     <p className="text-white/60 text-xs mb-3">Sign up with Social Networks</p>
                                     <div className="flex justify-center gap-6">
-                                        <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">
+                                        <button 
+                                            onClick={handleFacebookLogin}
+                                            className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
+                                        >
                                             <FontAwesomeIcon icon={faFacebookF} className="text-lg" />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={handleGoogleLogin}
                                             className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
                                         >
                                             <FontAwesomeIcon icon={faGoogle} className="text-lg" />
                                         </button>
-                                        <button className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50">
+                                        <button 
+                                            onClick={handleTwitterLogin}
+                                            className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
+                                        >
                                             <FontAwesomeIcon icon={faTwitter} className="text-lg" />
                                         </button>
                                     </div>
