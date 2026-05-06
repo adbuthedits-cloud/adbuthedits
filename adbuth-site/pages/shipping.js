@@ -9,7 +9,7 @@ export default function Shipping() {
         <div className="bg-white min-h-screen font-sans">
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Shipping Policy | Adbuth"}
-                description={seoData?.meta_description || seoData?.description || "Shipping and Delivery Policy for Adbuth Media Works."}
+                description={seoData?.meta_description || seoData?.description || "Shipping and Delivery Policy for Adbuth Verse."}
                 data={seoData}
             />
             <Navbar isdark={true} />

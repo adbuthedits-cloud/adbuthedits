@@ -79,7 +79,7 @@ export default function Services() {
   return (
     <div className=" min-h-screen font-sans">
       <SeoHead
-        title={seoData?.meta_title || seoData?.title || "Services | Adbuth Media Works"}
+        title={seoData?.meta_title || seoData?.title || "Services | Adbuth Verse"}
         description={seoData?.meta_description || seoData?.description || "Explore our wide range of digital services tailored for your business."}
         image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/service-video-editing.png"}
         data={seoData}

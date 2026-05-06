@@ -41,7 +41,7 @@ function MyApp({ Component, pageProps }) {
     <AuthProvider>
       <WishlistProvider>
         <Head>
-          <title>ADBUTH Media Works</title>
+          <title>ADBUTH Verse</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
 

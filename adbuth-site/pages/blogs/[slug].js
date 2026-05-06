@@ -58,10 +58,10 @@ export default function BlogPost() {
           og_image: blog.thumbnail,
           canonical_url: blog.canonical_url
         }}
-        title={`${blog.title} | Adbuth Media Works`}
-        description={blog.meta_description || "Read our latest blog post."}
+        title={`${blog.title} | Adbuth Verse`}
+        description={blog.meta_description || blog.content.substring(0, 160)}
         image={blog.thumbnail}
-        author={blog.author || "Adbuth Media Works"}
+        author={blog.author || "Adbuth Verse"}
       />
       <Navbar highlight="blogs" />
 

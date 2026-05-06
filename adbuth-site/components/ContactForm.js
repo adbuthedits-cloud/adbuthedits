@@ -80,7 +80,7 @@ export default function ContactForm() {
             Ready to bring your vision to life?
           </p>
           <p className="text-md md:text-xl text-gray-700 leading-relaxed max-w-md">
-            Adbuth Media works is here to help
+            Adbuth Verse is here to help
             you stand out in the crowd!
           </p>
         </div>

@@ -9,7 +9,7 @@ export default function Refund() {
         <div className="bg-white min-h-screen font-sans">
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Refund Policy | Adbuth"}
-                description={seoData?.meta_description || seoData?.description || "Refund and Cancellation Policy for Adbuth Media Works."}
+                description={seoData?.meta_description || seoData?.description || "Refund and Cancellation Policy for Adbuth Verse."}
                 data={seoData}
             />
             <Navbar isdark={true} />

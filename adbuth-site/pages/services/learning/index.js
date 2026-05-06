@@ -122,7 +122,7 @@ export default function AdbuthLearning() {
     return (
         <div className="font-sans bg-white selection:bg-pink-500 selection:text-white" >
             <SeoHead
-                title={seoData?.meta_title || seoData?.title || "Learning | Adbuth Media Works"}
+                title={seoData?.meta_title || seoData?.title || "Learning | Adbuth Verse"}
                 description={seoData?.meta_description || seoData?.description || "Empowering teams and creators through AI-driven tools and learning programs."}
                 image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-e-learning.png"}
                 data={seoData}

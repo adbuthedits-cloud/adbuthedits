@@ -81,7 +81,7 @@ export default function ContactUs() {
     return (
         <div className="font-sans overflow-x-hidden bg-white">
             <SeoHead
-                title={seoData?.meta_title || seoData?.title || "Contact Us | Adbuth Media Works"}
+                title={seoData?.meta_title || seoData?.title || "Contact Us | Adbuth Verse"}
                 description={seoData?.meta_description || seoData?.description || "Get in touch with us for your digital marketing needs."}
                 image={seoData?.og_image || "/images/contact-bg.jpg"}
                 data={seoData}

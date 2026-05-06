@@ -24,7 +24,7 @@ const SeoHead = ({ page, data, title, description, image, author, loading = fals
     const meta = data || staticMeta || {};
 
     // Dynamic Fallbacks
-    const finalTitle = meta.meta_title || meta.title || title || 'ADBUTH Media Works';
+    const finalTitle = meta.meta_title || meta.title || title || 'ADBUTH Verse';
     const finalDesc = meta.meta_description || meta.description || description || 'Premium Video Editing Templates and Services';
     const finalKeywords = meta.meta_keywords || meta.keywords || 'video editing, templates, adbuth, media';
     const finalImage = meta.og_image || image || 'https://adbuth.com/og-default.jpg';

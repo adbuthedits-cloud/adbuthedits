@@ -9,7 +9,7 @@ export default function Privacy() {
         <div className="bg-white min-h-screen font-sans">
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Privacy Policy | Adbuth"}
-                description={seoData?.meta_description || seoData?.description || "Privacy Policy for Adbuth Media Works."}
+                description={seoData?.meta_description || seoData?.description || "Privacy Policy for Adbuth Verse."}
                 data={seoData}
             />
             <Navbar isdark={true} />
@@ -19,7 +19,7 @@ export default function Privacy() {
                 <p className="mb-4 text-sm text-gray-500">Last updated: {new Date().toLocaleDateString()}</p>
 
                 <div className="space-y-6 leading-relaxed">
-                    <p>At Adbuth Media Works, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you visit our website.</p>
+                    <p>At Adbuth Verse, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you visit our website.</p>
 
                     <h2 className="text-2xl font-bold mt-8 mb-4">1. Information We Collect</h2>
                     <p>We collect information you provide directly to us, such as when you create an account, make a purchase, or contact us. This may include your name, email address, phone number, and payment information.</p>

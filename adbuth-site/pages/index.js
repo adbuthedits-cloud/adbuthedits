@@ -17,14 +17,14 @@ const sampleBlogs = [
 ]
 
 const faqs = [
-  { q: 'Why does one need to choose Adbuth Media works?', a: 'We bring together a wealth of expertise in editing, sound design, motion graphics, colour grading, animations, and visual effects, all of which are essential to creating a polished, impactful final product. Additionally, we also understand the current trends and latest technologies and deliver them according to your needs.' },
-  { q: 'How Adbuth Media works can add value to your memories?', a: 'Adbuth Media works with their expertise in their field of work enhances the emotional depth of the video, elevating it beyond a simple recording to a cinematic experience ensuring that your memories are immortalized with the highest level of quality, artistry and attention to detail.' },
-  { q: 'How Adbuth Media works deliver your projects on time?', a: 'We provide personalised attention and professional results regardless of the project\'s scale based on first-cum-first-serve basis.' },
-  { q: 'What kind of industries do you serve at Adbuth Media works?', a: 'We serve a diverse clientele, including businesses, advertising agencies, content creators, filmmakers, influencers, YouTubers and more.' },
+  { q: 'Why does one need to choose Adbuth Verse?', a: 'We bring together a wealth of expertise in editing, sound design, motion graphics, colour grading, animations, and visual effects, all of which are essential to creating a polished, impactful final product. Additionally, we also understand the current trends and latest technologies and deliver them according to your needs.' },
+  { q: 'How Adbuth Verse can add value to your memories?', a: 'Adbuth Verse with their expertise in their field of work enhances the emotional depth of the video, elevating it beyond a simple recording to a cinematic experience ensuring that your memories are immortalized with the highest level of quality, artistry and attention to detail.' },
+  { q: 'How Adbuth Verse deliver your projects on time?', a: 'We provide personalised attention and professional results regardless of the project\'s scale based on first-cum-first-serve basis.' },
+  { q: 'What kind of industries do you serve at Adbuth Verse?', a: 'We serve a diverse clientele, including businesses, advertising agencies, content creators, filmmakers, influencers, YouTubers and more.' },
   { q: 'Do you work with clients of all project sizes?', a: 'Whether you\'re working on a small personal project or a large-scale production, we offer customized solutions for projects of any scale.' },
   { q: 'How can I submit my footage/ video for editing?', a: 'You can upload your content to our secured cloud storage. Once we agree to work on the project, a personalised and secured cloud drive access will be provided.' },
   { q: 'Can you help with just specific aspects of post-production?', a: 'Yes, we can! Whether you need help with a particular service like video editing, color grading, or sound design, or need comprehensive post-production studio support, we are flexible and can tailor our services to fit the scope of your project.' },
-  { q: 'At Adbuth Media works, do you offer specialised editing services (e.g., 4K editing, VFX, animation)?', a: 'Yes, we offer specialised services such as high-resolution (4K) editing, visual effects (VFX), animation, and other advanced editing techniques.' },
+  { q: 'At Adbuth Verse, do you offer specialised editing services (e.g., 4K editing, VFX, animation)?', a: 'Yes, we offer specialised services such as high-resolution (4K) editing, visual effects (VFX), animation, and other advanced editing techniques.' },
 ]
 
 

@@ -103,10 +103,10 @@ export default function Blogs() {
   return (
     <div className="bg-black min-h-screen text-white font-sans">
       <SeoHead
-        title={seoData?.meta_title || seoData?.title || "Our Blog | Adbuth Media Works"}
-        description={seoData?.meta_description || seoData?.description || "Explore the latest insights, trends, and stories from Adbuth Media Works."}
+        title={seoData?.meta_title || seoData?.title || "Our Blog | Adbuth Verse"}
+        description={seoData?.meta_description || seoData?.description || "Explore the latest insights, trends, and stories from Adbuth Verse."}
         image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/blogs/blogs-header.png"}
-        author={seoData?.author || "Adbuth Media Works"}
+        author={seoData?.author || "Adbuth Verse"}
         data={seoData} // Pass full object for keywords, canonical
       />
       <Navbar highlight="blogs" />

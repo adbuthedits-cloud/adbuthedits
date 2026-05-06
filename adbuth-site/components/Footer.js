@@ -17,7 +17,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-xs text-gray-500 leading-relaxed w-full  lg:px-0  lg:max-w-xs text-center md:text-left">
-              Welcome to Adbuth Media Works, a premier post
+              Welcome to Adbuth Verse, a premier post
               production studio and your video editing partner!
             </p>
           </div>
@@ -66,7 +66,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row flex-start items-center gap-4 text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-          <p>© 2025 Adbuth Media Works. All</p>
+          <p>© 2025 Adbuth Verse. All</p>
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-[#7D287E]">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-[#7D287E]">Terms of Use</Link>

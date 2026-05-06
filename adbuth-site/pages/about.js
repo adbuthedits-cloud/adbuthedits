@@ -16,8 +16,8 @@ export default function About() {
   return (
     <div>
       <SeoHead
-        title={seoData?.meta_title || seoData?.title || "About Us | Adbuth Media Works"}
-        description={seoData?.meta_description || seoData?.description || "Learn more about Adbuth Media Works, our team, and our mission."}
+        title={seoData?.meta_title || seoData?.title || "About Us | Adbuth Verse"}
+        description={seoData?.meta_description || seoData?.description || "Learn more about Adbuth Verse, our team, and our mission."}
         image={seoData?.og_image || "/images/about-bg.jpg"}
         data={seoData}
       />
@@ -59,7 +59,7 @@ export default function About() {
               className="space-y-6 text-gray-700 text-sm leading-relaxed text-justify"
             >
               <p>
-                Adbuth Media Works is a dynamic post production studio fueled by a team of passionate, skilled professionals from all across India, united by a shared commitment to excellence. Our exceptional expertise and innovative spirit form the foundation of every project we undertake. We are your trusted partner for all your video editing needs, from the initial creative concept to the final polished masterpiece.
+                Adbuth Verse is a dynamic post production studio fueled by a team of passionate, skilled professionals from all across India, united by a shared commitment to excellence. Our exceptional expertise and innovative spirit form the foundation of every project we undertake. We are your trusted partner for all your video editing needs, from the initial creative concept to the final polished masterpiece.
               </p>
               <p className="md:font-semibold">
                 We don't just edit; we transform your ideas into stunning visual stories.
@@ -77,13 +77,13 @@ export default function About() {
                       className="space-y-6 overflow-hidden"
                     >
                       <p>
-                        At Adbuth Media Works, every client is unique, and we pride ourselves on offering a versatile suite of services tailored to projects of any size or scope. Equipped with the latest industry-standard tools, we harness cutting-edge software like DaVinci Resolve, Adobe Creative Cloud, and Final Cut Pro to provide you with excellent online editing service. Additionally, specialized hardware like colour-calibrated high-resolution monitors, Apple devices, and colour-grading panels by Black Magic play pivotal roles in achieving seamless post-production workflows and delivering highest quality video editing products to our customers. Our online editing services involve high-quality rendering, color grading, visual effects, and sound synchronization.
+                        At Adbuth Verse, every client is unique, and we pride ourselves on offering a versatile suite of services tailored to projects of any size or scope. Equipped with the latest industry-standard tools, we harness cutting-edge software like DaVinci Resolve, Adobe Creative Cloud, and Final Cut Pro to provide you with excellent online editing service. Additionally, specialized hardware like colour-calibrated high-resolution monitors, Apple devices, and colour-grading panels by Black Magic play pivotal roles in achieving seamless post-production workflows and delivering highest quality video editing products to our customers. Our online editing services involve high-quality rendering, color grading, visual effects, and sound synchronization.
                       </p>
                       <p>
-                        At Adbuth Media Works, creativity and precision are at the core of everything we do. Whether it's crafting a flawless advertisement, a cinematic short film, a corporate video, a vibrant YouTube video, or a cherished personal memory brought to life, our top-tier video editing services cater to both professional and personal aspirations. We're here to refine your footage, enhance your visuals, and elevate your story with unmatched brilliance.
+                        At Adbuth Verse, creativity and precision are at the core of everything we do. Whether it's crafting a flawless advertisement, a cinematic short film, a corporate video, a vibrant YouTube video, or a cherished personal memory brought to life, our top-tier video editing services cater to both professional and personal aspirations. We're here to refine your footage, enhance your visuals, and elevate your story with unmatched brilliance.
                       </p>
                       <p>
-                        Adbuth Media Works is your go-to partner for all your video editing and post-production needs.
+                        Adbuth Verse is your go-to partner for all your video editing and post-production needs.
                       </p>
                     </motion.div>
                   )}
@@ -105,13 +105,13 @@ export default function About() {
               {/* Desktop: Always show full content */}
               <div className="hidden md:block space-y-6">
                 <p>
-                  At Adbuth Media Works, every client is unique, and we pride ourselves on offering a versatile suite of services tailored to projects of any size or scope. Equipped with the latest industry-standard tools, we harness cutting-edge software like DaVinci Resolve, Adobe Creative Cloud, and Final Cut Pro to provide you with excellent online editing service. Additionally, specialized hardware like colour-calibrated high-resolution monitors, Apple devices, and colour-grading panels by Black Magic play pivotal roles in achieving seamless post-production workflows and delivering highest quality video editing products to our customers. Our online editing services involve high-quality rendering, color grading, visual effects, and sound synchronization.
+                  At Adbuth Verse, every client is unique, and we pride ourselves on offering a versatile suite of services tailored to projects of any size or scope. Equipped with the latest industry-standard tools, we harness cutting-edge software like DaVinci Resolve, Adobe Creative Cloud, and Final Cut Pro to provide you with excellent online editing service. Additionally, specialized hardware like colour-calibrated high-resolution monitors, Apple devices, and colour-grading panels by Black Magic play pivotal roles in achieving seamless post-production workflows and delivering highest quality video editing products to our customers. Our online editing services involve high-quality rendering, color grading, visual effects, and sound synchronization.
                 </p>
                 <p>
-                  At Adbuth Media Works, creativity and precision are at the core of everything we do. Whether it's crafting a flawless advertisement, a cinematic short film, a corporate video, a vibrant YouTube video, or a cherished personal memory brought to life, our top-tier video editing services cater to both professional and personal aspirations. We're here to refine your footage, enhance your visuals, and elevate your story with unmatched brilliance.
+                  At Adbuth Verse, creativity and precision are at the core of everything we do. Whether it's crafting a flawless advertisement, a cinematic short film, a corporate video, a vibrant YouTube video, or a cherished personal memory brought to life, our top-tier video editing services cater to both professional and personal aspirations. We're here to refine your footage, enhance your visuals, and elevate your story with unmatched brilliance.
                 </p>
                 <p>
-                  Adbuth Media Works is your go-to partner for all your video editing and post-production needs.
+                  Adbuth Verse is your go-to partner for all your video editing and post-production needs.
                 </p>
               </div>
             </motion.div>
@@ -156,7 +156,7 @@ export default function About() {
               viewport={{ once: true }}
               className="text-3xl font-bold uppercase text-gray-700 mb-12"
             >
-              MEET THE FOUNDERS OF ADBUTH MEDIA WORKS
+              MEET THE FOUNDERS OF ADBUTH VERSE
             </motion.h3>
 
             <div className="flex flex-wrap justify-center gap-12">
@@ -203,7 +203,7 @@ export default function About() {
               viewport={{ once: true }}
               className="text-3xl font-bold uppercase text-gray-700 mb-12"
             >
-              OUR TEAM AT ADBUTH MEDIA WORKS
+              OUR TEAM AT ADBUTH VERSE
             </motion.h3>
 
             {/* Mobile: Infinite Scrolling Rows */}

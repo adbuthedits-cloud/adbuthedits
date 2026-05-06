@@ -185,7 +185,7 @@ const WhatWeDoDesktop = () => {
                                     transition={{ delay: 0.3, duration: 0.8 }}
                                     className="text-gray-800 text-lg font-medium leading-tight mb-8"
                                 >
-                                    At Adbuth Media works post production studio, we don’t just edit videos; we curate experiences. With state-of-the-art technology and a team of skilled professionals, our studio offers a comprehensive range of top-notch services. Our company provide three major services
+                                    At Adbuth Verse post production studio, we don’t just edit videos; we curate experiences. With state-of-the-art technology and a team of skilled professionals, our studio offers a comprehensive range of top-notch services. Our company provide three major services
                                 </motion.div>
                             </div>
                         </div>
@@ -240,7 +240,7 @@ const WhatWeDoMobile = () => {
                         transition={{ delay: 0.3, duration: 0.8 }}
                         className="text-gray-800 text-sm md:text-xl font-medium leading-relaxed mb-8 max-w-md md:max-w-xl mx-auto"
                     >
-                        At Adbuth Media works post production studio, we don't just edit videos; we curate experiences.
+                        At Adbuth Verse post production studio, we don't just edit videos; we curate experiences.
                         We provide comprehensive top-notch services tailored to your goals.
                     </motion.div>
                 </div>

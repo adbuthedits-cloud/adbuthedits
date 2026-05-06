@@ -56,7 +56,7 @@ const DigitalInvitations = () => {
 
     return (
         <div className="bg-white min-h-screen font-sans text-gray-900">
-            <SeoHead page="service-design-invitations" title="Digital Invitations | Adbuth Media Works" />
+            <SeoHead page="service-design-invitations" title="Digital Invitations | Adbuth Verse" />
 
             <Navbar highlight="services" isdark={false} />
 

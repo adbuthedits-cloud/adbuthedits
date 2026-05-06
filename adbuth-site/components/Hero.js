@@ -27,18 +27,18 @@ export default function Hero() {
         {/* Text Section */}
         <div className="flex flex-col justify-center text-center md:text-left">
           <h1 className="text-4xl md:text-4xl lg:text-7xl font-bold leading-tight tracking-tight">
-            <ClipTypeStagger mode="word" duration={.6} stagger={0.2}>
+            <ClipTypeStagger mode="word" duration={.2} stagger={0.1}>
               Great stories deserve great editing
             </ClipTypeStagger>
           </h1>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
+            transition={{ delay: 0, duration: 0.4 }}
             className="mt-6"
           >
             <p className="text-gray-200 text-lg md:text-xl">
-              At Adbuth Media works, we make sure your visions don't just come to life, they shine.
+              At Adbuth Verse, we make sure your visions don't just come to life, they shine.
             </p>
           </motion.div>
         </div>
@@ -48,7 +48,7 @@ export default function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.2, delay: 0 }}
             className="w-full max-w-[320px]"
           >
             <HeroCard />
@@ -60,7 +60,7 @@ export default function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.2, delay: 0 }}
             className="w-full"
           >
             <HeroCard />
