@@ -21,6 +21,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files with long-term caching (Expires headers)
+const path = require('path');
+const oneYear = 31536000000;
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+    maxAge: oneYear,
+    immutable: true
+}));
+app.use(express.static(path.join(__dirname, 'public'), {
+    maxAge: oneYear
+}));
+
 // Passport & Session Middleware
 app.use(session({
     secret: process.env.SESSION_SECRET || 'adbuth_secret',

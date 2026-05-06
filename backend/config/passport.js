@@ -11,6 +11,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       proxy: process.env.NODE_ENV === 'production'
     },
     async (accessToken, refreshToken, profile, done) => {
+      console.log('[Passport] Attempting Google Login. Callback URL:', `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`);
       try {
           const email = profile.emails[0].value;
           const googleId = profile.id;

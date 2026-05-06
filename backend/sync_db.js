@@ -5,7 +5,7 @@ const syncDatabase = async () => {
     try {
         console.log('Connecting to database and syncing tables...');
         // This will create tables if they do not exist (and does nothing if they already exist)
-        await sequelize.sync({ alter: false }); 
+        await sequelize.sync({ alter: true }); 
         console.log('Database tables synced successfully!');
         process.exit(0);
     } catch (err) {

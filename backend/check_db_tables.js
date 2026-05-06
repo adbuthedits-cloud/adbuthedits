@@ -1,21 +1,21 @@
 const sequelize = require('./config/database');
 
-async function check() {
+const checkColumns = async () => {
     try {
-        const [results] = await sequelize.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
-        console.log('Tables in DB:', results.map(r => r.table_name));
-
-        const [ratingsLower] = await sequelize.query("SELECT COUNT(*) FROM ratings").catch((e) => [[{ count: 'not found: ' + e.message }]]);
-        console.log('Count in lowercase "ratings":', ratingsLower[0].count);
-
-        const [ratingsUpper] = await sequelize.query('SELECT COUNT(*) FROM "Ratings"').catch((e) => [[{ count: 'not found: ' + e.message }]]);
-        console.log('Count in quoted "Ratings":', ratingsUpper[0].count);
-
+        const [results] = await sequelize.query(`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'Users'
+        `);
+        console.log('Columns in Users table:');
+        results.forEach(row => {
+            console.log(`- ${row.column_name}: ${row.data_type}`);
+        });
         process.exit(0);
     } catch (err) {
-        console.error('Check failed:', err);
+        console.error('Error fetching columns:', err);
         process.exit(1);
     }
-}
+};
 
-check();
+checkColumns();
