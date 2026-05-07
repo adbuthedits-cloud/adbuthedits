@@ -2,11 +2,27 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const https = require('https');
+const crypto = require('crypto');
 const { User, Admin, Role, AdminSession, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const passport = require('../config/passport');
+
+const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID;
+const TWITTER_CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET;
+const BACKEND_URL = (process.env.BACKEND_URL || 'https://adbuth-backend.onrender.com').replace(/\/$/, '');
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://www.adbuthverse.com').replace(/\/$/, '');
+const TWITTER_CALLBACK_URL = `${BACKEND_URL}/api/auth/twitter/callback`;
+
+// Helper: PKCE code verifier & challenge
+function generateCodeVerifier() {
+  return crypto.randomBytes(32).toString('base64url');
+}
+function generateCodeChallenge(verifier) {
+  return crypto.createHash('sha256').update(verifier).digest('base64url');
+}
 
 // PUT /api/auth/change-password
 router.put('/change-password', authMiddleware, async (req, res) => {
@@ -171,17 +187,153 @@ router.get('/facebook/callback',
     }
 );
 
-router.get('/twitter', passport.authenticate('twitter', { scope: ['users.read', 'tweet.read', 'offline.access'] }));
-router.get('/twitter/callback', 
-    passport.authenticate('twitter', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=twitter_failed`, session: false }),
-    (req, res) => {
-        const payload = { user: { id: req.user.user_id, role: req.user.role, type: 'customer' } };
-        jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, token) => {
-            if (err) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=jwt_failed`);
-            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?token=${token}`);
-        });
+// ============================================================
+// TWITTER MANUAL OAUTH2 + PKCE ROUTES
+// ============================================================
+
+// Step 1: Redirect user to Twitter's authorization page
+router.get('/twitter', (req, res) => {
+    if (!TWITTER_CLIENT_ID) return res.redirect(`${FRONTEND_URL}/login?error=twitter_not_configured`);
+
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = generateCodeChallenge(codeVerifier);
+    const state = crypto.randomBytes(16).toString('hex');
+
+    // Store in session for verification in callback
+    req.session.twitter_code_verifier = codeVerifier;
+    req.session.twitter_state = state;
+
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: TWITTER_CLIENT_ID,
+        redirect_uri: TWITTER_CALLBACK_URL,
+        scope: 'users.read tweet.read offline.access',
+        state: state,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256'
+    });
+
+    res.redirect(`https://twitter.com/i/oauth2/authorize?${params.toString()}`);
+});
+
+// Step 2: Handle callback from Twitter
+router.get('/twitter/callback', async (req, res) => {
+    const { code, state, error } = req.query;
+
+    if (error) {
+        console.error('[Twitter Callback Error]', error);
+        return res.redirect(`${FRONTEND_URL}/login?error=twitter_denied`);
     }
-);
+
+    // Verify state
+    if (!state || state !== req.session.twitter_state) {
+        console.error('[Twitter State Mismatch]', { received: state, expected: req.session.twitter_state });
+        return res.redirect(`${FRONTEND_URL}/login?error=twitter_state_mismatch`);
+    }
+
+    const codeVerifier = req.session.twitter_code_verifier;
+    if (!codeVerifier) {
+        console.error('[Twitter Missing Code Verifier]');
+        return res.redirect(`${FRONTEND_URL}/login?error=twitter_session_expired`);
+    }
+
+    // Clean session
+    delete req.session.twitter_code_verifier;
+    delete req.session.twitter_state;
+
+    try {
+        // Step 2a: Exchange authorization code for access token
+        const tokenBody = new URLSearchParams({
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: TWITTER_CALLBACK_URL,
+            code_verifier: codeVerifier
+        }).toString();
+
+        const credentials = Buffer.from(`${TWITTER_CLIENT_ID}:${TWITTER_CLIENT_SECRET}`).toString('base64');
+
+        const tokenResponse = await new Promise((resolve, reject) => {
+            const options = {
+                hostname: 'api.twitter.com',
+                path: '/2/oauth2/token',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Basic ${credentials}`,
+                    'Content-Length': Buffer.byteLength(tokenBody)
+                }
+            };
+            const request = https.request(options, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => resolve({ status: response.statusCode, body: data }));
+            });
+            request.on('error', reject);
+            request.write(tokenBody);
+            request.end();
+        });
+
+        const tokenData = JSON.parse(tokenResponse.body);
+        if (!tokenData.access_token) {
+            console.error('[Twitter Token Error]', tokenData);
+            return res.redirect(`${FRONTEND_URL}/login?error=twitter_token_failed`);
+        }
+
+        // Step 2b: Fetch user profile from X API v2
+        const profileResponse = await new Promise((resolve, reject) => {
+            const options = {
+                hostname: 'api.twitter.com',
+                path: '/2/users/me?user.fields=name,username,id',
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+            };
+            const request = https.request(options, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => resolve({ status: response.statusCode, body: data }));
+            });
+            request.on('error', reject);
+            request.end();
+        });
+
+        const profileData = JSON.parse(profileResponse.body);
+        if (!profileData.data) {
+            console.error('[Twitter Profile Error]', profileData);
+            return res.redirect(`${FRONTEND_URL}/login?error=twitter_profile_failed`);
+        }
+
+        const { id: twitterId, name, username } = profileData.data;
+        const nameParts = (name || username || 'Twitter User').split(' ');
+
+        // Step 2c: Find or create user
+        let user = await User.findOne({ where: { twitter_id: twitterId } });
+
+        if (!user) {
+            user = await User.create({
+                twitter_id: twitterId,
+                email: null,
+                first_name: nameParts[0],
+                last_name: nameParts.slice(1).join(' ') || '',
+                auth_provider: 'twitter'
+            });
+        }
+
+        // Step 2d: Generate JWT and redirect to frontend
+        const payload = { user: { id: user.user_id, role: user.role, type: 'customer' } };
+        const token = await new Promise((resolve, reject) => {
+            jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, t) => {
+                if (err) reject(err); else resolve(t);
+            });
+        });
+
+        return res.redirect(`${FRONTEND_URL}/login?token=${token}`);
+
+    } catch (err) {
+        console.error('[Twitter Auth Fatal Error]', err);
+        return res.redirect(`${FRONTEND_URL}/login?error=twitter_failed`);
+    }
+});
+
 
 // POST /api/auth/admin/login
 router.post('/admin/login', async (req, res) => {
