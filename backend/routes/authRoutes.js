@@ -163,26 +163,32 @@ router.post('/register', async (req, res) => {
     }
 });
 
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', 
-    passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_failed`, session: false }),
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
+router.get('/google/callback',
+    passport.authenticate('google', {
+        failureRedirect: `${FRONTEND_URL}/login?error=google_failed`,
+        session: false
+    }),
     (req, res) => {
         const payload = { user: { id: req.user.user_id, role: req.user.role, type: 'customer' } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, token) => {
-            if (err) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=jwt_failed`);
-            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?token=${token}`);
+            if (err) return res.redirect(`${FRONTEND_URL}/login?error=jwt_failed`);
+            res.redirect(`${FRONTEND_URL}/login?token=${token}`);
         });
     }
 );
 
-router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
-router.get('/facebook/callback', 
-    passport.authenticate('facebook', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=facebook_failed`, session: false }),
+router.get('/facebook', passport.authenticate('facebook', { scope: ['email'], session: false }));
+router.get('/facebook/callback',
+    passport.authenticate('facebook', {
+        failureRedirect: `${FRONTEND_URL}/login?error=facebook_failed`,
+        session: false
+    }),
     (req, res) => {
         const payload = { user: { id: req.user.user_id, role: req.user.role, type: 'customer' } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, token) => {
-            if (err) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=jwt_failed`);
-            res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?token=${token}`);
+            if (err) return res.redirect(`${FRONTEND_URL}/login?error=jwt_failed`);
+            res.redirect(`${FRONTEND_URL}/login?token=${token}`);
         });
     }
 );
