@@ -12,6 +12,9 @@ const session = require('express-session');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for secure cookies on Render/proxies
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors({
     origin: '*',
