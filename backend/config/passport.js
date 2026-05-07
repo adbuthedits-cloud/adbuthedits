@@ -3,13 +3,15 @@ const { User } = require('../models');
 const { Op } = require('sequelize');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
-const OAuth2Strategy = require('passport-oauth2').Strategy;
+const TwitterStrategy = require('passport-twitter-oauth2').Strategy;
+
+const backendUrl = (process.env.BACKEND_URL || 'https://adbuth-backend.onrender.com').replace(/\/$/, '');
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`,
+      callbackURL: `${backendUrl}/api/auth/google/callback`,
       proxy: process.env.NODE_ENV === 'production'
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -45,7 +47,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
   passport.use(new FacebookStrategy({
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/facebook/callback`,
+      callbackURL: `${backendUrl}/api/auth/facebook/callback`,
       profileFields: ['id', 'emails', 'name'],
       proxy: process.env.NODE_ENV === 'production'
     },
@@ -85,21 +87,21 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
   ));
 }
 
-// Twitter Strategy (Manual OAuth 2.0 with PKCE)
+// Twitter Strategy (Specialized OAuth 2.0 with PKCE)
 if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
-  const twitterStrategy = new OAuth2Strategy({
-      authorizationURL: 'https://twitter.com/i/oauth2/authorize',
-      tokenURL: 'https://api.twitter.com/2/oauth2/token',
+  passport.use('twitter', new TwitterStrategy({
       clientID: process.env.TWITTER_CLIENT_ID,
       clientSecret: process.env.TWITTER_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/twitter/callback`,
-      state: true,
-      pkce: true,
-      scope: ['users.read', 'tweet.read']
-  }, async (accessToken, refreshToken, profile, done) => {
+      callbackURL: `${backendUrl}/api/auth/twitter/callback`,
+      clientType: 'confidential',
+      proxy: process.env.NODE_ENV === 'production',
+      scope: ['users.read', 'tweet.read', 'offline.access']
+    },
+    async (accessToken, refreshToken, profile, done) => {
       try {
           const twitterId = profile.id;
-          const email = profile.email || null;
+          // Note: profile.emails might be available if the app is approved for email access
+          const email = (profile.emails && profile.emails[0]) ? profile.emails[0].value : null;
 
           let user = await User.findOne({ 
               where: { 
@@ -122,31 +124,14 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
           user = await User.create({
               twitter_id: twitterId,
               email: email,
-              first_name: profile.name.split(' ')[0],
-              last_name: profile.name.split(' ')[1] || '',
+              first_name: profile.displayName ? profile.displayName.split(' ')[0] : (profile.username || 'Twitter User'),
+              last_name: profile.displayName ? (profile.displayName.split(' ')[1] || '') : '',
               auth_provider: 'twitter'
           });
           return done(null, user);
       } catch (err) { return done(err, null); }
-  });
-
-  // Manual Profile Fetcher for X API v2
-  twitterStrategy.userProfile = function(accessToken, done) {
-      this._oauth2.get('https://api.twitter.com/2/users/me', accessToken, (err, body) => {
-          if (err) return done(err);
-          try {
-              const json = JSON.parse(body);
-              const profile = {
-                  id: json.data.id,
-                  name: json.data.name,
-                  username: json.data.username
-              };
-              done(null, profile);
-          } catch (e) { done(e); }
-      });
-  };
-
-  passport.use('twitter', twitterStrategy);
+    }
+  ));
 }
 
 passport.serializeUser((user, done) => {
