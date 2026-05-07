@@ -6,13 +6,13 @@ import useSeo from '../hooks/useSeo';
 export default function Privacy() {
     const { seoData } = useSeo('privacy');
     return (
-        <div className="bg-white min-h-screen font-sans">
+        <div className="bg-white min-h-screen font-sans pt-24">
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Privacy Policy | Adbuth"}
                 description={seoData?.meta_description || seoData?.description || "Privacy Policy for Adbuth Verse."}
                 data={seoData}
             />
-            <Navbar isdark={true} />
+            <Navbar isdark={false} />
 
             <div className="max-w-4xl mx-auto px-6 py-20 text-gray-800">
                 <h1 className="text-4xl font-bold mb-8 text-[#7D287E]">Privacy Policy</h1>
