@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faInstagram, faFacebook, faYoutube } from '@fortawesome/free-brands-svg-icons';
+import { faInstagram, faFacebook, faYoutube, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
 
@@ -99,6 +99,7 @@ export default function ContactUs() {
                             <a href="#" className="hover:text-pink-500 transition-colors"><FontAwesomeIcon icon={faInstagram} /></a>
                             <a href="#" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faFacebook} /></a>
                             <a href="#" className="hover:text-red-500 transition-colors"><FontAwesomeIcon icon={faYoutube} /></a>
+                            <a href="#" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faLinkedin} /></a>
                         </div>
                     </div>
                 </div>
