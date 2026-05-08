@@ -28,7 +28,8 @@ import {
     faUserShield,
     faClockRotateLeft,
     faRoute,
-    faClipboardCheck
+    faClipboardCheck,
+    faEnvelope
 } from "@fortawesome/free-solid-svg-icons";
 import { getAuthToken, getAuthUser, canAccessModule } from "../utils/auth";
 import setupAxiosInterceptors from "../utils/axiosConfig";
@@ -214,6 +215,7 @@ export default function AdminLayout({ children }) {
 
                     {canSee("reviews") && <MenuItem href="/reviews" icon={faStar} label="Reviews" collapsed={collapsed} />}
                     {canSee("payments") && <MenuItem href="/payments" icon={faWallet} label="Payments" collapsed={collapsed} />}
+                    {canSee("enquiries") && <MenuItem href="/enquiries" icon={faEnvelope} label="Enquiries" collapsed={collapsed} />}
 
                     {canSee("marketing") && (
                         <>
