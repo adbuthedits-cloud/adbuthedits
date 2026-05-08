@@ -7,7 +7,7 @@ import Footer from '../../../../components/Footer';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowRight, faChevronLeft, faChevronRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faChevronLeft, faChevronRight, faArrowLeft, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
 
 export default function AdbuthPolitics() {
@@ -19,12 +19,12 @@ export default function AdbuthPolitics() {
         {
             title: "Political Campaign Films",
             desc: "From campaign launch videos to manifesto explainers. We create high-impact films that showcase your leadership vision, party values, and achievements designed to emotionally engage and energize supporters. Perfect for rallies, social media, and TV ads.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/Political%20Campaign%20Films.png"
+            video: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/16%20Political%20Campaign%20Films%20V1.1.mp4"
         },
         {
             title: "Constituency Videos",
             desc: "Every voter wants to know what their leader does. Our constituency videos highlight ground-level development, public interactions, and your role in driving change within the community. These videos strengthen your local reputation and help you stay connected with your people regularly.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/Constituency%20Videos.png"
+            video: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/Constituency%20Video-V1.1.mp4"
         }
     ];
 
@@ -52,6 +52,28 @@ export default function AdbuthPolitics() {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const VideoPlayer = ({ src, className = "" }) => {
+        const [isMuted, setIsMuted] = useState(true);
+        return (
+            <div className={`absolute inset-0 overflow-hidden ${className}`}>
+                <video 
+                    src={src} 
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted={isMuted}
+                    loop
+                    playsInline
+                />
+                <button 
+                    onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                    className="absolute bottom-4 right-4 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 pointer-events-auto"
+                >
+                    <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className="text-[10px]" />
+                </button>
+            </div>
+        );
+    };
 
     return (
         <div className="font-sans bg-white text-black overflow-x-hidden">
@@ -247,14 +269,8 @@ export default function AdbuthPolitics() {
                             }}
                             className="text-center group px-12"
                         >
-                            <div className="h-[350px] w-full max-w-[280px] mx-auto bg-gray-200 mb-6 overflow-hidden relative shadow-sm">
-                                <Image
-                                    src={servicesList[currentService].image}
-                                    alt={servicesList[currentService].title}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 280px"
-                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                />
+                            <div className="aspect-[3/4] w-full max-w-[280px] mx-auto bg-gray-900 mb-6 overflow-hidden relative shadow-sm rounded-xl">
+                                <VideoPlayer src={servicesList[currentService].video} />
                             </div>
                             <h3 className="text-2xl font-bold mb-3">{servicesList[currentService].title}</h3>
                             <p className="text-[#7D287E] text-sm max-w-sm mx-auto leading-relaxed">
@@ -281,14 +297,8 @@ export default function AdbuthPolitics() {
                                 style={{ y: idx % 2 === 0 ? y1 : y2 }}
                                 className="text-center group cursor-pointer"
                             >
-                                <div className="h-[400px] w-[300px] md:h-[300px] md:w-[240px] lg:h-[400px] lg:w-[300px] mx-auto bg-gray-200 mb-6 overflow-hidden relative shadow-sm">
-                                    <Image
-                                        src={service.image}
-                                        alt={service.title}
-                                        fill
-                                        sizes="(max-width: 1024px) 240px, 300px"
-                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
+                                <div className="aspect-[3/4] h-[400px] w-[300px] md:h-[300px] md:w-[240px] lg:h-[400px] lg:w-[300px] mx-auto bg-gray-900 mb-6 overflow-hidden relative shadow-sm rounded-xl">
+                                    <VideoPlayer src={service.video} />
                                 </div>
                                 <h3 className="text-2xl md:text-xl lg:text-2xl font-bold mb-3">{service.title}</h3>
                                 <p className="text-[#7D287E] text-sm md:text-xs lg:text-sm max-w-sm mx-auto leading-relaxed">

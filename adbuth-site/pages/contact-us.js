@@ -89,10 +89,10 @@ export default function ContactUs() {
             <Navbar highlight="contact" isdark={true} />
 
             {/* Hero / Header Section */}
-            <section className="text-white md:h-[80vh] h-[65vh]  flex md:items-end items-center px-6 pb-24 lg:px-20 md:px-16 relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/contact/contact-header-bg.png')" }}>
+            <section className="text-white md:h-[50vh] lg:h-[80vh] h-[65vh]  flex md:items-end items-center px-6 pb-24 lg:px-20 md:px-16 relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/contact/contact-header-bg.png')" }}>
                 <div className="max-w-7xl lg:mx-20 mx-0">
                     <div className="max-w-xl">
-                        <h1 className="text-4xl lg:text-6xl md:text-4xl font-bold mb-4">Contact Us</h1>
+                        <h1 className="text-4xl lg:text-6xl md:text-4xl font-bold mb-4 md:mb-14 lg:mb-4">Contact Us</h1>
                         <p className="text-gray-400 text-sm md:text-base lg:mb-16 md:mb-16 mb-12">For all the Post video editing services</p>
 
                         <div className="flex gap-6 text-2xl">
@@ -223,11 +223,11 @@ export default function ContactUs() {
                             <div className="bg-[#000B60] text-white p-8 rounded-2xl shadow-xl w-full">
                                 <div className="flex flex-col lg:flex-row lg:justify-between justify-around lg:items-center items-start h-32">
                                     <div className="flex flex-col mb-5">
-                                        <span className="text-base">Mobile number   </span>
+                                        <span className="text-base">Mobile number</span>
                                         <a href="tel:+919182683055">+91 91826 83055</a>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-base">Mail Us on   </span>
+                                        <span className="text-base">Mail Us on</span>
                                         <a href="mailto:[adbuthedits@gmail.com]">adbuthedits@gmail.com</a>
                                     </div>
                                 </div>

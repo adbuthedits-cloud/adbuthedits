@@ -6,34 +6,55 @@ import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faVolumeUp, faVolumeMute, faPlay } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
 
 export default function AdbuthCorporate() {
     const { seoData } = useSeo('adbuth-corporate');
 
+    const VideoPlayer = ({ src, className = "" }) => {
+        const [isMuted, setIsMuted] = useState(true);
+        return (
+            <div className={`absolute inset-0 overflow-hidden ${className}`}>
+                <video
+                    src={src}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted={isMuted}
+                    loop
+                    playsInline
+                    preload="auto"
+                />
+                <button
+                    onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                    className="absolute bottom-4 right-4 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 pointer-events-auto"
+                >
+                    <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className="text-[10px]" />
+                </button>
+            </div>
+        );
+    };
+
     // ─── Card data ─────────────────────────────────────────────────────────────
     const CARDS = [
-        { title: 'Corporate Films', desc: 'High-quality films that highlight your company\'s values, culture, and achievements.', images: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/corporate-films.png' },
-        { title: 'Training Videos', desc: 'Engaging, easy-to-follow content to educate and upskill employees effectively.', images: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/training-videos.png' },
-        { title: 'Brand Stories', desc: 'Narratives that showcase your brand journey, connect emotionally, and leave a lasting impact.', images: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/brand-stories.png' },
+        { title: 'Corporate Films', desc: 'High-quality films that highlight your company\'s values, culture, and achievements.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/corporatefilms-v1.1.mp4' },
+        { title: 'Training Videos', desc: 'Engaging, easy-to-follow content to educate and upskill employees effectively.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/Training.mp4' },
+        { title: 'Brand Stories', desc: 'Narratives that showcase your brand journey, connect emotionally, and leave a lasting impact.', video: '' },
     ];
     // Triple the array so the user can scroll infinitely in both directions
-    const LOOPED_CARDS = [...CARDS, ...CARDS, ...CARDS];
-
-    const [activeCard, setActiveCard] = useState(0);   // 0-2, index within CARDS
+    const [activeCard, setActiveCard] = useState(0);   
     const scrollContainerRef = useRef(null);
     const isUserInteracting = useRef(false);
-    const currentAbsRef = useRef(CARDS.length);         // absolute index in LOOPED_CARDS
-    const scrollTimer = useRef(null);                 // debounce timer for activeCard
+    const currentAbsRef = useRef(0);         
 
-    // ─── Initialise scroll to the middle set on mount ───────────────────────────
+    // ─── Initialise scroll position ───────────────────────────
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
-        const middleCard = container.children[CARDS.length];
-        if (middleCard) {
+        const firstCard = container.children[0];
+        if (firstCard) {
             container.scrollLeft =
-                middleCard.offsetLeft - container.offsetWidth / 2 + middleCard.offsetWidth / 2;
+                firstCard.offsetLeft - container.offsetWidth / 2 + firstCard.offsetWidth / 2;
         }
     }, []);
 
@@ -42,8 +63,11 @@ export default function AdbuthCorporate() {
         const interval = setInterval(() => {
             if (isUserInteracting.current || !scrollContainerRef.current) return;
             const container = scrollContainerRef.current;
-            const nextAbs = currentAbsRef.current + 1;
-            const nextCard = container.children[nextAbs];
+            
+            // Loop back to start if at the end
+            const nextIdx = (currentAbsRef.current + 1) % CARDS.length;
+            const nextCard = container.children[nextIdx];
+            
             if (nextCard) {
                 container.scrollTo({
                     left: nextCard.offsetLeft - container.offsetWidth / 2 + nextCard.offsetWidth / 2,
@@ -54,7 +78,6 @@ export default function AdbuthCorporate() {
         return () => clearInterval(interval);
     }, []);
 
-    // ─── Scroll handler – track active card + infinite-loop position jump ───────
     const handleScroll = () => {
         const container = scrollContainerRef.current;
         if (!container) return;
@@ -71,25 +94,7 @@ export default function AdbuthCorporate() {
         }
 
         currentAbsRef.current = closestIndex;
-        setActiveCard(closestIndex % CARDS.length);
-
-        // Silently jump when user reaches the first or last duplicate set
-        if (closestIndex < CARDS.length) {
-            // jumped into first copy → jump to same slot in middle copy
-            const target = cardEls[closestIndex + CARDS.length];
-            if (target)
-                container.scrollLeft =
-                    target.offsetLeft - container.offsetWidth / 2 + target.offsetWidth / 2;
-            currentAbsRef.current = closestIndex + CARDS.length;
-        } else if (closestIndex >= CARDS.length * 2) {
-            // jumped into last copy → jump to same slot in middle copy
-            const equiv = closestIndex - CARDS.length;
-            const target = cardEls[equiv];
-            if (target)
-                container.scrollLeft =
-                    target.offsetLeft - container.offsetWidth / 2 + target.offsetWidth / 2;
-            currentAbsRef.current = equiv;
-        }
+        setActiveCard(closestIndex);
     };
 
     return (
@@ -201,11 +206,7 @@ export default function AdbuthCorporate() {
 
                     {/* Desktop Grid */}
                     <div className="hidden md:grid md:grid-cols-3 gap-8">
-                        {[
-                            { title: 'Corporate Films', desc: 'High-quality films that highlight your company\'s values, culture, and achievements.', images: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/corporate-films.png" },
-                            { title: 'Training Videos', desc: 'Engaging, easy-to-follow content to educate and upskill employees effectively.', images: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/training-videos.png" },
-                            { title: 'Brand Stories', desc: 'Narratives that showcase your brand journey, connect emotionally, and leave a lasting impact.', images: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/brand-stories.png" }
-                        ].map((card, index) => (
+                        {CARDS.map((card, index) => (
                             <motion.div
                                 key={index}
                                 initial={{ opacity: 0, y: 30 }}
@@ -213,20 +214,18 @@ export default function AdbuthCorporate() {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.2, duration: 0.5, ease: 'easeOut' }}
                                 whileHover={{ scale: 1.07, transition: { type: 'tween', ease: 'easeOut', duration: 0.16 } }}
-                                className="relative text-white rounded-xl aspect-[3/4] flex flex-col justify-end overflow-hidden cursor-pointer"
+                                className="relative text-white rounded-xl aspect-[3/4] flex flex-col justify-end overflow-hidden cursor-pointer bg-gray-900"
                             >
-                                {/* Static background image */}
-                                <Image
-                                    src={card.images}
-                                    alt={card.title}
-                                    fill
-                                    priority
-                                    sizes="(max-width: 768px) 100vw, 33vw"
-                                    className="object-cover"
-                                />
+                                {card.video ? (
+                                    <VideoPlayer src={card.video} />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-[#1a2151]">
+                                        <FontAwesomeIcon icon={faPlay} className="text-4xl opacity-10" />
+                                    </div>
+                                )}
                                 {/* Gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/80" />
-                                <div className="relative z-10 p-8">
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/80 pointer-events-none" />
+                                <div className="relative z-10 p-8 pointer-events-none">
                                     <h3 className="lg:text-2xl text-xl font-bold mb-4">{card.title}</h3>
                                     <p className="text-gray-200 lg:text-sm text-xs md:line-clamp-2">{card.desc}</p>
                                 </div>
@@ -244,25 +243,23 @@ export default function AdbuthCorporate() {
                         }}
                         className="flex md:hidden overflow-x-auto snap-x snap-mandatory gap-4 px-[15vw] pb-10 no-scrollbar"
                     >
-                        {LOOPED_CARDS.map((card, index) => (
+                        {CARDS.map((card, index) => (
                             <motion.div
                                 key={index}
                                 animate={{
-                                    scale: activeCard === index % CARDS.length ? 1 : 0.9,
-                                    opacity: activeCard === index % CARDS.length ? 1 : 0.6,
+                                    scale: activeCard === index ? 1 : 0.9,
+                                    opacity: activeCard === index ? 1 : 0.6,
                                 }}
                                 transition={{ duration: 0.35, ease: 'easeOut' }}
                                 className="snap-center flex-shrink-0 w-[58vw] aspect-[3/4] rounded-2xl flex flex-col justify-end shadow-lg relative overflow-hidden text-white"
                             >
-                                {/* Static background image */}
-                                <Image
-                                    src={card.images}
-                                    alt={card.title}
-                                    fill
-                                    priority
-                                    sizes="60vw"
-                                    className="object-cover"
-                                />
+                                {card.video ? (
+                                    <VideoPlayer src={card.video} />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-[#1a2151]">
+                                        <FontAwesomeIcon icon={faPlay} className="text-4xl opacity-10" />
+                                    </div>
+                                )}
                                 {/* Gradient overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/80" />
                                 <div className="relative z-10 p-6">

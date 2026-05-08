@@ -5,7 +5,7 @@ import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
 
 const craftServices = [
@@ -15,10 +15,10 @@ const craftServices = [
         title: 'Wedding Films',
         description: 'We craft cinematic wedding films that beautifully capture the essence of your big day. From emotional vows to candid laughter, we make sure every moment is told with elegance, artistry, and heart.',
         cards: [
-            { title: 'Wedding Highlights', description: 'Cinematic moments captured forever.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Candid Shots', description: 'Pure emotions, unscripted.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Storytelling', description: 'Narrative driven edits.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Final Cut', description: 'Polished to perfection.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' }
+            { title: 'Wedding Highlights', description: 'Cinematic moments captured forever.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-edits/wedding%20highlights.mp4' },
+            { title: 'Candid Shots', description: 'Pure emotions, unscripted.', video: '' },
+            { title: 'Storytelling', description: 'Narrative driven edits.', video: '' },
+            { title: 'Final Cut', description: 'Polished to perfection.', video: '' }
         ]
     },
     {
@@ -27,10 +27,10 @@ const craftServices = [
         title: 'Surprise Edits',
         description: 'Our surprise edits are perfect for birthdays, anniversaries, reunions, or just to say you matter. We stitch together photos, videos, and music into a heartfelt film that speaks louder than words.',
         cards: [
-            { title: 'Birthday Bash', description: 'Celebrate another year of joy.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Anniversary Special', description: 'Relive your love story.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Reunion Recap', description: 'Memories with old friends.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Just Because', description: 'Small moments, big smiles.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' }
+            { title: 'Birthday Bash', description: 'Celebrate another year of joy.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-edits/Birthday%20bash.mp4' },
+            { title: 'Anniversary Special', description: 'Relive your love story.', video: '' },
+            { title: 'Reunion Recap', description: 'Memories with old friends.', video: '' },
+            { title: 'Just Because', description: 'Small moments, big smiles.', video: '' }
         ]
     },
     {
@@ -39,13 +39,36 @@ const craftServices = [
         title: 'Personal Stories',
         description: 'Whether it\'s a life journey, a special trip, or a milestone achievement, we create short films that celebrate you. Our editing style blends emotion with creativity, turning ordinary moments into extraordinary stories.',
         cards: [
-            { title: 'Travel Diaries', description: 'Adventures around the world.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Life Journey', description: 'From childhood to now.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Milestone Moments', description: 'Achievements worth celebrating.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' },
-            { title: 'Daily Vlogs', description: 'Everyday life, elevated.', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' }
+            { title: 'Travel Diaries', description: 'Adventures around the world.', video: '' },
+            { title: 'Life Journey', description: 'From childhood to now.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-edits/Life%20journey.mp4.04.mp4' },
+            { title: 'Milestone Moments', description: 'Achievements worth celebrating.', video: '' },
+            { title: 'Daily Vlogs', description: 'Everyday life, elevated.', video: '' }
         ]
     }
 ];
+
+const VideoPlayer = ({ src }) => {
+    const [isMuted, setIsMuted] = useState(true);
+    return (
+        <div className="absolute inset-0 group">
+            <video
+                src={src}
+                className="w-full h-full object-cover"
+                autoPlay
+                muted={isMuted}
+                loop
+                playsInline
+                preload="auto"
+            />
+            <button
+                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                className="absolute bottom-2 right-2 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-7 h-7 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 opacity-0 group-hover:opacity-100 pointer-events-auto"
+            >
+                <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className="text-[8px]" />
+            </button>
+        </div>
+    );
+};
 
 const CraftCard = ({ card, index }) => (
     <motion.div
@@ -55,8 +78,14 @@ const CraftCard = ({ card, index }) => (
         transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
         className="bg-[#130a1f] p-4 rounded-2xl border border-purple-500/20 shadow-xl"
     >
-        <div className="lg:h-[160px] lg:min-h-[160px]  md:h-[120px] md:min-h-[120px]  w-full bg-gray-700 rounded-xl mb-4 animate-pulse overflow-hidden relative">
-            {/* <img src={card.image} alt={card.title} className="w-full h-full object-cover" /> */}
+        <div className="aspect-video w-full bg-gray-900 rounded-xl mb-4 overflow-hidden relative group">
+            {card.video ? (
+                <VideoPlayer src={card.video} />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center bg-[#1a0f2e]">
+
+                </div>
+            )}
         </div>
         <div>
             <h4 className="text-white font-bold lg:text-lg md:text-sm mb-1">{card.title}</h4>
@@ -356,10 +385,14 @@ export default function AdbuthEdits() {
                                         transition={{ duration: 0.3, delay: index * 0.1 }}
                                         className={"bg-[#181824] p-2 rounded-2xl border border-white/5 shadow-lg "}
                                     >
-                                        <div className="aspect-[4/3] w-full bg-[#8f8f8f] rounded-xl mb-3 flex items-center justify-center overflow-hidden relative">
-                                            {card.image && card.image !== 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg' ? (
-                                                <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                            ) : null}
+                                        <div className="aspect-video w-full bg-gray-900 rounded-xl mb-3 overflow-hidden relative group">
+                                            {card.video ? (
+                                                <VideoPlayer src={card.video} />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-[#1a0f2e]">
+
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="px-1 pb-1">
                                             <h4 className="text-white font-bold text-xs mb-1 truncate">{card.title}</h4>

@@ -6,7 +6,7 @@ import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faChevronDown, faChevronUp, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
 
 const videoServices = [
     {
@@ -14,69 +14,75 @@ const videoServices = [
         title: 'Adbuth Edits',
         subtitle: 'Personal Stories & Celebrations',
         description: 'Wedding films, surprise edits, and personal storytelling crafted to capture the emotions that matter most. We transform raw footage into memories you can relive forever.',
-        videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Edits.mp4%20V1.1.mp4'
     },
     {
         id: 'corporate',
         title: 'Adbuth Corporate',
         subtitle: 'Business Films & Brand Stories',
         description: 'From corporate profiles to employee training modules, we create videos that strengthen your brand identity and enhance internal communication.',
-        videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHCORPORATE-V1.3.mp4'
     },
     {
         id: 'adds',
-        title: 'Adbuth Adds',
+        title: 'Adbuth Ads',
         subtitle: 'Commercial Advertising for TV & Digital',
         description: 'High-impact ad films designed for television, OTT, and social media campaigns crafted to grab attention and drive conversions.',
-        videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHADS.mp4'
     },
     {
         id: 'politics',
         title: 'Adbuth Politics',
         subtitle: 'Political Campaigns & Constituency Stories',
         description: 'Strategic storytelling for leaders and campaigns. We design constituency videos, campaign promos, and result-driven communication material.',
-        videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Politics.06.mp4'
     },
     {
         id: 'music',
         title: 'Adbuth Music',
         subtitle: 'Original Music, Jingles & Sound Design',
         description: 'Music that moves people. From original jingles to professional voiceovers and BGM, we give your videos the sound they deserve.',
-        videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Music.mp4'
     },
     {
         id: 'movies',
         title: 'Adbuth Movies',
         subtitle: 'Cinematic Post-Production',
         description: 'Cinematic editing and finishing for films. Transform raw footage into compelling narratives with precision, visual depth, and storytelling impact.',
-        videoPlaceholder: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg'
+        videoUrl: '' // No video provided for Movies yet
     }
 ];
 
 const heroServices = [
     {
         name: "Adbuth Edits",
-        desc: "We craft polished, professional video editing services for brand storytelling that communicates your brand’s message with clarity, impact and enhanced user engagement."
+        desc: "We craft polished, professional video editing services for brand storytelling that communicates your brand’s message with clarity, impact and enhanced user engagement.",
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Edits.mp4%20V1.1.mp4'
     },
     {
         name: "Adbuth Corporate",
-        desc: "We create refined, professional corporate video solutions that communicate your brand vision with clarity, credibility, and strong business impact."
+        desc: "We create refined, professional corporate video solutions that communicate your brand vision with clarity, credibility, and strong business impact.",
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHCORPORATE-V1.3.mp4'
     },
     {
         name: "Adbuth Ads",
-        desc: "We produce high-impact advertising videos that capture attention instantly, deliver your message clearly, and drive meaningful audience engagement."
+        desc: "We produce high-impact advertising videos that capture attention instantly, deliver your message clearly, and drive meaningful audience engagement.",
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHADS.mp4'
     },
     {
         name: "Adbuth Politics",
-        desc: "We craft strategic political video content that communicates vision, builds trust, and connects effectively with the public and target audience."
+        desc: "We craft strategic political video content that communicates vision, builds trust, and connects effectively with the public and target audience.",
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Politics.06.mp4'
     },
     {
         name: "Adbuth Music",
-        desc: "We create immersive music visuals and audio experiences that enhance storytelling, elevate emotion, and leave a lasting impression."
+        desc: "We create immersive music visuals and audio experiences that enhance storytelling, elevate emotion, and leave a lasting impression.",
+        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Music.mp4'
     },
     {
         name: "Adbuth Movies",
-        desc: "We deliver cinematic post-production services that transform raw footage into compelling narratives with precision, depth, and visual excellence."
+        desc: "We deliver cinematic post-production services that transform raw footage into compelling narratives with precision, depth, and visual excellence.",
+        videoUrl: ''
     }
 ];
 
@@ -97,6 +103,37 @@ const TypingEffect = ({ text }) => {
     }, [text]);
 
     return <>{displayedText}</>;
+};
+
+const VideoPlayer = ({ src, buttonSize = "small" }) => {
+    const [isMuted, setIsMuted] = useState(true);
+    
+    // Reset mute state when src changes
+    useEffect(() => {
+        setIsMuted(true);
+    }, [src]);
+
+    const isLarge = buttonSize === "large";
+
+    return (
+        <div className="w-full h-full relative overflow-hidden">
+            <video 
+                src={src} 
+                className="w-full h-full object-cover absolute inset-0"
+                autoPlay
+                muted={isMuted}
+                loop
+                playsInline
+                preload="auto"
+            />
+            <button 
+                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                className={`absolute ${isLarge ? 'bottom-6 right-6 w-10 h-10' : 'bottom-4 right-4 w-8 h-8'} z-20 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300`}
+            >
+                <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className={isLarge ? 'text-xs' : 'text-[10px]'} />
+            </button>
+        </div>
+    );
 };
 
 export default function Videos() {
@@ -202,16 +239,17 @@ export default function Videos() {
                                 </Link>
                             </motion.div>
 
-                            {/* Right: Video Player Placeholder */}
+                            {/* Right: Video Player */}
                             <motion.div
                                 initial={{ opacity: 0, x: 50 }}
                                 whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true }}
-                                className="bg-[#150d22] w-full md:max-w-[400px] lg:max-w-full order-first lg:order-last border border-[#fff] rounded-[2rem] flex items-center justify-center relative group cursor-pointer h-full min-h-[250px] col-span-3"
+                                className="bg-[#150d22] w-full md:max-w-[400px] lg:max-w-full order-first lg:order-last border border-[#fff] rounded-[2rem] flex items-center justify-center relative group overflow-hidden h-full min-h-[300px] col-span-3 shadow-2xl"
                             >
-                                <div className="w-24 h-24 bg-gray-300/10 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 pl-2">
-                                    <FontAwesomeIcon icon={faPlay} className="text-gray-300 text-4xl" />
-                                </div>
+                                <VideoPlayer 
+                                    src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/02%20Video%20Editing%20%E2%80%93%20Services%20Overview%20V1.1.mp4" 
+                                    buttonSize="large"
+                                />
                             </motion.div>
 
                         </div>
@@ -263,8 +301,14 @@ export default function Videos() {
                                                             </button>
                                                         </Link>
                                                     </div>
-                                                    <div className="bg-gray-600 rounded-xl min-h-[200px] order-first md:order-last">
-                                                        {/* Video/Image Placeholder */}
+                                                    <div className="bg-gray-900 rounded-xl min-h-[200px] order-first md:order-last overflow-hidden relative shadow-2xl">
+                                                        {service.videoUrl ? (
+                                                            <VideoPlayer src={service.videoUrl} />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-gray-700">
+                                                                <FontAwesomeIcon icon={faPlay} className="text-4xl opacity-20" />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

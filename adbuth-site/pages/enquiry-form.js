@@ -20,17 +20,17 @@ const SERVICES = [
     {
         id: 'videos',
         title: 'Videos',
-        subServices: ['Adbuth Edits (Wedding/Social)', 'Adbuth Corporate', 'Adbuth Ads', 'Adbuth Politics', 'Adbuth Music Videos', 'Custom Video Project']
+        subServices: ['Adbuth Edits', 'Adbuth Corporate', 'Adbuth Ads', 'Adbuth Politics', 'Adbuth Music Videos', 'Custom Video Project', 'Adbuth Movies']
     },
     {
         id: 'designing',
         title: 'Designing',
-        subServices: ['Adbuth E-Invitations', 'Adbuth Graphics', 'Branding & Logo', 'Social Media Design', 'UI/UX Design']
+        subServices: ['Adbuth E-Invitations', 'Adbuth Graphics']
     },
     {
         id: 'learning',
         title: 'Learning',
-        subServices: ['Adbuth DAM (Diploma)', 'Adbuth E-Learning (Self-paced)', '1-on-1 Mentorship', 'Corporate Training']
+        subServices: ['Adbuth DAM', 'Adbuth E-Learning ']
     }
 ];
 
