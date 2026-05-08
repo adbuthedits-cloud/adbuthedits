@@ -291,8 +291,26 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
               onMouseEnter={() => setProfileOpen(true)}
               onMouseLeave={() => setProfileOpen(false)}
             >
-              <button className={`${highlight === 'profile' ? 'text-purple-700' : 'text-white'} w-10 h-10 rounded-full border-2 border-purple-700 bg-purple-700 flex items-center justify-center hover:bg-transparent hover:text-purple-700 transition-all duration-300 backdrop-blur-sm`}>
-                <FontAwesomeIcon icon={faUser} />
+              {/* Smart Avatar: shows photo, initials, or icon */}
+              <button className={`${highlight === 'profile' ? 'ring-2 ring-purple-400' : ''} w-10 h-10 rounded-full border-2 border-purple-700 overflow-hidden flex items-center justify-center transition-all duration-300`}>
+                {user.profile_picture ? (
+                  <img
+                    src={user.profile_picture}
+                    alt={user.name || 'Profile'}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-purple-700 hover:bg-transparent hover:text-purple-700 flex items-center justify-center text-white text-sm font-bold transition-all duration-300">
+                    {user.first_name && user.last_name
+                      ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+                      : user.first_name
+                      ? user.first_name[0].toUpperCase()
+                      : user.last_name
+                      ? user.last_name[0].toUpperCase()
+                      : <FontAwesomeIcon icon={faUser} />}
+                  </div>
+                )}
               </button>
 
               <AnimatePresence>
@@ -554,8 +572,26 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
                 <motion.div variants={linkVariants} className="flex flex-col gap-2">
                   <div className="flex items-center justify-between" onClick={() => toggleSubmenu('profile')}>
                     <div className="flex items-center gap-2 cursor-pointer">
-                      <div className="w-8 h-8 rounded-full bg-purple-700 flex items-center justify-center text-sm">
-                        <FontAwesomeIcon icon={faUser} />
+                      {/* Smart Avatar (Mobile) */}
+                      <div className="w-8 h-8 rounded-full border border-purple-700 overflow-hidden flex items-center justify-center">
+                        {user.profile_picture ? (
+                          <img
+                            src={user.profile_picture}
+                            alt={user.name || 'Profile'}
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-purple-700 flex items-center justify-center text-white text-xs font-bold">
+                            {user.first_name && user.last_name
+                              ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+                              : user.first_name
+                              ? user.first_name[0].toUpperCase()
+                              : user.last_name
+                              ? user.last_name[0].toUpperCase()
+                              : <FontAwesomeIcon icon={faUser} className="text-xs" />}
+                          </div>
+                        )}
                       </div>
                       <span>{user.name || 'Profile'}</span>
                     </div>
