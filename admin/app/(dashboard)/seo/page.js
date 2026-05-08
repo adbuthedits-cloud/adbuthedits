@@ -16,36 +16,51 @@ function SeoDashboard() {
     const [selectedPage, setSelectedPage] = useState(null); // For editing
     const [saving, setSaving] = useState(false);
 
-    // Initial system pages to ensure exist (if not in DB)
+    // Grouped by Root Folder Structure
     const systemPages = [
+        // --- Main Pages ---
         { page_identifier: 'home', title: 'Home Page', path: '/' },
-        { page_identifier: 'shop', title: 'Shop Page', path: '/shop' },
         { page_identifier: 'about', title: 'About Us', path: '/about' },
         { page_identifier: 'contact', title: 'Contact Us', path: '/contact' },
         { page_identifier: 'blogs', title: 'Blog Listing', path: '/blogs' },
+        { page_identifier: 'enquiry-form', title: 'Enquiry Form', path: '/enquiry-form' },
+
+        // --- Auth & User ---
+        { page_identifier: 'login', title: 'Login Page', path: '/login' },
+        { page_identifier: 'signup', title: 'Sign Up Page', path: '/signup' },
+
+        // --- E-Commerce & Shop ---
+        { page_identifier: 'shop', title: 'Shop Page', path: '/shop' },
+        { page_identifier: 'cart', title: 'Cart Page', path: '/cart' },
+        { page_identifier: 'checkout', title: 'Checkout Page', path: '/checkout' },
+        { page_identifier: 'wishlist', title: 'Wishlist Page', path: '/wishlist' },
+
+        // --- Services Root ---
         { page_identifier: 'service-main', title: 'Services Main', path: '/services' },
+
+        // --- Services: Designing ---
         { page_identifier: 'service-designing', title: 'Service: Designing', path: '/services/designing' },
         { page_identifier: 'service-design-invitations', title: 'Service: E-Invitations', path: '/services/designing/adbuth-e-invitations' },
+        { page_identifier: 'service-design-graphics', title: 'Service: Adbuth Graphics', path: '/services/designing/adbuth-graphics' },
+
+        // --- Services: Learning ---
         { page_identifier: 'service-learning', title: 'Service: Learning', path: '/services/learning' },
         { page_identifier: 'service-learning-dam', title: 'Service: Adbuth DAM', path: '/services/learning/adbuth-dam' },
+        { page_identifier: 'service-learning-elearning', title: 'Service: E-Learning', path: '/services/learning/adbuth-e-learning' },
+
+        // --- Services: Videos ---
         { page_identifier: 'service-videos', title: 'Service: Videos Main', path: '/services/videos' },
         { page_identifier: 'service-video-ads', title: 'Service: Adbuth Ads', path: '/services/videos/adbuth-ads' },
         { page_identifier: 'service-video-corporate', title: 'Service: Corporate', path: '/services/videos/adbuth-corporate' },
         { page_identifier: 'service-video-edits', title: 'Service: Edits', path: '/services/videos/adbuth-edits' },
         { page_identifier: 'service-video-music', title: 'Service: Music', path: '/services/videos/adbuth-music' },
         { page_identifier: 'service-video-politics', title: 'Service: Politics', path: '/services/videos/adbuth-politics' },
-        { page_identifier: 'cart', title: 'Cart Page', path: '/cart' },
-        { page_identifier: 'checkout', title: 'Checkout Page', path: '/checkout' },
-        { page_identifier: 'wishlist', title: 'Wishlist Page', path: '/wishlist' },
-        { page_identifier: 'login', title: 'Login Page', path: '/login' },
-        { page_identifier: 'signup', title: 'Sign Up Page', path: '/signup' },
-        { page_identifier: 'enquiry-form', title: 'Enquiry Form', path: '/enquiry-form' },
+
+        // --- Legal & Policies ---
         { page_identifier: 'privacy', title: 'Privacy Policy', path: '/privacy' },
         { page_identifier: 'terms', title: 'Terms & Conditions', path: '/terms' },
         { page_identifier: 'refund', title: 'Refund Policy', path: '/refund' },
         { page_identifier: 'shipping', title: 'Shipping Policy', path: '/shipping' },
-        { page_identifier: 'service-design-graphics', title: 'Service: Adbuth Graphics', path: '/services/designing/adbuth-graphics' },
-        { page_identifier: 'service-learning-elearning', title: 'Service: E-Learning', path: '/services/learning/adbuth-e-learning' },
     ];
 
     useEffect(() => {
