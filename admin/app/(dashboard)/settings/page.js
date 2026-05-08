@@ -1,6 +1,6 @@
 "use client";
 import withPermission from '../../../components/withPermission';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faSave, faCheckCircle, faExclamationCircle, faEye, faEyeSlash, faPowerOff } from '@fortawesome/free-solid-svg-icons';
