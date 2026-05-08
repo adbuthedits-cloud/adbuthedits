@@ -17,40 +17,48 @@ import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from '../components/ErrorBoundary'
 import PromoPopup from '../components/PromoPopup'
 
-const MAINTENANCE_MODE = true;
-
 function MyApp({ Component, pageProps }) {
   const router = useRouter()
   const [isPageLoading, setIsPageLoading] = useState(false)
-  const [showMaintenance, setShowMaintenance] = useState(MAINTENANCE_MODE)
+  const [showMaintenance, setShowMaintenance] = useState(false) // Default false until API returns true
+  const [isCheckingMaintenance, setIsCheckingMaintenance] = useState(true)
 
   useEffect(() => {
-    if (!MAINTENANCE_MODE) {
-      setShowMaintenance(false);
-      return;
-    }
+    const fetchMaintenanceStatus = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${apiUrl}/api/settings/public`);
+        const data = await res.json();
+        
+        const isMaintenanceOn = data.maintenance_mode === true;
+        
+        // Check for bypass in URL or LocalStorage
+        const searchParams = new URLSearchParams(window.location.search);
+        const bypassToken = searchParams.get('bypass');
 
-    // Check for bypass in URL or LocalStorage
-    const searchParams = new URLSearchParams(window.location.search);
-    const bypassToken = searchParams.get('bypass');
+        if (bypassToken === 'adbuth2024') {
+          localStorage.setItem('adbuth_bypass', 'true');
+          setShowMaintenance(false);
+          // Remove query param from URL
+          router.replace(router.pathname, undefined, { shallow: true });
+        } else if (bypassToken === 'false') {
+          localStorage.removeItem('adbuth_bypass');
+          setShowMaintenance(isMaintenanceOn && !router.pathname.startsWith('/admin'));
+          router.replace(router.pathname, undefined, { shallow: true });
+        } else {
+          const isBypassed = localStorage.getItem('adbuth_bypass') === 'true';
+          const isAdminRoute = router.pathname.startsWith('/admin');
+          setShowMaintenance(isMaintenanceOn && !isBypassed && !isAdminRoute);
+        }
+      } catch (err) {
+        console.error('Failed to fetch maintenance status', err);
+        setShowMaintenance(false); // Fallback to live if API fails
+      } finally {
+        setIsCheckingMaintenance(false);
+      }
+    };
 
-    if (bypassToken === 'adbuth2024') {
-      localStorage.setItem('adbuth_bypass', 'true');
-      setShowMaintenance(false);
-      // Remove query param from URL
-      router.replace(router.pathname, undefined, { shallow: true });
-      return;
-    } else if (bypassToken === 'false') {
-      localStorage.removeItem('adbuth_bypass');
-      setShowMaintenance(!router.pathname.startsWith('/admin'));
-      router.replace(router.pathname, undefined, { shallow: true });
-      return;
-    }
-
-    const isBypassed = localStorage.getItem('adbuth_bypass') === 'true';
-    const isAdminRoute = router.pathname.startsWith('/admin');
-    
-    setShowMaintenance(!isBypassed && !isAdminRoute);
+    fetchMaintenanceStatus();
   }, [router.pathname, router.query]);
 
   useEffect(() => {
@@ -78,10 +86,11 @@ function MyApp({ Component, pageProps }) {
 
         <div className={`${inter.variable} ${playfair.variable} ${dmSans.variable} ${montserrat.variable} font-sans`}>
           {isPageLoading && <PageLoader />}
+          {isCheckingMaintenance && <div className="fixed inset-0 bg-black z-[100]" />} {/* Black screen while checking to prevent flash */}
 
-          {showMaintenance ? (
+          {!isCheckingMaintenance && showMaintenance ? (
             <ComingSoon />
-          ) : (
+          ) : !isCheckingMaintenance && (
             <>
               <ErrorBoundary>
                 <AnimatePresence>
