@@ -51,7 +51,7 @@ export default function Privacy() {
                         <div className="bg-purple-50 p-6 rounded-xl border border-purple-100 mt-4">
                             <p className="font-semibold text-[#7D287E]">To delete your account and associated data:</p>
                             <ol className="list-decimal ml-6 mt-2 space-y-2">
-                                <li>Send an email to <strong>support@adbuth.com</strong> with the subject "Data Deletion Request".</li>
+                                <li>Send an email to <strong>adbuthedits@gmail.com</strong> with the subject "Data Deletion Request".</li>
                                 <li>Include your registered email address or Username.</li>
                                 <li>We will process your request and permanently delete your data within 48-72 hours.</li>
                             </ol>
@@ -71,7 +71,7 @@ export default function Privacy() {
                     <section>
                         <h2 className="text-2xl font-bold mb-4 text-gray-900">7. Contact Us</h2>
                         <p>If you have any questions about this Privacy Policy or your data, please contact us at:</p>
-                        <p className="mt-2 font-semibold">Email: support@adbuth.com</p>
+                        <p className="mt-2 font-semibold">Email: adbuthedits@gmail.com</p>
                     </section>
                 </div>
             </div>
