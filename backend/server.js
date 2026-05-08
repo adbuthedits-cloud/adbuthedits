@@ -66,6 +66,7 @@ const cartRoutes = require('./routes/cartRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
 const settingRoutes = require('./routes/settingRoutes');
+const { runSafeMigrations } = require('./utils/safeSync');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -79,7 +80,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/seo', seoRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/enquiries', enquiryRoutes);
+app.use('/api/enquiry', enquiryRoutes);
 app.use('/api/settings', settingRoutes);
 
 // Database connection and server start
@@ -87,6 +88,9 @@ const startServer = async () => {
     try {
         await sequelize.authenticate();
         console.log('Database connected successfully.');
+
+        // Run safe additive migrations (adds new columns/tables without dropping data)
+        await runSafeMigrations();
 
         // Initialize user uploads cleanup on startup
         cleanupUserUploads();

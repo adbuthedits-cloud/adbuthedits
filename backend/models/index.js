@@ -16,6 +16,7 @@ const Blog = require('./Blog');
 const Review = require('./Review');
 const Coupon = require('./Coupon');
 const Enquiry = require('./Enquiry');
+const EnquiryReply = require('./EnquiryReply');
 const CouponUsage = require('./CouponUsage');
 const BlogCategory = require('./BlogCategory');
 const ReviewSetting = require('./ReviewSetting');
@@ -40,6 +41,10 @@ const SeoPage = require('./SeoPage');
 // Role <-> Admin (a role has many admins)
 Role.hasMany(Admin, { foreignKey: 'role_id', as: 'members', constraints: false });
 Admin.belongsTo(Role, { foreignKey: 'role_id', as: 'roleDetails', constraints: false });
+
+// Enquiry <-> EnquiryReply
+Enquiry.hasMany(EnquiryReply, { foreignKey: 'enquiry_id', as: 'replies', constraints: false });
+EnquiryReply.belongsTo(Enquiry, { foreignKey: 'enquiry_id', as: 'enquiry', constraints: false });
 
 // Blog <-> BlogCategory
 BlogCategory.hasMany(Blog, { foreignKey: 'blog_category_id', as: 'blogs' });
@@ -179,6 +184,7 @@ module.exports = {
     Review,
     Coupon,
     Enquiry,
+    EnquiryReply,
     CouponUsage,
     BlogCategory,
     // New master data models

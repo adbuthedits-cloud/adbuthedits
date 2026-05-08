@@ -7,6 +7,10 @@ const Enquiry = sequelize.define('Enquiry', {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
+    source: {
+        type: DataTypes.STRING, // 'enquiry_form' | 'contact_form' | 'get_in_touch'
+        defaultValue: 'enquiry_form',
+    },
     full_name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -14,13 +18,11 @@ const Enquiry = sequelize.define('Enquiry', {
     email: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-            isEmail: true
-        }
+        validate: { isEmail: true }
     },
     phone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // Optional for contact form
     },
     company_name: {
         type: DataTypes.STRING,
@@ -32,7 +34,7 @@ const Enquiry = sequelize.define('Enquiry', {
     },
     service: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // Optional for contact form
     },
     sub_service: {
         type: DataTypes.STRING,
@@ -57,8 +59,13 @@ const Enquiry = sequelize.define('Enquiry', {
     status: {
         type: DataTypes.STRING,
         defaultValue: 'pending',
+    },
+    assigned_to: {
+        type: DataTypes.UUID,
+        allowNull: true, // Admin UUID who is handling this
     }
 }, {
+    tableName: 'enquiries',
     timestamps: true,
     underscored: true,
 });
