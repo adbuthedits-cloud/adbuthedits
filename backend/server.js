@@ -65,6 +65,7 @@ const seoRoutes = require('./routes/seoRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
+const settingRoutes = require('./routes/settingRoutes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -79,6 +80,7 @@ app.use('/api/seo', seoRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/enquiries', enquiryRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Database connection and server start
 const startServer = async () => {

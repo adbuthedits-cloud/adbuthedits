@@ -22,6 +22,7 @@ const ReviewSetting = require('./ReviewSetting');
 const ReviewVote = require('./ReviewVote');
 
 // --- NEW MASTER DATA MODELS ---
+const SystemSetting = require('./SystemSetting');
 const AssetType = require('./AssetType');
 const AssetVariant = require('./AssetVariant');
 const AssetCategory = require('./AssetCategory');
@@ -187,6 +188,7 @@ module.exports = {
     AssetSubCategory,
     AssetOrientation,
     ShopSetting,
+    SystemSetting,
     ReviewSetting,
     ReviewVote,
     AdminSession,
