@@ -16,24 +16,24 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-          // Safely extract email
           const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
           const googleId = profile.id;
+          const profilePicture = profile.photos && profile.photos[0] ? profile.photos[0].value : null;
 
           if (!email) {
-              // Google login requires an email - reject if not provided
               return done(null, false, { message: 'No email returned from Google' });
           }
 
           let user = await User.findOne({ where: { [Op.or]: [{ google_id: googleId }, { email }] } });
 
           if (user) {
-              // Security: only link google_id if the provider was not already a different social provider
               if (!user.google_id) {
                   user.google_id = googleId;
                   user.auth_provider = 'google';
-                  await user.save();
               }
+              // Always update profile picture in case it changed
+              if (profilePicture) user.profile_picture = profilePicture;
+              await user.save();
               return done(null, user);
           }
 
@@ -42,6 +42,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
               email,
               first_name: profile.name?.givenName || profile.displayName?.split(' ')[0] || 'User',
               last_name: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ') || '',
+              profile_picture: profilePicture,
               auth_provider: 'google'
           });
           return done(null, user);
@@ -59,13 +60,14 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_APP_SECRET,
       callbackURL: `${backendUrl}/api/auth/facebook/callback`,
-      profileFields: ['id', 'emails', 'name', 'displayName'],
+      profileFields: ['id', 'emails', 'name', 'displayName', 'photos'],
       proxy: process.env.NODE_ENV === 'production'
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
           const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
           const facebookId = profile.id;
+          const profilePicture = profile.photos && profile.photos[0] ? profile.photos[0].value : null;
 
           let user = await User.findOne({ 
               where: { 
@@ -80,8 +82,10 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
               if (!user.facebook_id) {
                   user.facebook_id = facebookId;
                   user.auth_provider = 'facebook';
-                  await user.save();
               }
+              // Always update profile picture in case it changed
+              if (profilePicture) user.profile_picture = profilePicture;
+              await user.save();
               return done(null, user);
           }
 
@@ -90,6 +94,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
               email,
               first_name: profile.name?.givenName || profile.displayName?.split(' ')[0] || 'User',
               last_name: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ') || '',
+              profile_picture: profilePicture,
               auth_provider: 'facebook'
           });
           return done(null, user);

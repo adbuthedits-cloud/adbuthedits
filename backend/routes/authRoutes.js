@@ -545,7 +545,7 @@ router.get('/verify', authMiddleware, async (req, res) => {
             };
         } else {
             const user = await User.findByPk(req.user.id, {
-                attributes: ['user_id', 'email', 'role', 'first_name', 'last_name', 'phone_number']
+                attributes: ['user_id', 'email', 'role', 'first_name', 'last_name', 'phone_number', 'profile_picture']
             });
             if (!user) return res.status(404).json({ msg: 'User not found' });
             userData = {
@@ -555,6 +555,7 @@ router.get('/verify', authMiddleware, async (req, res) => {
                 first_name: user.first_name,
                 last_name: user.last_name,
                 phone: user.phone_number,
+                profile_picture: user.profile_picture || null,
                 name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
             };
         }

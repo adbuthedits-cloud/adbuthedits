@@ -47,6 +47,10 @@ const User = sequelize.define('User', {
         allowNull: true,
         unique: true,
     },
+    profile_picture: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
     auth_provider: {
         type: DataTypes.ENUM('local', 'google', 'facebook', 'twitter'),
         defaultValue: 'local',
