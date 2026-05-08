@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXTwitter, faFacebook, faInstagram, faLinkedin } from '@fortawesome/free-brands-svg-icons';
+import { faFacebook, faInstagram, faLinkedin, faYoutube } from '@fortawesome/free-brands-svg-icons';
 
 export default function Footer() {
   return (
@@ -28,8 +28,8 @@ export default function Footer() {
               <ul className="space-y-2 text-xs text-gray-600 font-medium">
                 <li><Link href="/about" className="hover:text-[#7D287E] transition-colors">About</Link></li>
                 <li><Link href="/services" className="hover:text-[#7D287E] transition-colors">Services</Link></li>
-                <li><Link href="/blogs" className="hover:text-[#7D287E] transition-colors">Blog</Link></li>
-                <li><Link href="#" className="hover:text-[#7D287E] transition-colors">Testimonials</Link></li>
+                <li><Link href="/blogs" className="hover:text-[#7D287E] transition-colors">Blogs</Link></li>
+
               </ul>
             </div>
 
@@ -37,9 +37,9 @@ export default function Footer() {
             <div>
               <h6 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Resources</h6>
               <ul className="space-y-2 text-xs text-gray-600 font-medium">
-                <li><Link href="/help" className="hover:text-[#7D287E] transition-colors">Help & Support</Link></li>
+
                 <li><Link href="/contact-us" className="hover:text-[#7D287E] transition-colors">Contact Us</Link></li>
-                <li><Link href="/blog" className="hover:text-[#7D287E] transition-colors">Blog</Link></li>
+                <li><Link href="/blogs" className="hover:text-[#7D287E] transition-colors">Blogs</Link></li>
               </ul>
             </div>
 
@@ -47,18 +47,22 @@ export default function Footer() {
             <div>
               <h6 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Get in touch</h6>
               <div className="space-y-2 text-xs text-gray-600 font-medium ">
-                <p >adbuthdigitalsolutions@gmail.com</p>
-                <p>+91 91826 83055</p>
+                <p ><a href='mailto:[adbuthedits@gmail.com]'>adbuthedits@gmail.com</a></p>
+                <p><a href='tel:+919182683055'>+91 91826 83055</a></p>
               </div>
               <div className="flex gap-4 mt-10 md:mt-6 justify-center md:justify-start">
-                <a href="#" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
-                  <FontAwesomeIcon icon={faXTwitter} className="text-xs" />
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
+
+                <a target='_blank' href="https://www.facebook.com/jayasadbuthproductionsllp/" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
                   <FontAwesomeIcon icon={faFacebook} className="text-xs" />
                 </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
+                <a target='_blank' href="https://www.instagram.com/adbuthproductions/" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
                   <FontAwesomeIcon icon={faInstagram} className="text-xs" />
+                </a>
+                <a target='_blank' href="https://www.youtube.com/@JayasAdbuth" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
+                  <FontAwesomeIcon icon={faYoutube} className="text-xs" />
+                </a>
+                <a target='_blank' href="https://www.linkedin.com/in/jayasadbuth/" className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors">
+                  <FontAwesomeIcon icon={faLinkedin} className="text-xs" />
                 </a>
               </div>
             </div>

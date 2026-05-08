@@ -96,10 +96,10 @@ export default function ContactUs() {
                         <p className="text-gray-400 text-sm md:text-base lg:mb-16 md:mb-16 mb-12">For all the Post video editing services</p>
 
                         <div className="flex gap-6 text-2xl">
-                            <a href="#" className="hover:text-pink-500 transition-colors"><FontAwesomeIcon icon={faInstagram} /></a>
-                            <a href="#" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faFacebook} /></a>
-                            <a href="#" className="hover:text-red-500 transition-colors"><FontAwesomeIcon icon={faYoutube} /></a>
-                            <a href="#" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faLinkedin} /></a>
+                            <a target='_blank' href="https://www.instagram.com/adbuthproductions/" className="hover:text-pink-500 transition-colors"><FontAwesomeIcon icon={faInstagram} /></a>
+                            <a target='_blank' href="https://www.facebook.com/jayasadbuthproductionsllp/" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faFacebook} /></a>
+                            <a target='_blank' href="https://www.youtube.com/@JayasAdbuth" className="hover:text-red-500 transition-colors"><FontAwesomeIcon icon={faYoutube} /></a>
+                            <a target='_blank' href="https://www.linkedin.com/in/jayasadbuth/" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faLinkedin} /></a>
                         </div>
                     </div>
                 </div>
@@ -110,10 +110,10 @@ export default function ContactUs() {
                 <div className="grid  gap-10 items-start">
 
                     {/* Left Side (Desktop) / Bottom (Mobile) - Text & Call Card */}
-                    <div className="lg:col-span-5 flex flex-col justify-between h-full md:pt-56 pt-[450px] lg:pt-72 order-2 lg:order-1">
+                    <div className="lg:col-span-5 flex flex-col justify-between h-full pt-[450px] lg:pt-72 order-2 lg:order-1">
                         {/* Text Content */}
-                        <div className="md:mb-20">
-                            <h2 className="text-3xl md:text-xl lg:text-3xl font-bold text-black mb-6 leading-tight w-96">
+                        <div className="lg:mb-20">
+                            <h2 className="text-3xl lg:text-4xl font-bold text-black mb-6 leading-tight w-96">
                                 You are one step closer<br /> to build your perfect product
                             </h2>
                             <p className="text-xl font-bold text-black">Just send a Message</p>
@@ -123,19 +123,19 @@ export default function ContactUs() {
                     </div>
 
                     {/* Right Side - Form Card */}
-                    <div className="lg:col-span-7 absolute left-0 right-0 mx-auto w-[90%] md:w-full md:max-w-[50%] lg:max-w-[55%] md:left-auto md:right-0 -lg:top-64 md:-top-44 -top-56 md:mr-10">
+                    <div className="lg:col-span-7 absolute left-0 right-0 mx-auto w-[90%] lg:w-full lg:max-w-[55%] lg:left-auto lg:right-0 -top-56 lg:-top-64 lg:mr-10">
                         <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
                             {/* Header Image */}
-                            <div className="h-24 lg:h-48 md:h-28 w-full bg-cover bg-center flex items-center justify-center text-center px-4" style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/contact/contact-form-header.png')" }}>
-                                <h3 className="text-white text-sm lg:text-2xl md:text-sm font-bold leading-relaxed">
-                                    Write us a few words about your project and we’ll<br className="hidden md:block" /> prepare a proposal for you within 24 hours
+                            <div className="h-24 lg:h-48 w-full bg-cover bg-center flex items-center justify-center text-center px-4" style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/contact/contact-form-header.png')" }}>
+                                <h3 className="text-white text-sm lg:text-2xl font-bold leading-relaxed">
+                                    Write us a few words about your project and we’ll<br className="hidden lg:block" /> prepare a proposal for you within 24 hours
                                 </h3>
                             </div>
 
                             {/* Form Fields */}
-                            <div className="p-8 lg:p-12 md:p-8">
-                                <form onSubmit={handleSubmit} className="space-y-6 text-xs lg:text-base md:text-xs">
-                                    <div className="grid grid-cols-2 md:grid-cols-2 gap-6 ">
+                            <div className="p-8 lg:p-12">
+                                <form onSubmit={handleSubmit} className="space-y-6 text-xs lg:text-base">
+                                    <div className="grid grid-cols-2 gap-6 ">
                                         <div className="bg-gray-100 p-4 rounded">
                                             <input
                                                 type="text"
@@ -158,7 +158,7 @@ export default function ContactUs() {
                                             />
                                         </div>
                                     </div>
-                                    <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="grid lg:grid-cols-2 gap-6">
                                         <div className="bg-gray-100 p-4 rounded">
                                             <input
                                                 type="tel"
@@ -182,7 +182,7 @@ export default function ContactUs() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-100 p-4 rounded md:h-40 h-28">
+                                    <div className="bg-gray-100 p-4 rounded h-28 lg:h-40">
                                         <textarea
                                             name="message"
                                             value={formData.message}
@@ -202,7 +202,7 @@ export default function ContactUs() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-[#000B60] text-white font-bold md:py-4 py-3 rounded hover:bg-black transition-colors disabled:opacity-70"
+                                        className="w-full bg-[#000B60] text-white font-bold py-3 lg:py-4 rounded hover:bg-black transition-colors disabled:opacity-70"
                                     >
                                         {loading ? 'Sending...' : 'Send Message'}
                                     </button>
@@ -216,14 +216,20 @@ export default function ContactUs() {
                     </div>
 
 
-                    {/* Mobile Only Call Card (Order 3) */}
-                    <div className="md:hidden order-3 w-full ">
+                    {/* Mobile/Tablet Only Call Card (Order 3) */}
+                    <div className="lg:hidden order-3 w-full ">
                         <div className="mt-12">
                             <h3 className="text-3xl font-bold text-black mb-8">You Can<br />Directly Call Us</h3>
                             <div className="bg-[#000B60] text-white p-8 rounded-2xl shadow-xl w-full">
-                                <div className="flex flex-col md:flex-row md:justify-between justify-around md:items-center items-start h-32">
-                                    <span className="text-base">Mobile number</span>
-                                    <span className="text-base">Mail Us on</span>
+                                <div className="flex flex-col lg:flex-row lg:justify-between justify-around lg:items-center items-start h-32">
+                                    <div className="flex flex-col mb-5">
+                                        <span className="text-base">Mobile number   </span>
+                                        <a href="tel:+919182683055">+91 91826 83055</a>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-base">Mail Us on   </span>
+                                        <a href="mailto:[adbuthedits@gmail.com]">adbuthedits@gmail.com</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -232,13 +238,19 @@ export default function ContactUs() {
                 </div>
 
             </div>
-            {/* Call Card */}
-            <div className="md:flex hidden lg:px-40 md:px-20 mb-24 mt-16 flex-row justify-around items-center gap-20">
-                <h3 className="lg:text-3xl md:text-xl font-bold text-black mb-8">You Can<br />Directly Call Us</h3>
-                <div className="bg-[#000B60] text-white p-10 rounded-2xl shadow-xl w-full lg:max-w-lg md:max-w-[350px]">
-                    <div className="flex justify-between items-center ">
-                        <span className="lg:text-lg md:text-xs mr-20">Mobile number</span>
-                        <span className="lg:text-lg md:text-xs mr-20">Mail Us on</span>
+            {/* Call Card Desktop */}
+            <div className="hidden lg:flex px-40 mb-24 mt-16 flex-row justify-around items-center gap-20">
+                <h3 className="text-3xl font-bold text-black mb-8">You Can<br />Directly Call Us</h3>
+                <div className="bg-[#000B60] text-white p-10 rounded-2xl shadow-xl w-full max-w-lg">
+                    <div className="flex flex-row justify-between items-center ">
+                        <div className="mb-4 flex flex-col">
+                            <span className="text-lg mr-20 mb-2">Mobile number </span>
+                            <a href="tel:+919182683055">+91 91826 83055</a>
+                        </div>
+                        <div className="mb-4 flex flex-col">
+                            <span className="text-lg mr-20 mb-2">Mail Us on</span>
+                            <a href="mailto:[adbuthedits@gmail.com]">adbuthedits@gmail.com</a>
+                        </div>
                     </div>
                 </div>
             </div>
