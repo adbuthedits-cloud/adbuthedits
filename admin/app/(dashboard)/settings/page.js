@@ -3,7 +3,7 @@ import withPermission from '../../../components/withPermission';
 import { useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faSave, faCheckCircle, faExclamationCircle, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faSave, faCheckCircle, faExclamationCircle, faEye, faEyeSlash, faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import { getAuthToken } from '../../../utils/auth';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +23,10 @@ function Settings() {
     });
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState({ type: '', message: '' });
+    
+    // Maintenance Mode State
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const [fetchingMaintenance, setFetchingMaintenance] = useState(true);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,6 +35,45 @@ function Settings() {
 
     const toggleShow = (field) => {
         setShowPassword(prev => ({ ...prev, [field]: !prev[field] }));
+    };
+
+    useEffect(() => {
+        const fetchMaintenance = async () => {
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const res = await axios.get(`${apiUrl}/api/settings/public`);
+                setMaintenanceMode(res.data.maintenance_mode);
+            } catch (err) {
+                console.error("Failed to fetch maintenance mode", err);
+            } finally {
+                setFetchingMaintenance(false);
+            }
+        };
+        fetchMaintenance();
+    }, []);
+
+    const toggleMaintenance = async () => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
+            if (!token) return router.push('/login');
+
+            const newValue = !maintenanceMode;
+            setMaintenanceMode(newValue); // Optimistic update
+
+            await axios.put(`${apiUrl}/api/settings/maintenance_mode`, 
+                { value: newValue, description: "System Maintenance Mode Toggle" },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            
+            setStatus({ type: 'success', message: `Maintenance mode ${newValue ? 'enabled' : 'disabled'} successfully.` });
+        } catch (error) {
+            setMaintenanceMode(!maintenanceMode); // Revert
+            setStatus({
+                type: 'error',
+                message: error.response?.data?.msg || 'Failed to update maintenance mode'
+            });
+        }
     };
 
     // Validation Requirements
@@ -110,11 +153,9 @@ function Settings() {
                 {/* Form Side */}
                 <div className="w-full lg:w-2/3">
                     <div className="bg-[#1E1628] p-8 rounded-[18px] shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-[#2d1b4e]">
-                        <h3 className="font-bold text-lg text-white mb-6 border-b border-[#2d1b4e] pb-4">Change Password</h3>
-
-                        <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
-
-                            {/* Status Message */}
+                        
+                        {/* Status Message */}
+                        <div className="mb-6">
                             <AnimatePresence>
                                 {status.message && (
                                     <motion.div
@@ -128,6 +169,36 @@ function Settings() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+                        </div>
+
+                        {/* System Settings Section */}
+                        <div className="mb-10">
+                            <h3 className="font-bold text-lg text-white mb-6 border-b border-[#2d1b4e] pb-4">System Status</h3>
+                            <div className="bg-[#2d1b4e]/30 p-6 rounded-xl border border-[#a78bfa]/20 flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-white font-semibold flex items-center gap-2">
+                                        <FontAwesomeIcon icon={faPowerOff} className={maintenanceMode ? "text-amber-500" : "text-emerald-500"} />
+                                        Maintenance Mode
+                                    </h4>
+                                    <p className="text-gray-400 text-sm mt-1">
+                                        {maintenanceMode 
+                                            ? "Website is currently hidden from the public." 
+                                            : "Website is live and accessible to all users."}
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={toggleMaintenance}
+                                    disabled={fetchingMaintenance}
+                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${maintenanceMode ? 'bg-amber-500' : 'bg-[#3b2a5f]'} ${fetchingMaintenance ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-[#a78bfa]/50'}`}
+                                >
+                                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${maintenanceMode ? 'translate-x-8' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <h3 className="font-bold text-lg text-white mb-6 border-b border-[#2d1b4e] pb-4">Change Password</h3>
+
+                        <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
 
                             {/* Current Password */}
                             <div>
