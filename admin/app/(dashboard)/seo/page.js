@@ -34,6 +34,18 @@ function SeoDashboard() {
         { page_identifier: 'service-video-edits', title: 'Service: Edits', path: '/services/videos/adbuth-edits' },
         { page_identifier: 'service-video-music', title: 'Service: Music', path: '/services/videos/adbuth-music' },
         { page_identifier: 'service-video-politics', title: 'Service: Politics', path: '/services/videos/adbuth-politics' },
+        { page_identifier: 'cart', title: 'Cart Page', path: '/cart' },
+        { page_identifier: 'checkout', title: 'Checkout Page', path: '/checkout' },
+        { page_identifier: 'wishlist', title: 'Wishlist Page', path: '/wishlist' },
+        { page_identifier: 'login', title: 'Login Page', path: '/login' },
+        { page_identifier: 'signup', title: 'Sign Up Page', path: '/signup' },
+        { page_identifier: 'enquiry-form', title: 'Enquiry Form', path: '/enquiry-form' },
+        { page_identifier: 'privacy', title: 'Privacy Policy', path: '/privacy' },
+        { page_identifier: 'terms', title: 'Terms & Conditions', path: '/terms' },
+        { page_identifier: 'refund', title: 'Refund Policy', path: '/refund' },
+        { page_identifier: 'shipping', title: 'Shipping Policy', path: '/shipping' },
+        { page_identifier: 'service-design-graphics', title: 'Service: Adbuth Graphics', path: '/services/designing/adbuth-graphics' },
+        { page_identifier: 'service-learning-elearning', title: 'Service: E-Learning', path: '/services/learning/adbuth-e-learning' },
     ];
 
     useEffect(() => {
