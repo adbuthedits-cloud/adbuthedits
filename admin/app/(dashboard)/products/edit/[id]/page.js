@@ -692,7 +692,7 @@ function EditProduct() {
                             <label className="text-sm font-bold text-gray-300">Category <span className="text-purple-400 font-mono text-xs">[PE / BI / FW ...]</span></label>
                             <select name="asset_category_id" required value={formData.asset_category_id} onChange={e => { handleChange(e); setFormData(p => ({ ...p, asset_sub_category_id: '' })); }} disabled={!formData.parent_category_id} className="w-full p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all disabled:opacity-40">
                                 <option value="">{formData.parent_category_id ? 'Select Category' : 'Select Parent First'}</option>
-                                {masterData.categories?.filter(c => !formData.parent_category_id || c.parent_category_id === formData.parent_category_id).map(c => <option key={c.asset_category_id} value={c.asset_category_id}>{c.code} – {c.name}</option>)}
+                                {masterData.categories?.filter(c => !formData.parent_category_id || String(c.parent_category_id) === String(formData.parent_category_id)).map(c => <option key={c.asset_category_id} value={c.asset_category_id}>{c.code} – {c.name}</option>)}
                             </select>
                         </div>
 
@@ -700,7 +700,7 @@ function EditProduct() {
                             <label className="text-sm font-bold text-gray-300">Sub-Category <span className="text-purple-400 font-mono text-xs">[AN / BIR / DIW ...]</span></label>
                             <select name="asset_sub_category_id" required value={formData.asset_sub_category_id} onChange={handleChange} disabled={!formData.asset_category_id} className="w-full p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all disabled:opacity-40">
                                 <option value="">{formData.asset_category_id ? 'Select Sub-Category' : 'Select Category First'}</option>
-                                {masterData.subCategories?.filter(s => !formData.asset_category_id || s.asset_category_id === formData.asset_category_id).map(s => <option key={s.asset_sub_category_id} value={s.asset_sub_category_id}>{s.code} – {s.name}</option>)}
+                                {masterData.subCategories?.filter(s => !formData.asset_category_id || String(s.asset_category_id) === String(formData.asset_category_id)).map(s => <option key={s.asset_sub_category_id} value={s.asset_sub_category_id}>{s.code} – {s.name}</option>)}
                             </select>
                         </div>
 
