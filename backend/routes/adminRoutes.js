@@ -38,7 +38,7 @@ const clearCache = async (patterns) => {
     }
 };
 
-const { DeleteObjectCommand, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
+const { DeleteObjectCommand, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectsCommand, CopyObjectCommand } = require('@aws-sdk/client-s3');
 const AdmZip = require('adm-zip');
 const { Readable } = require('stream');
 const multerS3 = require('multer-s3');
@@ -218,11 +218,11 @@ const productStorage = multerS3({
 
         // Extract hierarchy from request body
         // Ensure these are sent BEFORE the file in the FormData on the frontend
-        const { parentCategory, typeCode, categoryCode, subCategoryCode, sku, subfolder } = req.body;
+        const { parentCategory, typeCode, variantCode, categoryCode, subCategoryCode, orientationCode, sku, subfolder } = req.body;
 
         if (parentCategory && typeCode && categoryCode && subCategoryCode && sku) {
             // Industrial Hierarchical Path
-            let folder = `products/${parentCategory}/${typeCode}/${categoryCode}/${subCategoryCode}/${sku}/`;
+            let folder = `products/${parentCategory}/${typeCode}/${variantCode || 'Variant'}/${categoryCode}/${subCategoryCode}/${orientationCode || 'Orientation'}/${sku}/`;
 
             // Handle subfolders within the SKU directory
             if (subfolder === 'image') folder += 'images/';
@@ -242,7 +242,7 @@ const productStorage = multerS3({
 
 const productUpload = multer({
     storage: productStorage,
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for videos
+    limits: { fileSize: 500 * 1024 * 1024 }, // 500MB limit for videos
 });
 
 // Helper to convert stream to buffer (for unzipping)
@@ -312,7 +312,7 @@ router.post('/upload-media', checkPermission('products', 'edit'), productUpload.
     }
 });
 
-// Blog Image Delete Route
+// --- Blog Image Delete Route ---
 router.delete('/delete-blog-image', checkPermission('blogs', 'edit'), async (req, res) => {
     try {
         const { fileUrl, key } = req.body;
@@ -569,7 +569,7 @@ router.delete('/blog-categories/:id', checkPermission('blog_categories', 'delete
 
 router.get('/products', checkPermission('products', 'view'), async (req, res) => {
     try {
-        const { page = 1, limit = 50, search, category } = req.query;
+        const { page = 1, limit = 500, search, category } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
         const where = {};
         if (search) where[Op.or] = [
@@ -581,6 +581,15 @@ router.get('/products', checkPermission('products', 'view'), async (req, res) =>
         const { count, rows } = await Product.findAndCountAll({
             where,
             include: [{ model: Category, as: 'parentCategory', attributes: ['category_name'] }],
+            attributes: {
+                include: [
+                    [sequelize.literal(`(
+                        SELECT AVG(rating)
+                        FROM ratings
+                        WHERE ratings.products_id = "Product"."products_id" AND ratings.status = 'approved'
+                    )`), 'averageRating'],
+                ]
+            },
             order: [['createdAt', 'DESC']],
             limit: parseInt(limit),
             offset
@@ -605,11 +614,127 @@ router.post('/products', checkPermission('products', 'edit'), async (req, res) =
 
 router.put('/products/:id', checkPermission('products', 'edit'), async (req, res) => {
     try {
-        const [updated] = await Product.update(req.body, { where: { products_id: req.params.id } });
-        if (!updated) return res.status(404).json({ error: 'Product not found' });
+        // --- 1. FETCH OLD PRODUCT TO DETECT GENERIC (DRAFT) MEDIA ---
+        const existingProduct = await Product.findByPk(req.params.id);
+        if (!existingProduct) return res.status(404).json({ error: 'Product not found' });
+
+        const body = { ...req.body };
+
+        // --- 2. MEDIA MIGRATION: Generic → Categorized ---
+        // Only migrate if new data has a real SKU (i.e. all categories are now selected)
+        const newSku = body.internal_sku;
+        const oldSku = existingProduct.internal_sku;
+        const isGenericOld = !oldSku || oldSku === 'no-sku';
+        const hasRealNewSku = newSku && newSku !== 'no-sku' && !newSku.includes('null');
+
+        if (isGenericOld && hasRealNewSku) {
+            console.log(`[Media Migration] Migrating media from generic draft to: ${newSku}`);
+
+            // Helper: extract R2 key from a full URL
+            const urlToKey = (url) => {
+                if (!url || typeof url !== 'string') return null;
+                try {
+                    const urlObj = new URL(url);
+                    return decodeURIComponent(urlObj.pathname.replace(/^\//, ''));
+                } catch { return null; }
+            };
+
+            // Helper: check if a key lives in a generic/draft folder
+            const isGenericKey = (key) => {
+                if (!key) return false;
+                return key.includes('/Generic/') || key.includes('/no-sku/') ||
+                       key.includes('/Type/') || key.includes('/Category/') || key.includes('/Subcategory/') ||
+                       key.includes('/Variant/') || key.includes('/Orientation/');
+            };
+
+            // Helper: determine subfolder tag from key
+            const getSubfolder = (key) => {
+                if (key.includes('/videos/')) return 'videos';
+                if (key.includes('/images/')) return 'images';
+                return ''; // thumbnail / resource at root
+            };
+
+            // Helper: build new key for migrated file
+            const buildNewKey = (oldKey, newSkuVal, parentCat, typeCode, variantCode, catCode, subCatCode, orientationCode) => {
+                const ext = path.extname(oldKey);
+                const filename = path.basename(oldKey);
+                const subfolder = getSubfolder(oldKey);
+                const base = `products/${parentCat}/${typeCode}/${variantCode}/${catCode}/${subCatCode}/${orientationCode}/${newSkuVal}`;
+                return subfolder ? `${base}/${subfolder}/${filename}` : `${base}/${filename}`;
+            };
+
+            // Resolve codes from master data for new categorization
+            const [pCat, aType, aVar, aCat, aSubCat, aOri] = await Promise.all([
+                body.parent_category_id ? require('../models/Category').findByPk(body.parent_category_id, { attributes: ['category_name'] }) : null,
+                body.asset_type_id ? require('../models/AssetType').findByPk(body.asset_type_id, { attributes: ['code'] }) : null,
+                body.asset_variant_id ? require('../models/AssetVariant').findByPk(body.asset_variant_id, { attributes: ['code'] }) : null,
+                body.asset_category_id ? require('../models/AssetCategory').findByPk(body.asset_category_id, { attributes: ['code'] }) : null,
+                body.asset_sub_category_id ? require('../models/AssetSubCategory').findByPk(body.asset_sub_category_id, { attributes: ['code'] }) : null,
+                body.asset_orientation_id ? require('../models/AssetOrientation').findByPk(body.asset_orientation_id, { attributes: ['code'] }) : null,
+            ]);
+
+            const parentCatName = (pCat?.category_name || 'Generic').replace(/\s+/g, '');
+            const typeCd = (aType?.code || 'Type').replace(/\s+/g, '');
+            const varCd = (aVar?.code || 'Variant').replace(/\s+/g, '');
+            const catCd = (aCat?.code || 'Category').replace(/\s+/g, '');
+            const subCatCd = (aSubCat?.code || 'Subcategory').replace(/\s+/g, '');
+            const oriCd = (aOri?.code || 'Orientation').replace(/\s+/g, '');
+
+            // Copy + delete helper
+            const migrateFile = async (oldUrl) => {
+                const oldKey = urlToKey(oldUrl);
+                if (!oldKey || !isGenericKey(oldKey)) return oldUrl; // not a generic file, skip
+                try {
+                    const newKey = buildNewKey(oldKey, newSku, parentCatName, typeCd, varCd, catCd, subCatCd, oriCd);
+                    // Copy using CopyObjectCommand (correct S3/R2 API)
+                    await publicS3.send(new CopyObjectCommand({
+                        Bucket: process.env.R2_PUBLIC_BUCKET,
+                        CopySource: `${process.env.R2_PUBLIC_BUCKET}/${encodeURIComponent(oldKey)}`,
+                        Key: newKey,
+                        MetadataDirective: 'COPY',
+                    }));
+                    // Delete old
+                    await publicS3.send(new DeleteObjectCommand({
+                        Bucket: process.env.R2_PUBLIC_BUCKET,
+                        Key: oldKey,
+                    }));
+                    console.log(`[Media Migration] Moved: ${oldKey} → ${newKey}`);
+                    return publicFileUrl(newKey);
+                } catch (err) {
+                    console.error(`[Media Migration] Failed for ${oldKey}:`, err.message);
+                    return oldUrl; // fallback: keep old URL on error
+                }
+            };
+
+            // Migrate thumbnail
+            if (body.thumbnail && typeof body.thumbnail === 'string') {
+                body.thumbnail = await migrateFile(body.thumbnail);
+            }
+
+            // Migrate gallery images
+            if (Array.isArray(body.images)) {
+                body.images = await Promise.all(body.images.map(url => migrateFile(url)));
+            }
+
+            // Migrate videos
+            if (Array.isArray(body.video)) {
+                body.video = await Promise.all(body.video.map(url => migrateFile(url)));
+            }
+
+            // Migrate resource file
+            if (body.resource_file && typeof body.resource_file === 'string') {
+                body.resource_file = await migrateFile(body.resource_file);
+            }
+
+            console.log(`[Media Migration] Complete for product: ${req.params.id}`);
+        }
+
+        // --- 3. SAVE UPDATED PRODUCT ---
+        await Product.update(body, { where: { products_id: req.params.id } });
         await clearCache(['products', 'product', 'products-meta']);
         res.json({ success: true });
     } catch (err) {
+        console.error('[Admin] Product Update Error:', err);
         res.status(400).json({ error: err.message });
     }
 });

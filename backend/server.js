@@ -83,6 +83,8 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/enquiry', enquiryRoutes);
 app.use('/api/settings', settingRoutes);
 
+app.use('/api/settings', settingRoutes);
+
 // Database connection and server start
 const startServer = async () => {
     try {

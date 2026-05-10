@@ -90,7 +90,7 @@ router.get('/', cache('products', 1800), async (req, res) => {
             parentCategory, assetCategory, assetSubCategory, assetType, assetVariant, orientation
         } = req.query;
 
-        const where = {};
+        const where = { is_draft: { [Op.not]: true } };
         const include = [
             { model: Category, as: 'parentCategory' },
             { model: AssetCategory, as: 'assetCategory' },
@@ -286,7 +286,7 @@ router.get('/next-serial', async (req, res) => {
 router.get('/:slug', cache('product', 1800), async (req, res) => {
     try {
         const product = await Product.findOne({
-            where: { slug: req.params.slug },
+            where: { slug: req.params.slug, is_draft: { [Op.not]: true } },
             include: [
                 { model: Category, as: 'parentCategory' },
                 { model: AssetCategory, as: 'assetCategory' },

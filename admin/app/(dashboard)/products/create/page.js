@@ -15,6 +15,7 @@ function CreateProduct() {
     const router = useRouter();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [isDraftSubmit, setIsDraftSubmit] = useState(false);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -303,13 +304,17 @@ function CreateProduct() {
             
             const parent = masterData.parentCategories?.find(c => c.category_id === formData.parent_category_id)?.category_name || "Generic";
             const typeCode = masterData.types?.find(t => t.type_id === formData.asset_type_id)?.code || "Type";
+            const variantCode = masterData.variants?.find(v => v.variant_id === formData.asset_variant_id)?.code || "Variant";
             const categoryCode = masterData.categories?.find(c => c.asset_category_id === formData.asset_category_id)?.code || "Category";
             const subCategoryCode = masterData.subCategories?.find(s => s.asset_sub_category_id === formData.asset_sub_category_id)?.code || "Subcategory";
+            const orientationCode = masterData.orientations?.find(o => o.orientation_id === formData.asset_orientation_id)?.code || "Orientation";
             
             formDataPayload.append("parentCategory", parent.replace(/\s+/g, ""));
             formDataPayload.append("typeCode", typeCode.replace(/\s+/g, ""));
+            formDataPayload.append("variantCode", variantCode.replace(/\s+/g, ""));
             formDataPayload.append("categoryCode", categoryCode.replace(/\s+/g, ""));
             formDataPayload.append("subCategoryCode", subCategoryCode.replace(/\s+/g, ""));
+            formDataPayload.append("orientationCode", orientationCode.replace(/\s+/g, ""));
             formDataPayload.append("sku", (internalSku || "no-sku").replace(/\s+/g, ""));
             formDataPayload.append("subfolder", subfolder); 
             formDataPayload.append("file", file);
@@ -393,11 +398,19 @@ function CreateProduct() {
 
             const dataToSubmit = {
                 ...formData,
-                internal_sku: internalSku,
-                price: parseFloat(formData.price),
+                parent_category_id: formData.parent_category_id || null,
+                asset_type_id: formData.asset_type_id || null,
+                asset_variant_id: formData.asset_variant_id || null,
+                asset_category_id: formData.asset_category_id || null,
+                asset_sub_category_id: formData.asset_sub_category_id || null,
+                asset_orientation_id: formData.asset_orientation_id || null,
+                internal_sku: internalSku || null,
+                serial_number: formData.serial_number || null,
+                price: parseFloat(formData.price) || 0,
                 compared_price: formData.compared_price ? parseFloat(formData.compared_price) : null,
                 thumbnail: thumbnailUrl,
                 images: finalImages,
+                is_draft: isDraftSubmit,
                 tags: tagsObject,
                 colors: colors,
                 to_person: toPerson,
@@ -415,6 +428,10 @@ function CreateProduct() {
 
             router.push("/products");
         } catch (error) {
+            setUploadingThumbnail(false);
+            setUploadingGallery(false);
+            setUploadingVideo(false);
+            setUploadingResource(false);
             console.error(error);
             alert("Failed to create product: " + (error.response?.data?.error || error.message));
         } finally {
@@ -945,9 +962,22 @@ function CreateProduct() {
                     </div>
                 </div>
 
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#130C1C]/80 backdrop-blur-md border-t border-[#2d1b4e] z-40 flex justify-end">
-                    <button type="submit" disabled={loading} className="w-full max-w-[250px] bg-[#7C3AED] text-white py-2 rounded-full font-bold hover:bg-[#6D28D9] transition-all shadow-2xl shadow-purple-900/20 flex items-center justify-center gap-3 text-lg">
-                        {loading ? (
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#130C1C]/80 backdrop-blur-md border-t border-[#2d1b4e] z-40 flex justify-end gap-4">
+                    <button type="submit" formNoValidate onClick={() => setIsDraftSubmit(true)} disabled={loading} className="w-full max-w-[250px] bg-[#2d1b4e] text-gray-300 py-2 rounded-full font-bold hover:bg-[#3b2a5f] transition-all shadow-xl shadow-purple-900/10 flex items-center justify-center gap-3 text-lg border border-[#3b2a5f]">
+                        {loading && isDraftSubmit ? (
+                            <>
+                                <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
+                                Saving Draft...
+                            </>
+                        ) : (
+                            <>
+                                <FontAwesomeIcon icon={faSave} />
+                                Save as Draft
+                            </>
+                        )}
+                    </button>
+                    <button type="submit" onClick={() => setIsDraftSubmit(false)} disabled={loading} className="w-full max-w-[250px] bg-[#7C3AED] text-white py-2 rounded-full font-bold hover:bg-[#6D28D9] transition-all shadow-2xl shadow-purple-900/20 flex items-center justify-center gap-3 text-lg">
+                        {loading && !isDraftSubmit ? (
                             <>
                                 <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
                                 Creating Product...

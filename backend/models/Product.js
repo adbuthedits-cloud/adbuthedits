@@ -119,6 +119,11 @@ const Product = sequelize.define('Product', {
         type: DataTypes.TEXT,
         allowNull: true
     },
+    is_draft: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
 });
 
 module.exports = Product;

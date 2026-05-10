@@ -10,6 +10,9 @@ const migrations = [
     // Add 'source' column to enquiries table
     `ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'enquiry_form'`,
 
+    // Add 'is_draft' column to products table
+    `ALTER TABLE "Products" ADD COLUMN IF NOT EXISTS is_draft BOOLEAN DEFAULT false`,
+
     // Add 'assigned_to' column to enquiries table  
     `ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS assigned_to UUID`,
 

@@ -656,7 +656,7 @@ function EditProduct() {
             </div>
 
             <form className="space-y-8 pb-20">
-                <fieldset disabled className="space-y-8 opacity-90 pointer-events-none">
+                <fieldset disabled className="space-y-8 opacity-90">
                 {/* Section 1: Basic Information */}
                 <div className="bg-[#1E1628] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-[#2d1b4e] p-8 space-y-6">
                     <h3 className="font-bold text-white text-lg border-b border-[#2d1b4e] pb-2 flex items-center gap-2">
@@ -876,7 +876,7 @@ function EditProduct() {
                                 </div>
                             )}
                             {!uploadingThumbnail && formData.thumbnail && (
-                                <div className="relative mt-2 w-32 h-32 rounded-xl border border-[#2d1b4e] overflow-hidden">
+                                <div className="relative mt-2 w-32 h-32 rounded-xl border border-[#2d1b4e] overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.open(formData.thumbnail instanceof File ? URL.createObjectURL(formData.thumbnail) : formData.thumbnail, '_blank')}>
                                     <Image 
                                         src={formData.thumbnail instanceof File ? URL.createObjectURL(formData.thumbnail) : formData.thumbnail} 
                                         fill 
@@ -906,7 +906,7 @@ function EditProduct() {
                                     const src = img instanceof File ? URL.createObjectURL(img) : img;
                                     return (
                                         <div key={idx} className="relative group">
-                                            <div className="relative w-20 h-20 rounded-lg border border-[#2d1b4e] overflow-hidden">
+                                            <div className="relative w-20 h-20 rounded-lg border border-[#2d1b4e] overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.open(src, '_blank')}>
                                                 <Image src={src} alt="Gallery item" fill className="object-cover" sizes="80px" />
                                             </div>
                                             <button type="button" onClick={() => removeItem(idx, images, setImages)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500/80 text-white rounded-full text-[10px] flex items-center justify-center shadow-lg hover:bg-red-500">

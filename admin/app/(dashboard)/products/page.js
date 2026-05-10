@@ -53,9 +53,14 @@ function Products() {
 
     const fetchProducts = async () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const token = getAuthToken();
         try {
-            const res = await axios.get(`${apiUrl}/api/products`);
-            setProducts(res.data);
+            // Use admin route so drafts are included in the listing
+            const res = await axios.get(`${apiUrl}/api/admin/products?limit=500`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Admin route returns { products: [...], total, page }
+            setProducts(res.data.products || res.data);
             setLoading(false);
         } catch (error) {
             console.error('Failed to fetch products', error);
@@ -396,9 +401,15 @@ function Products() {
                                         className="bg-[#1E1628] rounded-[18px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-xl hover:shadow-purple-900/10 transition-all group relative border border-[#2d1b4e]"
                                     >
                                         {/* Vertical Ribbon */}
-                                        <div className="absolute top-0 left-4 w-8 h-12 bg-[#2d1b4e] flex items-center justify-center rounded-b-lg shadow-sm z-10 transition-transform hover:scale-110 origin-top">
-                                            <span className="text-[10px] font-bold text-[#a78bfa] -rotate-90 tracking-wider transform translate-y-1 block">NEW</span>
-                                        </div>
+                                        {product.is_draft ? (
+                                            <div className="absolute top-0 left-4 w-8 h-12 bg-amber-600 flex items-center justify-center rounded-b-lg shadow-sm z-10 transition-transform hover:scale-110 origin-top">
+                                                <span className="text-[10px] font-bold text-white -rotate-90 tracking-wider transform translate-y-1 block">DRAFT</span>
+                                            </div>
+                                        ) : (
+                                            <div className="absolute top-0 left-4 w-8 h-12 bg-[#2d1b4e] flex items-center justify-center rounded-b-lg shadow-sm z-10 transition-transform hover:scale-110 origin-top">
+                                                <span className="text-[10px] font-bold text-[#a78bfa] -rotate-90 tracking-wider transform translate-y-1 block">NEW</span>
+                                            </div>
+                                        )}
 
                                         {/* 3-Dots Menu */}
                                         <div className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#2d1b4e] cursor-pointer text-gray-500 group-hover:text-[#a78bfa] transition-colors">
@@ -449,6 +460,26 @@ function Products() {
                                                     alt=""
                                                     className="h-full object-contain max-w-[95%] drop-shadow-sm"
                                                 />
+                                            ) : (product.images && product.images.length > 0) ? (
+                                                <motion.img
+                                                    whileHover={{ scale: 1.05 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    src={product.images[0]}
+                                                    alt=""
+                                                    className="h-full object-contain max-w-[95%] drop-shadow-sm"
+                                                />
+                                            ) : (product.video && product.video.length > 0) ? (
+                                                <motion.video
+                                                    whileHover={{ scale: 1.05 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    src={product.video[0]}
+                                                    className="h-full object-contain max-w-[95%] drop-shadow-sm pointer-events-none"
+                                                    muted
+                                                    loop
+                                                    playsInline
+                                                    onMouseOver={(e) => e.target.play()}
+                                                    onMouseOut={(e) => { e.target.pause(); e.target.currentTime = 0; }}
+                                                />
                                             ) : (
                                                 <div className="text-gray-300">
                                                     <FontAwesomeIcon icon={faSearch} className="text-4xl opacity-20" />
@@ -473,7 +504,7 @@ function Products() {
                                             <div className="flex justify-between items-end border-t border-[#2d1b4e] pt-3 border-dashed">
                                                 <div>
                                                     <span className="text-[10px] text-gray-500 block mb-0.5 font-bold uppercase tracking-wider">Price</span>
-                                                    <span className="text-lg font-bold text-white">₹{product.price.toLocaleString()}</span>
+                                                    <span className="text-lg font-bold text-white">₹{(product.price || 0).toLocaleString()}</span>
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-[10px] text-gray-500 block mb-0.5 font-bold uppercase tracking-wider">Sales</span>
