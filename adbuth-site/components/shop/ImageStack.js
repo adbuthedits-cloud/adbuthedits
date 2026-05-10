@@ -84,8 +84,8 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
             >
                 {mediaItems.map((item, i) => {
                     const isCenter = i === index;
-                    const isNext = i === (index + 1) % mediaItems.length;
-                    const isPrev = i === (index - 1 + mediaItems.length) % mediaItems.length;
+                    const isNext = !isCenter && i === (index + 1) % mediaItems.length;
+                    const isPrev = !isCenter && !isNext && i === (index - 1 + mediaItems.length) % mediaItems.length;
 
                     const isVisible = isCenter || isNext || isPrev || mediaItems.length <= 3;
 
