@@ -253,6 +253,35 @@ router.get('/master-data', cache('master-data', 86400), async (req, res) => {
     }
 });
 
+// GET /api/products/next-serial
+router.get('/next-serial', async (req, res) => {
+    try {
+        const {
+            parent_category_id,
+            asset_type_id,
+            asset_variant_id,
+            asset_category_id,
+            asset_sub_category_id,
+            asset_orientation_id
+        } = req.query;
+
+        const where = {};
+        if (parent_category_id) where.parent_category_id = parent_category_id;
+        if (asset_type_id) where.asset_type_id = asset_type_id;
+        if (asset_variant_id) where.asset_variant_id = asset_variant_id;
+        if (asset_category_id) where.asset_category_id = asset_category_id;
+        if (asset_sub_category_id) where.asset_sub_category_id = asset_sub_category_id;
+        if (asset_orientation_id) where.asset_orientation_id = asset_orientation_id;
+
+        const maxSerial = await Product.max('serial_number', { where });
+        const nextSerial = maxSerial ? maxSerial + 1 : 1001;
+        
+        res.json({ nextSerial });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // GET /api/products/:slug
 router.get('/:slug', cache('product', 1800), async (req, res) => {
     try {
