@@ -49,7 +49,7 @@ export default function ProductCard({ product }) {
         : 0;
 
     return (
-        <div className="group relative flex flex-col bg-white   hover:shadow-md transition-all duration-200">
+        <div className="group relative flex flex-col bg-white hover:shadow-md transition-all duration-200">
             {/* Image Container */}
             <Link href={productUrl} className="block relative overflow-hidden bg-gray-50" style={{ aspectRatio: '3/4' }}>
                 {thumbnail ? (

@@ -64,7 +64,7 @@ export default function ProductDetailView({ slug }) {
 
                 // Fetch Related Products (Priority: assetCategory, Fallback: parentCategory)
                 let related = [];
-                
+
                 // 1. Try Sub-Category (assetCategory)
                 if (data.assetCategory?.asset_category_id) {
                     const relRes = await fetch(`${apiUrl}/api/products?assetCategory=${data.assetCategory.asset_category_id}`);
@@ -90,7 +90,7 @@ export default function ProductDetailView({ slug }) {
                     const occRes = await fetch(`${apiUrl}/api/products?assetCategory=${data.assetCategory.asset_category_id}&limit=200`);
                     if (occRes.ok) {
                         const allRelated = await occRes.json();
-                        
+
                         // Group by sub-category name
                         const groupsMap = {};
                         allRelated.forEach(p => {
@@ -384,13 +384,20 @@ export default function ProductDetailView({ slug }) {
                                 <span className="text-gray-900 truncate max-w-[300px]"> {product.title}</span>
                             </div>
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mt-3 sm:mt-4 text-gray-900 leading-tight">{product.title}</h1>
-                            <p className="text-xs sm:text-sm text-gray-500 mt-1">{product.internal_sku || product.slug}</p>
+
                         </div>
 
-                        <div className="flex items-baseline gap-3 mb-6">
+                        <div className="flex items-baseline gap-2 mb-6">
                             <span className="text-3xl font-black text-gray-900 tracking-tight">₹{product.price}</span>
-                            {product.compare_at_price && (
-                                <span className="text-lg text-gray-400 line-through decoration-red-500/30">₹{product.compare_at_price}</span>
+                            {product.compared_price > product.price && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg text-gray-500 font-medium ml-1">
+                                        MRP <span className="line-through decoration-gray-400">₹{product.compared_price}</span>
+                                    </span>
+                                    <span className="text-lg text-orange-500 font-bold">
+                                        ({Math.round(((product.compared_price - product.price) / product.compared_price) * 100)}% OFF)
+                                    </span>
+                                </div>
                             )}
                         </div>
 
@@ -474,7 +481,7 @@ export default function ProductDetailView({ slug }) {
                                 <h3 className="text-lg font-bold text-gray-900 mb-6 uppercase tracking-tight">Recommended For You</h3>
                                 <div className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                                     {relatedProducts.map(p => (
-                                        <div key={p.products_id} className="min-w-[150px] sm:min-w-[180px] snap-start">
+                                        <div key={p.products_id} className="w-[160px] sm:w-[190px] flex-none snap-start">
                                             <ProductCard product={p} />
                                         </div>
                                     ))}
@@ -503,7 +510,7 @@ export default function ProductDetailView({ slug }) {
                                             </h2>
                                             <div className="h-1 w-12 bg-purple-600 mt-2" />
                                         </div>
-                                        <Link 
+                                        <Link
                                             href={`/shop?parentCategory=${product.parentCategory?.slug || 'all'}&assetCategory=${product.assetCategory?.slug || ''}&assetSubCategory=${group.slug}`}
                                             className="text-sm font-bold text-purple-700 hover:text-purple-900 flex items-center gap-2 group transition-all"
                                         >
@@ -514,7 +521,7 @@ export default function ProductDetailView({ slug }) {
 
                                     <div className="flex overflow-x-auto gap-4 pb-8 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                                         {group.products.map(p => (
-                                            <div key={p.products_id} className="min-w-[180px] sm:min-w-[220px] snap-start">
+                                            <div key={p.products_id} className="w-[200px] sm:w-[240px] flex-none snap-start">
                                                 <ProductCard product={p} />
                                             </div>
                                         ))}
