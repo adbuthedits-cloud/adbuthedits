@@ -21,8 +21,9 @@ function SeoDashboard() {
         // --- Main Pages ---
         { page_identifier: 'home', title: 'Home Page', path: '/' },
         { page_identifier: 'about', title: 'About Us', path: '/about' },
+
+        { page_identifier: 'blogs', title: 'Blogs', path: '/blogs' },
         { page_identifier: 'contact', title: 'Contact Us', path: '/contact' },
-        { page_identifier: 'blogs', title: 'Blog Listing', path: '/blogs' },
         { page_identifier: 'enquiry-form', title: 'Enquiry Form', path: '/enquiry-form' },
 
         // --- Auth & User ---
@@ -38,6 +39,14 @@ function SeoDashboard() {
         // --- Services Root ---
         { page_identifier: 'service-main', title: 'Services Main', path: '/services' },
 
+        // --- Services: Videos ---
+        { page_identifier: 'service-videos', title: 'Service: Videos Main', path: '/services/videos' },
+        { page_identifier: 'service-video-ads', title: 'Service: Adbuth Ads', path: '/services/videos/adbuth-ads' },
+        { page_identifier: 'service-video-corporate', title: 'Service: Corporate', path: '/services/videos/adbuth-corporate' },
+        { page_identifier: 'service-video-edits', title: 'Service: Edits', path: '/services/videos/adbuth-edits' },
+        { page_identifier: 'service-video-music', title: 'Service: Music', path: '/services/videos/adbuth-music' },
+        { page_identifier: 'service-video-politics', title: 'Service: Politics', path: '/services/videos/adbuth-politics' },
+
         // --- Services: Designing ---
         { page_identifier: 'service-designing', title: 'Service: Designing', path: '/services/designing' },
         { page_identifier: 'service-design-invitations', title: 'Service: E-Invitations', path: '/services/designing/adbuth-e-invitations' },
@@ -47,14 +56,6 @@ function SeoDashboard() {
         { page_identifier: 'service-learning', title: 'Service: Learning', path: '/services/learning' },
         { page_identifier: 'service-learning-dam', title: 'Service: Adbuth DAM', path: '/services/learning/adbuth-dam' },
         { page_identifier: 'service-learning-elearning', title: 'Service: E-Learning', path: '/services/learning/adbuth-e-learning' },
-
-        // --- Services: Videos ---
-        { page_identifier: 'service-videos', title: 'Service: Videos Main', path: '/services/videos' },
-        { page_identifier: 'service-video-ads', title: 'Service: Adbuth Ads', path: '/services/videos/adbuth-ads' },
-        { page_identifier: 'service-video-corporate', title: 'Service: Corporate', path: '/services/videos/adbuth-corporate' },
-        { page_identifier: 'service-video-edits', title: 'Service: Edits', path: '/services/videos/adbuth-edits' },
-        { page_identifier: 'service-video-music', title: 'Service: Music', path: '/services/videos/adbuth-music' },
-        { page_identifier: 'service-video-politics', title: 'Service: Politics', path: '/services/videos/adbuth-politics' },
 
         // --- Legal & Policies ---
         { page_identifier: 'privacy', title: 'Privacy Policy', path: '/privacy' },
