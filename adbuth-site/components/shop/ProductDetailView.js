@@ -474,7 +474,7 @@ export default function ProductDetailView({ slug }) {
                                 <h3 className="text-lg font-bold text-gray-900 mb-6 uppercase tracking-tight">Recommended For You</h3>
                                 <div className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                                     {relatedProducts.map(p => (
-                                        <div key={p.products_id} className="min-w-[200px] sm:min-w-[240px] snap-start">
+                                        <div key={p.products_id} className="min-w-[150px] sm:min-w-[180px] snap-start">
                                             <ProductCard product={p} />
                                         </div>
                                     ))}
@@ -512,9 +512,9 @@ export default function ProductDetailView({ slug }) {
                                         </Link>
                                     </div>
 
-                                    <div className="flex overflow-x-auto gap-6 pb-8 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+                                    <div className="flex overflow-x-auto gap-4 pb-8 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                                         {group.products.map(p => (
-                                            <div key={p.products_id} className="min-w-[240px] sm:min-w-[280px] snap-start">
+                                            <div key={p.products_id} className="min-w-[180px] sm:min-w-[220px] snap-start">
                                                 <ProductCard product={p} />
                                             </div>
                                         ))}
