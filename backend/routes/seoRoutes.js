@@ -73,4 +73,20 @@ router.post('/pages', authMiddleware, adminMiddleware, checkPermission('seo', 'e
     }
 });
 
+// DELETE /api/seo/pages/:id - Delete a page SEO (Admin only)
+router.delete('/pages/:id', authMiddleware, adminMiddleware, checkPermission('seo', 'edit'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const page = await SeoPage.findByPk(id);
+        if (!page) {
+            return res.status(404).json({ error: 'Page not found' });
+        }
+        await page.destroy();
+        await clearCache(['seo']);
+        res.json({ message: 'SEO Page deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

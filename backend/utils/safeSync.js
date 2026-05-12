@@ -35,6 +35,9 @@ const migrations = [
 
     // Make 'service' nullable in enquiries
     `ALTER TABLE enquiries ALTER COLUMN service DROP NOT NULL`,
+
+    // Add 'path' column to SeoPages table
+    `ALTER TABLE "SeoPages" ADD COLUMN IF NOT EXISTS path VARCHAR(255)`,
 ];
 
 async function runSafeMigrations() {

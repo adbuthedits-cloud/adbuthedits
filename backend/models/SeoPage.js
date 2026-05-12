@@ -35,6 +35,10 @@ const SeoPage = sequelize.define('SeoPage', {
     no_index: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    path: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     timestamps: true
