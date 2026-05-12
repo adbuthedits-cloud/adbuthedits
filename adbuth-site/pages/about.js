@@ -170,7 +170,7 @@ export default function About() {
                 className="flex flex-col items-center group"
               >
                 <div className="relative w-64 h-64 rounded-xl mb-4 overflow-hidden shadow-lg border border-purple-100/10">
-                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg" alt="Angilika Jaya Venkat Kiran" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Angilika%20Jaya%20Venkata%20Kiran.png" alt="Angilika Jaya Venkat Kiran" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                 </div>
                 <h4 className="font-bold text-black text-sm group-hover:text-[#7D287E] transition-colors">Angilika Jaya Venkat Kiran</h4>
                 <p className="text-xs text-gray-500">Managing Director</p>
@@ -185,7 +185,7 @@ export default function About() {
                 className="flex flex-col items-center group"
               >
                 <div className="relative w-64 h-64 rounded-xl mb-4 overflow-hidden shadow-lg border border-purple-100/10">
-                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg" alt="Venu Thorani" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Thorani%20Venu.png" alt="Venu Thorani" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                 </div>
                 <h4 className="font-bold text-black text-sm group-hover:text-[#7D287E] transition-colors">Venu Thorani</h4>
                 <p className="text-xs text-gray-500">Managing Director</p>
@@ -227,17 +227,20 @@ export default function About() {
                 {[...Array(3)].map((_, repeatIndex) => (
                   <div key={repeatIndex} className="flex gap-4">
                     {[
-                      { name: "Vijay", role: "Studio Manager" },
-                      { name: "Rajesh", role: "Senior Editor" },
-                      { name: "Vikram", role: "Senior Editor" },
-                      { name: "Rekha Sree", role: "Graphic Designer" },
+                      { name: "Rakesh Mungara", role: "Business Development Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Rakesh%20Mungara.png" },
+                      { name: "Murali Krishna", role: "HR Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Murali%20Krishna.png" },
+                      { name: "Sai Sireesha", role: "Data Management Executive", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Sai%20Sireesha.png" },
+                      { name: "Rajesh Alathore", role: "Senior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Rajesh.png" },
+                      { name: "Vikram Kishore", role: "Senior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Vikram%20Kishore.png" },
+                      { name: "Sukumar", role: "Senior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Sukumar.png" },
+                      { name: "Sai Chaitanya", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Sai%20Chaitanya.png" },
                     ].map((member, i) => (
                       <div
                         key={`row1-${repeatIndex}-${i}`}
                         className="flex flex-col items-start text-left flex-shrink-0 w-[150px]"
                       >
                         <div className="relative w-full aspect-square rounded-xl mb-3 overflow-hidden shadow-md bg-black">
-                          <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg" alt={member.name} fill className="object-cover" />
+                          <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover" />
                         </div>
                         <h4 className="font-bold text-black text-sm">{member.name}</h4>
                         <p className="text-[10px] text-gray-600">{member.role}</p>
@@ -266,17 +269,20 @@ export default function About() {
                 {[...Array(3)].map((_, repeatIndex) => (
                   <div key={repeatIndex} className="flex gap-4">
                     {[
-                      { name: "Sukumar", role: "Editor" },
-                      { name: "Vijay Balaram", role: "Album Designer" },
-                      { name: "Teja", role: "Social Media Marketing Specialist" },
-                      { name: "Anusha", role: "Social Media Marketing Executive" },
+                      { name: "Simhadri", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Simahadri.png" },
+                      { name: "Praneeth", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Praneeth%20..png" },
+                      { name: "Yaswanth Kumar", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Yaswanth%20Kumar.png" },
+                      { name: "Yaseen Shareef", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Yassen%20Shareef.png" },
+                      { name: "Shah Basha", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Shah%20basha.png" },
+                      { name: "Prudhivi Raj", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/prudhvi%20raj.png" },
+                      { name: "Venkata Lokesh", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Venkata%20Lokesh.png" },
                     ].map((member, i) => (
                       <div
                         key={`row2-${repeatIndex}-${i}`}
                         className="flex flex-col items-start text-left flex-shrink-0 w-[150px]"
                       >
                         <div className="relative w-full aspect-square rounded-xl mb-3 overflow-hidden shadow-md bg-black">
-                          <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg" alt={member.name} fill className="object-cover" />
+                          <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover" />
                         </div>
                         <h4 className="font-bold text-black text-sm">{member.name}</h4>
                         <p className="text-[10px] text-gray-600">{member.role}</p>
@@ -290,14 +296,20 @@ export default function About() {
             {/* Desktop: Static Grid */}
             <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-8">
               {[
-                { name: "Vijay", role: "Studio Manager" },
-                { name: "Rajesh", role: "Senior Editor" },
-                { name: "Vikram", role: "Senior Editor" },
-                { name: "Rekha Sree", role: "Graphic Designer" },
-                { name: "Sukumar", role: "Editor" },
-                { name: "Vijay Balaram", role: "Album Designer" },
-                { name: "Teja", role: "Social Media Marketing Specialist" },
-                { name: "Anusha", role: "Social Media Marketing Executive" },
+                { name: "Rakesh Mungara", role: "Business Development Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Rakesh%20Mungara.png" },
+                { name: "Murali Krishna", role: "HR Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Murali%20Krishna.png" },
+                { name: "Sai Sireesha", role: "Data Management Executive", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Sai%20Sireesha.png" },
+                { name: "Rajesh Alathore", role: "Senior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Rajesh.png" },
+                { name: "Vikram Kishore", role: "Senior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Vikram%20Kishore.png" },
+                { name: "Sukumar", role: "Senior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Sukumar.png" },
+                { name: "Sai Chaitanya", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Sai%20Chaitanya.png" },
+                { name: "Simhadri", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Simahadri.png" },
+                { name: "Praneeth", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Praneeth%20..png" },
+                { name: "Yaswanth Kumar", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Yaswanth%20Kumar.png" },
+                { name: "Yaseen Shareef", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Yassen%20Shareef.png" },
+                { name: "Shah Basha", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Shah%20basha.png" },
+                { name: "Prudhivi Raj", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/prudhvi%20raj.png" },
+                { name: "Venkata Lokesh", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Venkata%20Lokesh.png" },
               ].map((member, i) => (
                 <motion.div
                   key={i}
@@ -311,7 +323,7 @@ export default function About() {
                 >
                   <div className="relative w-full aspect-square rounded-xl mb-3 overflow-hidden shadow-md border-2 border-transparent group-hover:border-[#FCD804] transition-all duration-300">
                     <div className="relative w-full h-full">
-                      <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg" alt={member.name} fill className="object-cover transition-transform duration-500" />
+                      <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover transition-transform duration-500" />
                     </div>
                   </div>
                   <h4 className="font-bold text-black text-sm group-hover:text-[#7D287E] transition-colors">{member.name}</h4>

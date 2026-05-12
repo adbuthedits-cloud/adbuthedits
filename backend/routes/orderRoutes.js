@@ -438,4 +438,33 @@ router.get('/items/:itemId/view', auth, async (req, res) => {
     }
 });
 
+// PUBLIC TRACKING ROUTE (For Zoho Bot)
+router.get('/public/track', async (req, res) => {
+    try {
+        const { orderId, email } = req.query;
+        if (!orderId || !email) return res.status(400).json({ error: 'Order ID and Email required' });
+
+        const User = require('../models/User');
+        const order = await Order.findOne({
+            where: { order_id: orderId },
+            include: [
+                { model: User, as: 'user', where: { email: email.toLowerCase().trim() }, attributes: ['email', 'name'] },
+                { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product', attributes: ['title'] }] }
+            ]
+        });
+
+        if (!order) return res.status(404).json({ error: 'Order not found or email mismatch' });
+
+        res.json({
+            status: order.status,
+            total: order.total_amount,
+            date: order.createdAt,
+            items: order.items.map(i => i.product.title).join(', ')
+        });
+    } catch (err) {
+        console.error('[Public Tracking Error]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
