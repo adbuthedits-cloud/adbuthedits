@@ -10,7 +10,7 @@
  */
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as faHeartSolid, faStar } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartOutline } from '@fortawesome/free-regular-svg-icons';
@@ -28,6 +28,28 @@ function isNewProduct(updatedAt) {
 export default function ProductCard({ product }) {
     const [wishlisted, setWishlisted] = useState(false);
     const videoRef = useRef(null);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        if (!videoRef.current || !containerRef.current) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        videoRef.current?.play().catch(e => console.log('Autoplay prevented', e));
+                    } else {
+                        videoRef.current?.pause();
+                    }
+                });
+            },
+            { threshold: 0.2 } // Play when 20% visible
+        );
+
+        observer.observe(containerRef.current);
+
+        return () => observer.disconnect();
+    }, []);
 
     if (!product) return null;
 
@@ -56,8 +78,7 @@ export default function ProductCard({ product }) {
                     href={productUrl} 
                     className="block relative overflow-hidden bg-gray-50" 
                     style={{ aspectRatio: '3/4' }}
-                    onMouseEnter={() => videoRef.current && videoRef.current.play()}
-                    onMouseLeave={() => videoRef.current && videoRef.current.pause()}
+                    ref={containerRef}
                 >
                 {videoUrl ? (
                     <video
