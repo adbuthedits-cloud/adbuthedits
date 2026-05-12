@@ -519,7 +519,7 @@ export default function ProductDetailView({ slug }) {
                                         </Link>
                                     </div>
 
-                                    <div className="flex overflow-x-auto gap-4 pb-8 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+                                    <div className="flex overflow-x-auto gap-4  no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                                         {group.products.map(p => (
                                             <div key={p.products_id} className="w-[200px] sm:w-[240px] flex-none snap-start">
                                                 <ProductCard product={p} />

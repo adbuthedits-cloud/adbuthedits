@@ -10,7 +10,7 @@
  */
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as faHeartSolid, faStar } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartOutline } from '@fortawesome/free-regular-svg-icons';
@@ -27,6 +27,7 @@ function isNewProduct(updatedAt) {
 
 export default function ProductCard({ product }) {
     const [wishlisted, setWishlisted] = useState(false);
+    const videoRef = useRef(null);
 
     if (!product) return null;
 
@@ -51,7 +52,13 @@ export default function ProductCard({ product }) {
     return (
         <div className="group relative flex flex-col bg-white hover:shadow-md transition-all duration-200">
             {/* Image Container */}
-            <Link href={productUrl} className="block relative overflow-hidden bg-gray-50" style={{ aspectRatio: '3/4' }}>
+                <Link 
+                    href={productUrl} 
+                    className="block relative overflow-hidden bg-gray-50" 
+                    style={{ aspectRatio: '3/4' }}
+                    onMouseEnter={() => videoRef.current && videoRef.current.play()}
+                    onMouseLeave={() => videoRef.current && videoRef.current.pause()}
+                >
                 {thumbnail ? (
                     <Image
                         src={thumbnail}
@@ -62,12 +69,13 @@ export default function ProductCard({ product }) {
                     />
                 ) : videoUrl ? (
                     <video
+                        ref={videoRef}
                         src={videoUrl}
                         className="w-full h-full object-cover"
                         muted
                         loop
                         playsInline
-                        autoPlay
+                        preload="metadata"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -128,7 +136,10 @@ export default function ProductCard({ product }) {
                 <div className="flex items-baseline gap-2 mt-auto">
                     <span className="text-[14px] font-bold text-gray-900">₹{product.price}</span>
                     {hasDiscount && (
-                        <span className="text-[11px] text-gray-400 line-through">₹{product.compared_price}</span>
+                        <>
+                            <span className="text-[11px] text-gray-400 line-through">₹{product.compared_price}</span>
+                            <span className="text-[11px] font-bold text-green-600">{discountPct}% OFF</span>
+                        </>
                     )}
                 </div>
             </Link>

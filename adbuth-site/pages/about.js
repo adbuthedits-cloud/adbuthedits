@@ -170,7 +170,7 @@ export default function About() {
                 className="flex flex-col items-center group"
               >
                 <div className="relative w-64 h-64 rounded-xl mb-4 overflow-hidden shadow-lg border border-purple-100/10">
-                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Angilika%20Jaya%20Venkata%20Kiran.png" alt="Angilika Jaya Venkat Kiran" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Angilika%20Jaya%20Venkata%20Kiran.png" alt="Angilika Jaya Venkat Kiran" fill className="object-cover object-top transition-transform duration-700 group-hover:scale-105" />
                 </div>
                 <h4 className="font-bold text-black text-sm group-hover:text-[#7D287E] transition-colors">Angilika Jaya Venkat Kiran</h4>
                 <p className="text-xs text-gray-500">Managing Director</p>
@@ -185,7 +185,7 @@ export default function About() {
                 className="flex flex-col items-center group"
               >
                 <div className="relative w-64 h-64 rounded-xl mb-4 overflow-hidden shadow-lg border border-purple-100/10">
-                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Thorani%20Venu.png" alt="Venu Thorani" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Thorani%20Venu.png" alt="Venu Thorani" fill className="object-cover object-top transition-transform duration-700 group-hover:scale-105" />
                 </div>
                 <h4 className="font-bold text-black text-sm group-hover:text-[#7D287E] transition-colors">Venu Thorani</h4>
                 <p className="text-xs text-gray-500">Managing Director</p>
@@ -240,7 +240,7 @@ export default function About() {
                         className="flex flex-col items-start text-left flex-shrink-0 w-[150px]"
                       >
                         <div className="relative w-full aspect-square rounded-xl mb-3 overflow-hidden shadow-md bg-black">
-                          <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover" />
+                          <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover object-top" />
                         </div>
                         <h4 className="font-bold text-black text-sm">{member.name}</h4>
                         <p className="text-[10px] text-gray-600">{member.role}</p>
@@ -282,7 +282,7 @@ export default function About() {
                         className="flex flex-col items-start text-left flex-shrink-0 w-[150px]"
                       >
                         <div className="relative w-full aspect-square rounded-xl mb-3 overflow-hidden shadow-md bg-black">
-                          <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover" />
+                          <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover object-top" />
                         </div>
                         <h4 className="font-bold text-black text-sm">{member.name}</h4>
                         <p className="text-[10px] text-gray-600">{member.role}</p>
@@ -294,7 +294,7 @@ export default function About() {
             </div>
 
             {/* Desktop: Static Grid */}
-            <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-8 ">
               {[
                 { name: "Rakesh Mungara", role: "Business Development Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Rakesh%20Mungara.png" },
                 { name: "Murali Krishna", role: "HR Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Murali%20Krishna.png" },
@@ -323,7 +323,7 @@ export default function About() {
                 >
                   <div className="relative w-full aspect-square rounded-xl mb-3 overflow-hidden shadow-md border-2 border-transparent group-hover:border-[#FCD804] transition-all duration-300">
                     <div className="relative w-full h-full">
-                      <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover transition-transform duration-500" />
+                      <Image src={member.image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"} alt={member.name} fill className="object-cover object-top transition-transform duration-500" />
                     </div>
                   </div>
                   <h4 className="font-bold text-black text-sm group-hover:text-[#7D287E] transition-colors">{member.name}</h4>
