@@ -59,23 +59,24 @@ export default function ProductCard({ product }) {
                     onMouseEnter={() => videoRef.current && videoRef.current.play()}
                     onMouseLeave={() => videoRef.current && videoRef.current.pause()}
                 >
-                {thumbnail ? (
+                {videoUrl ? (
+                    <video
+                        ref={videoRef}
+                        src={videoUrl}
+                        poster={thumbnail || undefined}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        muted
+                        loop
+                        playsInline
+                        preload="none"
+                    />
+                ) : thumbnail ? (
                     <Image
                         src={thumbnail}
                         alt={product.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                    />
-                ) : videoUrl ? (
-                    <video
-                        ref={videoRef}
-                        src={videoUrl}
-                        className="w-full h-full object-cover"
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
