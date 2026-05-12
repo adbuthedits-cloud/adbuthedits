@@ -16,6 +16,7 @@ import { inter, playfair, dmSans, montserrat } from '../lib/fonts'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from '../components/ErrorBoundary'
 import PromoPopup from '../components/PromoPopup'
+import ZohoSalesIQ from '../components/ZohoSalesIQ'
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter()
@@ -109,6 +110,7 @@ function MyApp({ Component, pageProps }) {
                 }}
               />
               <PromoPopup />
+              <ZohoSalesIQ />
             </>
           )}
         </div>
