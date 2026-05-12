@@ -3,7 +3,7 @@ import withPermission from '../../../components/withPermission';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faSave, faGlobe, faPencilAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSave, faGlobe, faPencilAlt, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { getAuthToken } from '../../../utils/auth';
 import { useRouter } from 'next/navigation';
 import Button from '../../../components/Button';
@@ -121,6 +121,20 @@ function SeoDashboard() {
         }
     };
 
+    const handleDelete = async (page) => {
+        if (!window.confirm(`Are you sure you want to delete SEO for ${page.page_identifier}?`)) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
+            await axios.delete(`${apiUrl}/api/seo/pages/${page.page_id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchPages();
+        } catch (error) {
+            alert('Failed to delete SEO');
+        }
+    };
+
     if (loading) return <div>Loading SEO...</div>;
 
     return (
@@ -130,6 +144,14 @@ function SeoDashboard() {
                     <h1 className="text-3xl font-bold text-white tracking-tight">SEO Management</h1>
                     <p className="text-gray-400">Optimize search engine visibility for static pages</p>
                 </div>
+                <Button 
+                    onClick={() => setSelectedPage({ page_identifier: '', title: '', path: '', meta_title: '', meta_description: '', keywords: '', isNew: true })}
+                    variant="primary"
+                    className="flex items-center gap-2"
+                >
+                    <FontAwesomeIcon icon={faPlus} />
+                    Add Page SEO
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -139,9 +161,16 @@ function SeoDashboard() {
                             <div className="w-12 h-12 rounded-full bg-[#a78bfa]/10 flex items-center justify-center text-[#a78bfa]">
                                 <FontAwesomeIcon icon={faGlobe} className="text-xl" />
                             </div>
-                            <button onClick={() => setSelectedPage(page)} className="text-gray-500 hover:text-white transition-colors">
-                                <FontAwesomeIcon icon={faPencilAlt} />
-                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={() => setSelectedPage(page)} className="text-gray-500 hover:text-white transition-colors">
+                                    <FontAwesomeIcon icon={faPencilAlt} />
+                                </button>
+                                {page.page_id && !systemPages.find(s => s.page_identifier === page.page_identifier) && (
+                                    <button onClick={() => handleDelete(page)} className="text-gray-500 hover:text-red-500 transition-colors">
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         <h3 className="text-lg font-bold text-white mb-1">{page.title || page.page_identifier}</h3>
                         <p className="text-xs text-gray-500 font-mono mb-4">{page.path}</p>
@@ -162,15 +191,42 @@ function SeoDashboard() {
             {selectedPage && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="bg-[#1E1628] border border-[#2d1b4e] rounded-2xl w-full max-w-2xl p-8 shadow-2xl animate-scaleIn">
-                        <h2 className="text-2xl font-bold text-white mb-6">Edit SEO: {selectedPage.title}</h2>
+                        <h2 className="text-2xl font-bold text-white mb-6">
+                            {selectedPage.isNew ? 'Add New SEO' : `Edit SEO: ${selectedPage.title || selectedPage.page_identifier}`}
+                        </h2>
 
                         <form onSubmit={handleSave} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-300">Page Identifier</label>
+                                    <input
+                                        value={selectedPage.page_identifier || ''}
+                                        onChange={e => setSelectedPage({ ...selectedPage, page_identifier: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                                        disabled={!selectedPage.isNew}
+                                        className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa] disabled:opacity-50"
+                                        placeholder="e.g. my-custom-page"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-300">Route Path</label>
+                                    <input
+                                        value={selectedPage.path || ''}
+                                        onChange={e => setSelectedPage({ ...selectedPage, path: e.target.value })}
+                                        className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa]"
+                                        placeholder="e.g. /my-custom-page"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-300">Meta Title</label>
                                 <input
                                     value={selectedPage.meta_title || selectedPage.title || ''}
-                                    onChange={e => setSelectedPage({ ...selectedPage, meta_title: e.target.value, title: e.target.value })} // Handling both likely
+                                    onChange={e => setSelectedPage({ ...selectedPage, meta_title: e.target.value, title: e.target.value })}
                                     className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa]"
+                                    required
                                 />
                             </div>
                             <div className="space-y-2">
