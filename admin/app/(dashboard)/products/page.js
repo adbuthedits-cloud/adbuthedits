@@ -491,9 +491,14 @@ function Products() {
                                         <div className="px-1 space-y-3">
                                             {/* Title & Rating Row */}
                                             <div className="flex justify-between items-start gap-2">
-                                                <h3 className="font-bold text-gray-100 text-[15px] leading-snug line-clamp-2 flex-1 group-hover:text-[#a78bfa] transition-colors cursor-pointer">
-                                                    {product.title}
-                                                </h3>
+                                                <div className="flex-1">
+                                                    <span className="text-[10px] font-mono text-[#a78bfa]/60 block mb-1 uppercase tracking-tighter">
+                                                        {product.internal_sku || 'NO-SKU'}
+                                                    </span>
+                                                    <h3 className="font-bold text-gray-100 text-[15px] leading-snug line-clamp-2 group-hover:text-[#a78bfa] transition-colors cursor-pointer">
+                                                        {product.title}
+                                                    </h3>
+                                                </div>
                                                 <div className="flex items-center gap-1 shrink-0 bg-amber-500/10 px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-400 border border-amber-500/20">
                                                     <span>{product.averageRating ? Number(product.averageRating).toFixed(1) : (product.rating ? Number(product.rating).toFixed(1) : '0.0')}</span>
                                                     <FontAwesomeIcon icon={faStar} className="text-[9px]" />
