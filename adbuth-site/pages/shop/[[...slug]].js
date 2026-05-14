@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import Navbar from '../../components/Navbar';
 import ShopSidebar from '../../components/shop/ShopSidebar';
 import ShopTopBar from '../../components/shop/ShopTopBar';
@@ -142,7 +142,6 @@ function ShopBanner({ masterData, activeParentSlug, onBrowseClick, isShopBase })
 
 // ─── Main product grid with Virtualization ─────────────────────────────────────
 function ProductGrid({ products, loading }) {
-    const parentRef = useRef(null);
     const [columnCount, setColumnCount] = useState(2);
 
     // Update column count based on window width (syncing with Tailwind breakpoints)
@@ -168,11 +167,10 @@ function ProductGrid({ products, loading }) {
         return r;
     }, [products, columnCount]);
 
-    const rowVirtualizer = useVirtualizer({
+    const rowVirtualizer = useWindowVirtualizer({
         count: rows.length,
-        getScrollElement: () => typeof window !== 'undefined' ? window : null,
         estimateSize: () => 450, // Estimated height of a ProductCard row
-        overscan: 3,
+        overscan: 5,
     });
 
     if (loading && !products.length) {
@@ -187,7 +185,6 @@ function ProductGrid({ products, loading }) {
 
     return (
         <div 
-            ref={parentRef}
             className={`relative transition-opacity duration-200 scroll-m-[160px] ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}
             style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%' }}
         >
