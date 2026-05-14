@@ -169,7 +169,7 @@ function ProductGrid({ products, loading }) {
 
     const rowVirtualizer = useWindowVirtualizer({
         count: rows.length,
-        estimateSize: () => 450, // Estimated height of a ProductCard row
+        estimateSize: () => 400, // Reduced initial estimate
         overscan: 5,
     });
 
@@ -197,14 +197,17 @@ function ProductGrid({ products, loading }) {
             {rowVirtualizer.getVirtualItems().map((virtualRow) => (
                 <div
                     key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
                     className="absolute top-0 left-0 w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
                     style={{
-                        height: `${virtualRow.size}px`,
                         transform: `translateY(${virtualRow.start}px)`,
                     }}
                 >
                     {rows[virtualRow.index].map((product) => (
-                        <ProductCard key={product.products_id} product={product} />
+                        <div key={product.products_id} className="h-full">
+                            <ProductCard product={product} />
+                        </div>
                     ))}
                 </div>
             ))}
