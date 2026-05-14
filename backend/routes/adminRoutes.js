@@ -619,7 +619,14 @@ router.get('/products', checkPermission('products', 'view'), async (req, res) =>
 
         const { count, rows } = await Product.findAndCountAll({
             where,
-            include: [{ model: Category, as: 'parentCategory', attributes: ['category_name'] }],
+            include: [
+                { model: Category, as: 'parentCategory', attributes: ['category_name'] },
+                { model: AssetType, as: 'assetType', attributes: ['name', 'code'] },
+                { model: AssetVariant, as: 'assetVariant', attributes: ['name', 'code'] },
+                { model: AssetCategory, as: 'assetCategory', attributes: ['name', 'code'] },
+                { model: AssetSubCategory, as: 'assetSubCategory', attributes: ['name', 'code'] },
+                { model: AssetOrientation, as: 'assetOrientation', attributes: ['name', 'code'] }
+            ],
             attributes: {
                 include: [
                     [sequelize.literal(`(
