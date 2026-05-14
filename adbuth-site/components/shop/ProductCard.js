@@ -61,9 +61,9 @@ export default function ProductCard({ product }) {
 
     const thumbnail = product.thumbnail || (product.images && product.images[0]) || null;
     let videoUrl = (product.video && product.video.length > 0) ? product.video[0] : (product.video_url || null);
-    
+
     // First-frame trick: append #t=0.5 if it's a video and doesn't already have a timestamp
-    const videoSrc = videoUrl && !videoUrl.includes('#t=') ? `${videoUrl}#t=0.5` : videoUrl;
+    const videoSrc = videoUrl && !videoUrl.includes('#t=') ? `${videoUrl}#t=1` : videoUrl;
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount
@@ -87,20 +87,20 @@ export default function ProductCard({ product }) {
     return (
         <div className="group relative flex flex-col bg-white hover:shadow-md transition-all duration-200">
             {/* Image Container */}
-                <Link 
-                    href={productUrl} 
-                    className="block relative overflow-hidden bg-gray-50" 
-                    style={{ aspectRatio: '3/4' }}
-                    ref={containerRef}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                >
+            <Link
+                href={productUrl}
+                className="block relative overflow-hidden bg-gray-50"
+                style={{ aspectRatio: '3/4' }}
+                ref={containerRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
                 {isInView && videoSrc ? (
                     <video
                         ref={videoRef}
                         src={videoSrc}
                         poster={thumbnail || undefined}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover  transition-transform duration-300"
                         muted
                         loop
                         playsInline
