@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import Navbar from '../../components/Navbar';
 import ShopSidebar from '../../components/shop/ShopSidebar';
 import ShopTopBar from '../../components/shop/ShopTopBar';
@@ -138,15 +139,45 @@ function ShopBanner({ masterData, activeParentSlug, onBrowseClick, isShopBase })
     );
 }
 
-// ─── Main product grid ─────────────────────────────────────────────────────────
+
+// ─── Main product grid with Virtualization ─────────────────────────────────────
 function ProductGrid({ products, loading }) {
-    const gridRef = useRef(null);
+    const parentRef = useRef(null);
+    const [columnCount, setColumnCount] = useState(2);
 
+    // Update column count based on window width (syncing with Tailwind breakpoints)
+    useEffect(() => {
+        const updateColumns = () => {
+            const w = window.innerWidth;
+            if (w >= 1536) setColumnCount(5);      // 2xl
+            else if (w >= 1280) setColumnCount(4); // xl
+            else if (w >= 768) setColumnCount(3);  // md/lg
+            else setColumnCount(2);                // sm/default
+        };
+        updateColumns();
+        window.addEventListener('resize', updateColumns);
+        return () => window.removeEventListener('resize', updateColumns);
+    }, []);
 
+    // Group products into rows
+    const rows = useMemo(() => {
+        const r = [];
+        for (let i = 0; i < products.length; i += columnCount) {
+            r.push(products.slice(i, i + columnCount));
+        }
+        return r;
+    }, [products, columnCount]);
+
+    const rowVirtualizer = useVirtualizer({
+        count: rows.length,
+        getScrollElement: () => typeof window !== 'undefined' ? window : null,
+        estimateSize: () => 450, // Estimated height of a ProductCard row
+        overscan: 3,
+    });
 
     if (loading && !products.length) {
         return (
-            <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 scroll-m-[160px]">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
         );
@@ -155,15 +186,31 @@ function ProductGrid({ products, loading }) {
     if (!products.length) return null;
 
     return (
-        <div ref={gridRef} className={`relative transition-opacity duration-200 scroll-m-[160px] ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        <div 
+            ref={parentRef}
+            className={`relative transition-opacity duration-200 scroll-m-[160px] ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}
+            style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%' }}
+        >
             {loading && (
                 <div className="absolute inset-0 z-10 flex items-start justify-center pt-20">
                     <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-700 rounded-full animate-spin" />
                 </div>
             )}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                {products.map(p => <ProductCard key={p.products_id} product={p} />)}
-            </div>
+            
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+                <div
+                    key={virtualRow.key}
+                    className="absolute top-0 left-0 w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
+                    style={{
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                >
+                    {rows[virtualRow.index].map((product) => (
+                        <ProductCard key={product.products_id} product={product} />
+                    ))}
+                </div>
+            ))}
         </div>
     );
 }

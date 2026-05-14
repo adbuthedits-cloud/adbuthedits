@@ -72,15 +72,18 @@ export default function ProductCard({ product }) {
 
     const handleMouseEnter = () => {
         if (videoRef.current) {
-            videoRef.current.play().catch(e => console.log('Autoplay prevented', e));
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // Silence the AbortError that occurs when play() is interrupted by pause()
+                });
+            }
         }
     };
 
     const handleMouseLeave = () => {
         if (videoRef.current) {
             videoRef.current.pause();
-            // Optional: reset to first frame
-            // videoRef.current.currentTime = 0.5;
         }
     };
 
