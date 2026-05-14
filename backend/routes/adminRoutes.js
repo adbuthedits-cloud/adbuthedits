@@ -20,6 +20,7 @@ const path = require('path');
 const redisClient = require('../config/redisClient');
 
 // Helper to clear cache
+// Helper to clear cache
 const clearCache = async (patterns) => {
     if (!redisClient.isOpen) {
         console.warn('Redis is not connected. Skipping cache clear.');
@@ -108,6 +109,32 @@ const checkDuplicate = async (Model, fields, excludeIdField = null, excludeIdVal
 };
 
 const slugify = (text) => text.toLowerCase().trim().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+
+// Helper to ensure slug uniqueness
+const ensureUniqueSlug = async (baseSlug, Model, idField, idValue = null) => {
+    if (!baseSlug) return null;
+    
+    const originalSlug = slugify(baseSlug);
+    let slug = originalSlug;
+    let counter = 1;
+    let exists = true;
+
+    while (exists) {
+        const where = { slug };
+        if (idValue) {
+            where[idField] = { [Op.ne]: idValue };
+        }
+        
+        const count = await Model.count({ where });
+        if (count === 0) {
+            exists = false;
+        } else {
+            slug = `${originalSlug}-${counter}`;
+            counter++;
+        }
+    }
+    return slug;
+};
 
 // --- DELIVERY UPLOAD → PRIVATE bucket ---
 let upload = multer({
@@ -484,7 +511,14 @@ router.get('/blogs/:id', checkPermission('blogs', 'view'), async (req, res) => {
 
 router.post('/blogs', checkPermission('blogs', 'edit'), async (req, res) => {
     try {
-        const blog = await Blog.create(req.body);
+        const body = { ...req.body };
+        if (body.slug) {
+            body.slug = await ensureUniqueSlug(body.slug, Blog, 'blog_id');
+        } else if (body.title) {
+            body.slug = await ensureUniqueSlug(body.title, Blog, 'blog_id');
+        }
+
+        const blog = await Blog.create(body);
 
         // Invalidate Cache
         await clearCache(['blogs', 'blog']);
@@ -497,7 +531,12 @@ router.post('/blogs', checkPermission('blogs', 'edit'), async (req, res) => {
 
 router.put('/blogs/:id', checkPermission('blogs', 'edit'), async (req, res) => {
     try {
-        const [updated] = await Blog.update(req.body, { where: { blog_id: req.params.id } });
+        const body = { ...req.body };
+        if (body.slug) {
+            body.slug = await ensureUniqueSlug(body.slug, Blog, 'blog_id', req.params.id);
+        }
+
+        const [updated] = await Blog.update(body, { where: { blog_id: req.params.id } });
         if (!updated) return res.status(404).json({ error: 'Blog not found' });
 
         // Invalidate Cache
@@ -603,7 +642,14 @@ router.get('/products', checkPermission('products', 'view'), async (req, res) =>
 
 router.post('/products', checkPermission('products', 'edit'), async (req, res) => {
     try {
-        const product = await Product.create(req.body);
+        const body = { ...req.body };
+        if (body.slug) {
+            body.slug = await ensureUniqueSlug(body.slug, Product, 'products_id');
+        } else if (body.title) {
+            body.slug = await ensureUniqueSlug(body.title, Product, 'products_id');
+        }
+
+        const product = await Product.create(body);
         await clearCache(['products', 'product', 'products-meta']);
         res.status(201).json(product);
     } catch (err) {
@@ -619,6 +665,11 @@ router.put('/products/:id', checkPermission('products', 'edit'), async (req, res
         if (!existingProduct) return res.status(404).json({ error: 'Product not found' });
 
         const body = { ...req.body };
+
+        // Ensure unique slug if it's being updated
+        if (body.slug && body.slug !== existingProduct.slug) {
+            body.slug = await ensureUniqueSlug(body.slug, Product, 'products_id', req.params.id);
+        }
 
         // --- 2. MEDIA MIGRATION: Generic → Categorized ---
         // Only migrate if new data has a real SKU (i.e. all categories are now selected)
@@ -2269,7 +2320,7 @@ router.post('/master-data/asset-categories', checkPermission('settings', 'edit')
             const field = duplicate.name.toLowerCase() === name.toLowerCase().trim() ? 'name' : 'code';
             return res.status(400).json({ error: `This ${field} already exists.`, field });
         }
-        const slug = slugify(name);
+        const slug = await ensureUniqueSlug(name, AssetCategory, 'asset_category_id');
         const record = await AssetCategory.create({ ...req.body, slug });
         res.status(201).json(record);
     } catch (err) { res.status(400).json({ error: err.message }); }
@@ -2282,7 +2333,7 @@ router.put('/master-data/asset-categories/:id', checkPermission('settings', 'edi
             const field = duplicate.name.toLowerCase() === name.toLowerCase().trim() ? 'name' : 'code';
             return res.status(400).json({ error: `This ${field} already exists.`, field });
         }
-        const slug = slugify(name);
+        const slug = await ensureUniqueSlug(name, AssetCategory, 'asset_category_id', req.params.id);
         const [n] = await AssetCategory.update({ ...req.body, slug }, { where: { asset_category_id: req.params.id } });
         if (!n) return res.status(404).json({ error: 'Not found' });
         res.json({ success: true });
@@ -2304,7 +2355,7 @@ router.post('/master-data/sub-categories', checkPermission('settings', 'edit'), 
             const field = duplicate.name.toLowerCase() === name.toLowerCase().trim() ? 'name' : 'code';
             return res.status(400).json({ error: `This ${field} already exists.`, field });
         }
-        const slug = slugify(name);
+        const slug = await ensureUniqueSlug(name, AssetSubCategory, 'asset_sub_category_id');
         const record = await AssetSubCategory.create({ ...req.body, slug });
         res.status(201).json(record);
     } catch (err) { res.status(400).json({ error: err.message }); }
@@ -2317,7 +2368,7 @@ router.put('/master-data/sub-categories/:id', checkPermission('settings', 'edit'
             const field = duplicate.name.toLowerCase() === name.toLowerCase().trim() ? 'name' : 'code';
             return res.status(400).json({ error: `This ${field} already exists.`, field });
         }
-        const slug = slugify(name);
+        const slug = await ensureUniqueSlug(name, AssetSubCategory, 'asset_sub_category_id', req.params.id);
         const [n] = await AssetSubCategory.update({ ...req.body, slug }, { where: { asset_sub_category_id: req.params.id } });
         if (!n) return res.status(404).json({ error: 'Not found' });
         res.json({ success: true });
@@ -2339,7 +2390,7 @@ router.post('/master-data/primary-categories', checkPermission('settings', 'edit
         const duplicate = await Category.findOne({ where: { category_name: sequelize.fn('LOWER', category_name.trim()) } });
         if (duplicate) return res.status(400).json({ error: 'This category already exists.', field: 'category_name' });
 
-        const slug = slugify(category_name);
+        const slug = await ensureUniqueSlug(category_name, Category, 'category_id');
         const record = await Category.create({
             category_name, // Just use the name
             slug,
@@ -2366,7 +2417,7 @@ router.put('/master-data/primary-categories/:id', checkPermission('settings', 'e
         if (!category) return res.status(404).json({ error: 'Category not found' });
 
         // Old file is intentionally kept in cloud storage to allow reuse in the media library.
-        const slug = slugify(category_name);
+        const slug = await ensureUniqueSlug(category_name, Category, 'category_id', req.params.id);
         await category.update({
             category_name,
             slug,
