@@ -86,8 +86,25 @@ function Products() {
     };
 
     const filteredProducts = products.filter(p => {
-        const matchSearch = (p.title || '').toLowerCase().includes(search.toLowerCase()) ||
-            (p.category?.category_name || '').toLowerCase().includes(search.toLowerCase());
+        const s = search.toLowerCase();
+        const matchSearch =
+            (p.title || '').toLowerCase().includes(s) ||
+            (p.internal_sku || '').toLowerCase().includes(s) ||
+            (p.slug || '').toLowerCase().includes(s) ||
+            (p.description || '').toLowerCase().includes(s) ||
+            (p.price || '').toString().includes(s) ||
+            (p.parentCategory?.category_name || '').toLowerCase().includes(s) ||
+            (p.assetType?.name || '').toLowerCase().includes(s) ||
+            (p.assetType?.code || '').toLowerCase().includes(s) ||
+            (p.assetVariant?.name || '').toLowerCase().includes(s) ||
+            (p.assetVariant?.code || '').toLowerCase().includes(s) ||
+            (p.assetCategory?.name || '').toLowerCase().includes(s) ||
+            (p.assetCategory?.code || '').toLowerCase().includes(s) ||
+            (p.assetSubCategory?.name || '').toLowerCase().includes(s) ||
+            (p.assetSubCategory?.code || '').toLowerCase().includes(s) ||
+            (p.assetOrientation?.name || '').toLowerCase().includes(s) ||
+            (p.assetOrientation?.code || '').toLowerCase().includes(s) ||
+            JSON.stringify(p.tags || {}).toLowerCase().includes(s);
 
         const matchCategory = selectedCategory ? p.category_id === selectedCategory : true;
 
@@ -492,7 +509,7 @@ function Products() {
                                             {/* Title & Rating Row */}
                                             <div className="flex justify-between items-start gap-2">
                                                 <div className="flex-1">
-                                                    <span className="text-[10px] font-mono text-[#a78bfa]/60 block mb-1 uppercase tracking-tighter">
+                                                    <span className="text-[13px] font-mono text-[#a78bfa]/60 block mb-1 uppercase tracking-tighter">
                                                         {product.internal_sku || 'NO-SKU'}
                                                     </span>
                                                     <h3 className="font-bold text-gray-100 text-[15px] leading-snug line-clamp-2 group-hover:text-[#a78bfa] transition-colors cursor-pointer">
