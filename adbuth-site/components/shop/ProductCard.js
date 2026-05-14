@@ -27,27 +27,23 @@ function isNewProduct(updatedAt) {
 
 export default function ProductCard({ product }) {
     const [wishlisted, setWishlisted] = useState(false);
+    const [isInView, setIsInView] = useState(false);
     const videoRef = useRef(null);
     const containerRef = useRef(null);
 
     useEffect(() => {
-        if (!videoRef.current || !containerRef.current) return;
+        if (!containerRef.current) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        videoRef.current?.play().catch(e => console.log('Autoplay prevented', e));
-                    } else {
-                        videoRef.current?.pause();
-                    }
+                    setIsInView(entry.isIntersecting);
                 });
             },
-            { threshold: 0.2 } // Play when 20% visible
+            { rootMargin: '400px' } // Pre-render when within 400px of viewport
         );
 
         observer.observe(containerRef.current);
-
         return () => observer.disconnect();
     }, []);
 
@@ -64,12 +60,29 @@ export default function ProductCard({ product }) {
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
 
     const thumbnail = product.thumbnail || (product.images && product.images[0]) || null;
-    const videoUrl = (product.video && product.video.length > 0) ? product.video[0] : (product.video_url || null);
+    let videoUrl = (product.video && product.video.length > 0) ? product.video[0] : (product.video_url || null);
+    
+    // First-frame trick: append #t=0.5 if it's a video and doesn't already have a timestamp
+    const videoSrc = videoUrl && !videoUrl.includes('#t=') ? `${videoUrl}#t=0.5` : videoUrl;
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount
         ? Math.round(((product.compared_price - product.price) / product.compared_price) * 100)
         : 0;
+
+    const handleMouseEnter = () => {
+        if (videoRef.current) {
+            videoRef.current.play().catch(e => console.log('Autoplay prevented', e));
+        }
+    };
+
+    const handleMouseLeave = () => {
+        if (videoRef.current) {
+            videoRef.current.pause();
+            // Optional: reset to first frame
+            // videoRef.current.currentTime = 0.5;
+        }
+    };
 
     return (
         <div className="group relative flex flex-col bg-white hover:shadow-md transition-all duration-200">
@@ -79,19 +92,21 @@ export default function ProductCard({ product }) {
                     className="block relative overflow-hidden bg-gray-50" 
                     style={{ aspectRatio: '3/4' }}
                     ref={containerRef}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
                 >
-                {videoUrl ? (
+                {isInView && videoSrc ? (
                     <video
                         ref={videoRef}
-                        src={videoUrl}
+                        src={videoSrc}
                         poster={thumbnail || undefined}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         muted
                         loop
                         playsInline
-                        preload="none"
+                        preload="metadata"
                     />
-                ) : thumbnail ? (
+                ) : (thumbnail && !videoSrc) ? (
                     <Image
                         src={thumbnail}
                         alt={product.title}
@@ -99,10 +114,12 @@ export default function ProductCard({ product }) {
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                     />
-                ) : (
+                ) : isInView ? (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <span className="text-gray-400 text-xs">No Preview</span>
+                        <span className="text-gray-400 text-xs">Loading...</span>
                     </div>
+                ) : (
+                    <div className="w-full h-full bg-gray-50" />
                 )}
 
                 {/* NEW Badge */}
