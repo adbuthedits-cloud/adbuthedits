@@ -590,12 +590,16 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
 }
 
 // ─── Server-side data fetch ────────────────────────────────────────────────────
-export async function getStaticProps() {
+// Using getServerSideProps instead of getStaticProps+ISR to prevent memory spikes.
+// ISR would periodically re-fetch ALL products, hold them in RAM, and re-render,
+// which caused OOM crashes on Render's 512MB limit.
+export async function getServerSideProps(context) {
+    const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     try {
         const [productsRes, masterRes, maxPriceRes] = await Promise.all([
-            fetch(`${API_URL}/api/products`),
-            fetch(`${API_URL}/api/products/master-data`),
-            fetch(`${API_URL}/api/products/max-price`),
+            fetch(`${BACKEND_URL}/api/products`),
+            fetch(`${BACKEND_URL}/api/products/master-data`),
+            fetch(`${BACKEND_URL}/api/products/max-price`),
         ]);
 
         if (!productsRes.ok || !masterRes.ok) throw new Error('API fetch failed');
@@ -612,17 +616,11 @@ export async function getStaticProps() {
                 masterData: masterData || {},
                 maxPrice: maxPriceData?.maxPrice || 10000,
             },
-            revalidate: 300, // ISR: re-generate every 5 minutes
         };
     } catch (err) {
-        console.error('ShopPage getStaticProps error:', err);
+        console.error('ShopPage getServerSideProps error:', err);
         return {
             props: { initialProducts: [], masterData: {}, maxPrice: 10000 },
-            revalidate: 60,
         };
     }
-}
-
-export async function getStaticPaths() {
-    return { paths: [{ params: { slug: [] } }], fallback: 'blocking' };
 }
