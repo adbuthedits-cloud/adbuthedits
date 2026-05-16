@@ -499,7 +499,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                     {/* Main Shop Grid */}
                     <div id="shop-products" className="flex items-start max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-6 scroll-m-[100px]">
                         {/* ── Left Sidebar (desktop) ── */}
-                        <div className="hidden lg:block">
+                        <div className="hidden lg:block sticky top-20 self-start">
                             <ShopSidebar
                                 filters={filters}
                                 onFilterChange={handleFilterChange}
