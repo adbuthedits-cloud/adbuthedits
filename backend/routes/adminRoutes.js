@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Order, OrderItem, Product, Category, Cart, CartItem, Payment, Coupon, CouponUsage, AssetType, AssetVariant, AssetCategory, AssetSubCategory, AssetOrientation, ShopSetting, Review, User, Admin, Role, Blog, BlogCategory, ReviewSetting, AdminSession, Enquiry, OrderTimeline, sequelize } = require('../models');
+const { Order, OrderItem, Product, Category, Cart, CartItem, Payment, Coupon, CouponUsage, AssetType, AssetVariant, AssetCategory, AssetSubCategory, AssetOrientation, ShopSetting, Review, User, Admin, Role, Blog, BlogCategory, ReviewSetting, AdminSession, Enquiry, OrderTimeline, CustomizationTemplate, sequelize } = require('../models');
 const { orderQueue } = require('../config/orderQueue');
 const { Op } = require('sequelize');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -2169,16 +2169,17 @@ router.get('/reports/attendance', checkPermission('staff', 'view'), async (req, 
 // --- GET all master data (for dropdowns) ---
 router.get('/master-data', checkPermission('master_data', 'view'), async (req, res) => {
     try {
-        const [types, variants, orientations, categories, subCategories, parentCategories, shopSettings] = await Promise.all([
+        const [types, variants, orientations, categories, subCategories, parentCategories, shopSettings, customizationTemplates] = await Promise.all([
             AssetType.findAll({ order: [['name', 'ASC']] }),
             AssetVariant.findAll({ order: [['name', 'ASC']] }),
             AssetOrientation.findAll({ order: [['name', 'ASC']] }),
             AssetCategory.findAll({ order: [['name', 'ASC']], include: [{ model: Category, as: 'parentCategory', attributes: ['category_id', 'category_name', 'slug'] }] }),
             AssetSubCategory.findAll({ order: [['name', 'ASC']], include: [{ model: AssetCategory, as: 'assetCategory', attributes: ['asset_category_id', 'name', 'code'] }] }),
             Category.findAll({ order: [['category_name', 'ASC']] }),
-            ShopSetting.findOne()
+            ShopSetting.findOne(),
+            CustomizationTemplate.findAll({ order: [['name', 'ASC']] })
         ]);
-        res.json({ types, variants, orientations, categories, subCategories, parentCategories, shopSettings });
+        res.json({ types, variants, orientations, categories, subCategories, parentCategories, shopSettings, customizationTemplates });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -2642,6 +2643,45 @@ router.post('/roles/seed', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+// --- CustomizationTemplate CRUD ---
+router.get('/master-data/customization-templates', checkPermission('settings', 'view'), async (req, res) => {
+    try {
+        const templates = await CustomizationTemplate.findAll({ order: [['name', 'ASC']] });
+        res.json(templates);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/master-data/customization-templates', checkPermission('settings', 'edit'), async (req, res) => {
+    try {
+        const { name, fields } = req.body;
+        if (!name || !fields) return res.status(400).json({ error: 'Name and fields are required.' });
+        
+        const existing = await CustomizationTemplate.findOne({ where: { name: name.trim() } });
+        if (existing) return res.status(400).json({ error: 'A template with this name already exists.' });
+
+        const record = await CustomizationTemplate.create(req.body);
+        await clearCache(['master-data']);
+        res.status(201).json(record);
+    } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.put('/master-data/customization-templates/:id', checkPermission('settings', 'edit'), async (req, res) => {
+    try {
+        const [n] = await CustomizationTemplate.update(req.body, { where: { template_id: req.params.id } });
+        if (!n) return res.status(404).json({ error: 'Not found' });
+        await clearCache(['master-data']);
+        res.json({ success: true });
+    } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.delete('/master-data/customization-templates/:id', checkPermission('settings', 'edit'), async (req, res) => {
+    try {
+        await CustomizationTemplate.destroy({ where: { template_id: req.params.id } });
+        await clearCache(['master-data']);
+        res.json({ success: true });
+    } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 module.exports = router;

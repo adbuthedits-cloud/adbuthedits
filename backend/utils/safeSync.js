@@ -38,6 +38,16 @@ const migrations = [
 
     // Add 'path' column to SeoPages table
     `ALTER TABLE "SeoPages" ADD COLUMN IF NOT EXISTS path VARCHAR(255)`,
+
+    // Create CustomizationTemplates table
+    `CREATE TABLE IF NOT EXISTS "CustomizationTemplates" (
+        template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL UNIQUE,
+        description TEXT,
+        fields JSONB NOT NULL,
+        "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
 ];
 
 async function runSafeMigrations() {

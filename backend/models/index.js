@@ -35,6 +35,7 @@ const OrderTimeline = require('./OrderTimeline');
 const AuditLog = require('./AuditLog');
 const Attribute = require('./Attribute');
 const SeoPage = require('./SeoPage');
+const CustomizationTemplate = require('./CustomizationTemplate');
 
 // Association Setup
 
@@ -202,5 +203,6 @@ module.exports = {
     AuditLog,
     Attribute,
     SeoPage,
+    CustomizationTemplate,
     Sequelize
 };
