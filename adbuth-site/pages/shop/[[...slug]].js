@@ -612,15 +612,13 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
 }
 
 // ─── Server-side data fetch ────────────────────────────────────────────────────
-// Using getStaticProps + ISR for "Instant" page loads. 
-// HTML is pre-built, so the user doesn't wait for API hits on every visit.
-export async function getStaticProps() {
-    const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+export async function getServerSideProps(context) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     try {
         const [productsRes, masterRes, maxPriceRes] = await Promise.all([
-            fetch(`${BACKEND_URL}/api/products`),
-            fetch(`${BACKEND_URL}/api/products/master-data`),
-            fetch(`${BACKEND_URL}/api/products/max-price`),
+            fetch(`${API_URL}/api/products`),
+            fetch(`${API_URL}/api/products/master-data`),
+            fetch(`${API_URL}/api/products/max-price`),
         ]);
 
         if (!productsRes.ok || !masterRes.ok) throw new Error('API fetch failed');
@@ -637,17 +635,11 @@ export async function getStaticProps() {
                 masterData: masterData || {},
                 maxPrice: maxPriceData?.maxPrice || 10000,
             },
-            revalidate: 600, // Re-generate in background every 10 minutes
         };
     } catch (err) {
-        console.error('ShopPage getStaticProps error:', err);
+        console.error('ShopPage getServerSideProps error:', err);
         return {
             props: { initialProducts: [], masterData: {}, maxPrice: 10000 },
-            revalidate: 60,
         };
     }
-}
-
-export async function getStaticPaths() {
-    return { paths: [{ params: { slug: [] } }], fallback: 'blocking' };
 }
