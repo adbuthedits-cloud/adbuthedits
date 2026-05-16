@@ -65,9 +65,14 @@ export default function ProductCard({ product, index = 0 }) {
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
 
     const thumbnail = product.thumbnail || null;
-    // List API only returns video_url (single URL string) to keep payload small.
-    // The full video[] array is only available on the product detail page.
-    const videoSrc = product.video_url || null;
+    // Resolve video: check video[] array first, then fall back to video_url string
+    const rawVideoUrl = (product.video && Array.isArray(product.video) && product.video.length > 0)
+        ? product.video[0]
+        : (product.video_url || null);
+    // Append #t=1 so the browser seeks to frame 1 as a poster on load
+    const videoSrc = (rawVideoUrl && typeof rawVideoUrl === 'string')
+        ? (rawVideoUrl.includes('#t=') ? rawVideoUrl : `${rawVideoUrl}#t=1`)
+        : null;
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount
