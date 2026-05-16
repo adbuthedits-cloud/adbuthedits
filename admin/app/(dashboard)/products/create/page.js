@@ -8,6 +8,7 @@ import { faSave, faArrowLeft, faPlus, faTimes, faTrash, faVideo, faPlay, faPenci
 import { getAuthToken, getAuthUser, hasPermission } from "../../../../utils/auth";
 import Image from "next/image";
 import Link from "next/link";
+import VideoThumbnailGenerator from "../../../../components/VideoThumbnailGenerator";
 
 import withPermission from "../../../../components/withPermission";
 
@@ -47,6 +48,7 @@ function CreateProduct() {
     const [videos, setVideos] = useState([]); 
     const [summary, setSummary] = useState([]); 
     const [customizations, setCustomizations] = useState([]); 
+    const [thumbnailPreview, setThumbnailPreview] = useState("");
     const [editingCustIndex, setEditingCustIndex] = useState(null); 
 
     const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
@@ -441,9 +443,18 @@ function CreateProduct() {
 
     const handleThumbnailUpload = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, thumbnail: file }));
+        if (!file) return;
+        // Only accept image files
+        if (!file.type.startsWith("image/")) {
+            alert("Please select a valid image file (JPG, PNG, WebP, etc.)");
+            return;
         }
+        // Release any previous captured preview URL to free memory
+        if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
+            URL.revokeObjectURL(thumbnailPreview);
+        }
+        setFormData(prev => ({ ...prev, thumbnail: file }));
+        setThumbnailPreview(URL.createObjectURL(file));
     };
 
     const handleGalleryUpload = (e) => {
@@ -678,8 +689,21 @@ function CreateProduct() {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-300">Thumbnail URL</label>
                             <div className="flex gap-2">
-                                <input name="thumbnail" value={formData.thumbnail} onChange={handleChange} className="flex-1 p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all placeholder-gray-500" placeholder="https://..." />
-                                <label className="bg-orange-600 cursor-pointer text-white px-4 rounded-xl hover:bg-orange-700 transition-colors flex items-center justify-center">
+                                <input
+                                    name="thumbnail"
+                                    value={formData.thumbnail instanceof File ? "" : (formData.thumbnail || "")}
+                                    onChange={(e) => {
+                                        // Clear captured preview if admin manually types a URL
+                                        if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
+                                            URL.revokeObjectURL(thumbnailPreview);
+                                            setThumbnailPreview("");
+                                        }
+                                        handleChange(e);
+                                    }}
+                                    className="flex-1 p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all placeholder-gray-500"
+                                    placeholder="https://..."
+                                />
+                                <label className="bg-orange-600 cursor-pointer text-white px-4 rounded-xl hover:bg-orange-700 transition-colors flex items-center justify-center" title="Upload thumbnail image">
                                     <FontAwesomeIcon icon={faCloudUploadAlt} />
                                     <input type="file" className="hidden" accept="image/*" onChange={handleThumbnailUpload} />
                                 </label>
@@ -689,14 +713,37 @@ function CreateProduct() {
                                     <FontAwesomeIcon icon={faSpinner} spin className="text-[#a78bfa] text-xl" />
                                 </div>
                             )}
-                            {!uploadingThumbnail && formData.thumbnail && (
+                            {!uploadingThumbnail && (formData.thumbnail || thumbnailPreview) && (
                                 <div className="relative h-24 w-32 rounded-lg border border-[#2d1b4e] mt-2 overflow-hidden">
                                     <Image 
-                                        src={formData.thumbnail instanceof File ? URL.createObjectURL(formData.thumbnail) : formData.thumbnail} 
+                                        src={thumbnailPreview || formData.thumbnail} 
                                         alt="Thumbnail Preview" 
                                         fill 
                                         className="object-cover" 
                                         sizes="(max-width: 768px) 100vw, 128px" 
+                                    />
+                                </div>
+                            )}
+
+                            {/* Show the frame-capture tool ONLY if:
+                                 1. A video exists (and it's not a YouTube/Vimeo link)
+                                 2. The admin has NOT already set a thumbnail manually (file upload OR typed URL) */}
+                            {videos.length > 0
+                                && !(videos[0] instanceof File ? false : (videos[0]?.includes('youtube.com') || videos[0]?.includes('youtu.be')))
+                                && !formData.thumbnail
+                                && !thumbnailPreview
+                                && (
+                                <div className="mt-4">
+                                    <div className="mb-2 p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-[11px] text-purple-300">
+                                        <strong>No thumbnail set.</strong> Play the video below, pause at the perfect frame, and click <strong>Capture Frame</strong>.
+                                    </div>
+                                    <VideoThumbnailGenerator
+                                        videoUrl={videos[0] instanceof File ? URL.createObjectURL(videos[0]) : videos[0]}
+                                        isFile={videos[0] instanceof File}
+                                        onCapture={(file, previewUrl) => {
+                                            setFormData(prev => ({ ...prev, thumbnail: file }));
+                                            setThumbnailPreview(previewUrl);
+                                        }}
                                     />
                                 </div>
                             )}

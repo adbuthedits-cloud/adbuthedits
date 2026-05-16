@@ -28,42 +28,47 @@ function isNewProduct(updatedAt) {
 export default function ProductCard({ product }) {
     const [wishlisted, setWishlisted] = useState(false);
     const [isInView, setIsInView] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const videoRef = useRef(null);
     const containerRef = useRef(null);
 
     useEffect(() => {
         if (!containerRef.current) return;
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    setIsInView(entry.isIntersecting);
-                });
-            },
-            { rootMargin: '400px' } // Pre-render when within 400px of viewport
-        );
+        if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        setIsInView(entry.isIntersecting);
+                    });
+                },
+                { rootMargin: '400px' } // Pre-render when within 400px of viewport
+            );
 
-        observer.observe(containerRef.current);
-        return () => observer.disconnect();
-    }, []);
+            observer.observe(containerRef.current);
+            return () => observer.disconnect();
+        }
+    }, [product]); // Re-run if product changes to ensure observer is attached to the new element
 
     if (!product) return null;
 
     const isNew = isNewProduct(product.updatedAt || product.updated_at);
-    const rating = product.averageRating ? parseFloat(product.averageRating).toFixed(1) : null;
+    const rating = (product.averageRating && !isNaN(parseFloat(product.averageRating))) 
+        ? parseFloat(product.averageRating).toFixed(1) 
+        : null;
     const reviewCount = product.reviewCount ? parseInt(product.reviewCount) : 0;
 
     // Build the product detail URL
     const parentSlug = product.parentCategory?.slug || 'all';
     const eventSlug = product.assetCategory?.slug || 'general';
-    const productSlug = product.slug;
+    const productSlug = product.slug || '';
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
 
-    const thumbnail = product.thumbnail || (product.images && product.images[0]) || null;
-    let videoUrl = (product.video && product.video.length > 0) ? product.video[0] : (product.video_url || null);
+    const thumbnail = product.thumbnail || (product.images && Array.isArray(product.images) && product.images[0]) || null;
+    let videoUrl = (product.video && Array.isArray(product.video) && product.video.length > 0) ? product.video[0] : (product.video_url || null);
 
     // First-frame trick: append #t=0.5 if it's a video and doesn't already have a timestamp
-    const videoSrc = videoUrl && !videoUrl.includes('#t=') ? `${videoUrl}#t=1` : videoUrl;
+    const videoSrc = (videoUrl && typeof videoUrl === 'string' && !videoUrl.includes('#t=')) ? `${videoUrl}#t=1` : (typeof videoUrl === 'string' ? videoUrl : null);
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount
@@ -95,34 +100,42 @@ export default function ProductCard({ product }) {
                 className="block relative overflow-hidden bg-gray-50"
                 style={{ aspectRatio: '3/4' }}
                 ref={containerRef}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={() => {
+                    setIsHovered(true);
+                    handleMouseEnter();
+                }}
+                onMouseLeave={() => {
+                    setIsHovered(false);
+                    handleMouseLeave();
+                }}
             >
-                {isInView && videoSrc ? (
+                {/* Default Thumbnail - Always present for performance */}
+                {thumbnail ? (
+                    <Image
+                        src={thumbnail}
+                        alt={product.title || 'Product Image'}
+                        fill
+                        className={`object-cover transition-opacity duration-300 ${isHovered && videoSrc ? 'opacity-0' : 'opacity-100'}`}
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                        priority={isNew}
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <span className="text-gray-300 text-[10px]">No Preview</span>
+                    </div>
+                )}
+
+                {/* Video - Only rendered when in view and swapped on hover */}
+                {isInView && videoSrc && isHovered && (
                     <video
                         ref={videoRef}
                         src={videoSrc}
-                        poster={thumbnail || undefined}
-                        className="w-full h-full object-cover  transition-transform duration-300"
+                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
                         muted
                         loop
                         playsInline
-                        preload="metadata"
+                        autoPlay
                     />
-                ) : (thumbnail && !videoSrc) ? (
-                    <Image
-                        src={thumbnail}
-                        alt={product.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                    />
-                ) : isInView ? (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <span className="text-gray-400 text-xs">Loading...</span>
-                    </div>
-                ) : (
-                    <div className="w-full h-full bg-gray-50" />
                 )}
 
                 {/* NEW Badge */}
