@@ -77,7 +77,9 @@ function EditProduct() {
     const [tempCustFieldList, setTempCustFieldList] = useState([]); // Array of [name, type]
     const [editingCustFieldIndex, setEditingCustFieldIndex] = useState(null);
 
-    const [masterData, setMasterData] = useState({ types: [], variants: [], orientations: [], categories: [], subCategories: [], parentCategories: [] });
+    const [masterData, setMasterData] = useState({ types: [], variants: [], orientations: [], categories: [], subCategories: [], parentCategories: [], customizationTemplates: [] });
+    const [templateName, setTemplateName] = useState("");
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [internalSku, setInternalSku] = useState('');
     const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(true); // Default to true for existing products
 
@@ -308,6 +310,13 @@ function EditProduct() {
     };
 
     // Generic Add/Remove Logic
+    const handleKeyDown = (e) => {
+        // Prevent form submission when Enter is pressed in input fields
+        if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.type !== "submit") {
+            e.preventDefault();
+        }
+    };
+
     const addItem = (item, setItem, list, setList) => {
         if (!item.trim()) return;
         setList([...list, item.trim()]);
@@ -639,11 +648,20 @@ function EditProduct() {
             };
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
             await axios.put(`${apiUrl}/api/admin/products/${id}`, dataToSubmit, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            router.push('/products');
+            alert(isDraftSubmit ? "Draft updated successfully!" : "Product updated successfully!");
+            setSaving(false);
+            
+            // Re-fetch data to show the latest saved state
+            const prodRes = await axios.get(`${apiUrl}/api/admin/products/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const product = prodRes.data;
+
         } catch (error) {
             setUploadingThumbnail(false);
             setUploadingGallery(false);
@@ -676,7 +694,7 @@ function EditProduct() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8 pb-20">
+            <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-8 pb-20">
                 {/* Section 1: Basic Information */}
                 <div className="bg-[#1E1628] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-[#2d1b4e] p-8 space-y-6">
                     <h3 className="font-bold text-white text-lg border-b border-[#2d1b4e] pb-2 flex items-center gap-2">
@@ -1179,6 +1197,72 @@ function EditProduct() {
                         <span className="w-1.5 h-6 bg-pink-500 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.5)]"></span>
                         Customization Form Builder
                     </h3>
+                    
+                    {/* Template Controls */}
+                    <div className="flex flex-wrap items-end gap-4 p-4 bg-pink-500/5 border border-pink-500/10 rounded-xl">
+                        <div className="flex-1 min-w-[200px] space-y-2">
+                            <label className="text-[10px] font-bold text-pink-400 uppercase tracking-wider">Load Template</label>
+                            <select 
+                                className="w-full p-2.5 bg-[#2d1b4e] border border-pink-500/20 rounded-lg text-sm text-gray-200 outline-none"
+                                onChange={(e) => {
+                                    const template = masterData.customizationTemplates?.find(t => t.template_id === e.target.value);
+                                    if (template && confirm(`Load template "${template.name}"? This will replace your current customization fields.`)) {
+                                        setCustomizations(template.fields);
+                                    }
+                                    e.target.value = "";
+                                }}
+                            >
+                                <option value="">Select a preset template...</option>
+                                {masterData.customizationTemplates?.map(t => (
+                                    <option key={t.template_id} value={t.template_id}>{t.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex-1 min-w-[200px] space-y-2">
+                            <label className="text-[10px] font-bold text-pink-400 uppercase tracking-wider">Save Current as Template</label>
+                            <div className="flex gap-2">
+                                <input 
+                                    value={templateName}
+                                    onChange={(e) => setTemplateName(e.target.value)}
+                                    className="flex-1 p-2.5 bg-[#2d1b4e] border border-pink-500/20 rounded-lg text-sm text-gray-200 outline-none placeholder-gray-600"
+                                    placeholder="Template name (e.g. Wedding Form)"
+                                />
+                                <button 
+                                    type="button"
+                                    disabled={!templateName.trim() || customizations.length === 0 || isSavingTemplate}
+                                    onClick={async () => {
+                                        try {
+                                            setIsSavingTemplate(true);
+                                            const token = getAuthToken();
+                                            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+                                            await axios.post(`${apiUrl}/api/admin/master-data/customization-templates`, {
+                                                name: templateName,
+                                                fields: customizations
+                                            }, {
+                                                headers: { Authorization: `Bearer ${token}` }
+                                            });
+                                            alert("Template saved!");
+                                            setTemplateName("");
+                                            // Refresh master data to show new template in dropdown
+                                            const mdRes = await fetch(`${apiUrl}/api/admin/master-data`, {
+                                                headers: { Authorization: `Bearer ${token}` }
+                                            });
+                                            const md = await mdRes.json();
+                                            if (md && !md.error) setMasterData(md);
+                                        } catch (err) {
+                                            alert(err.response?.data?.error || "Failed to save template");
+                                        } finally {
+                                            setIsSavingTemplate(false);
+                                        }
+                                    }}
+                                    className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                                >
+                                    {isSavingTemplate ? "Saving..." : "Save"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="space-y-4">
                         <div className="bg-[#130C1C]/50 p-6 rounded-2xl space-y-5 border border-[#2d1b4e]">
                             <div className="flex items-center justify-between">
