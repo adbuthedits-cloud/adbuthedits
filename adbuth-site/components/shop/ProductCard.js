@@ -145,18 +145,18 @@ export default function ProductCard({ product, index = 0 }) {
                     </span>
                 )}
 
-                {/* Discount Badge - Moved to bottom-left to avoid overlap */}
+                {/* Discount Badge */}
                 {hasDiscount && (
-                    <div className="absolute bottom-0 left-0 bg-gray-200/50 backdrop-blur-xl  text-white px-2.5 py-0.5 z-10 rounded-full ml-2 my-2">
-                        <span className="text-[10px] font-bold  tracking-tight">{discountPct}% OFF</span>
+                    <div className="absolute bottom-0 left-0 bg-black/60 text-white px-2.5 py-0.5 z-10 rounded-full ml-2 my-2">
+                        <span className="text-[10px] font-bold tracking-tight">{discountPct}% OFF</span>
                     </div>
                 )}
             </Link>
 
-            {/* Wishlist Button - Redesigned with glassmorphism */}
+            {/* Wishlist Button */}
             <button
                 onClick={(e) => { e.preventDefault(); setWishlisted(v => !v); }}
-                className="absolute top-2 right-2 z-20 w-8 h-8 bg-gray-200/50 backdrop-blur-xl rounded-full flex items-center justify-center hover:bg-white transition-all duration-300 shadow-sm group/wishlist"
+                className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center hover:bg-white transition-all duration-300 shadow-sm group/wishlist"
                 aria-label="Add to wishlist"
             >
                 <FontAwesomeIcon
