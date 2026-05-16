@@ -214,7 +214,7 @@ router.get('/', cache('products', 1800), async (req, res) => {
             include,
             attributes: [
                 'products_id', 'title', 'description', 'price', 'compared_price', 'slug',
-                'thumbnail', 'video_url', 'updatedAt',
+                'thumbnail', 'video', 'video_url', 'updatedAt',
                 'parent_category_id', 'asset_category_id', 'asset_sub_category_id',
                 'asset_type_id', 'asset_variant_id', 'asset_orientation_id',
                 // Single pre-aggregated join instead of N correlated subqueries
