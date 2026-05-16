@@ -442,6 +442,28 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     const visibleProducts = filteredProducts.slice(0, displayCount);
     const hasMore = displayCount < filteredProducts.length;
 
+    // ─── Infinite Scroll Observer ───────────────────────────────────────────
+    useEffect(() => {
+        if (!hasMore || filterLoading) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    // Small delay to make the transition feel smoother
+                    setTimeout(() => {
+                        setDisplayCount(prev => prev + PAGE_SIZE);
+                    }, 100);
+                }
+            },
+            { rootMargin: '200px' } // Start loading when within 200px of bottom
+        );
+
+        const target = document.getElementById('load-more-trigger');
+        if (target) observer.observe(target);
+
+        return () => observer.disconnect();
+    }, [hasMore, filterLoading, displayCount]);
+
     // Count active filters (for mobile badge)
     const activeFilterCount = [
         ...(filters.parentCategory ?? []),
@@ -590,10 +612,9 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
 }
 
 // ─── Server-side data fetch ────────────────────────────────────────────────────
-// Using getServerSideProps instead of getStaticProps+ISR to prevent memory spikes.
-// ISR would periodically re-fetch ALL products, hold them in RAM, and re-render,
-// which caused OOM crashes on Render's 512MB limit.
-export async function getServerSideProps(context) {
+// Using getStaticProps + ISR for "Instant" page loads. 
+// HTML is pre-built, so the user doesn't wait for API hits on every visit.
+export async function getStaticProps() {
     const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     try {
         const [productsRes, masterRes, maxPriceRes] = await Promise.all([
@@ -616,11 +637,17 @@ export async function getServerSideProps(context) {
                 masterData: masterData || {},
                 maxPrice: maxPriceData?.maxPrice || 10000,
             },
+            revalidate: 600, // Re-generate in background every 10 minutes
         };
     } catch (err) {
-        console.error('ShopPage getServerSideProps error:', err);
+        console.error('ShopPage getStaticProps error:', err);
         return {
             props: { initialProducts: [], masterData: {}, maxPrice: 10000 },
+            revalidate: 60,
         };
     }
+}
+
+export async function getStaticPaths() {
+    return { paths: [{ params: { slug: [] } }], fallback: 'blocking' };
 }
