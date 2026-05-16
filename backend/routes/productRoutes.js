@@ -90,7 +90,12 @@ router.get('/', cache('products', 1800), async (req, res) => {
             parentCategory, assetCategory, assetSubCategory, assetType, assetVariant, orientation
         } = req.query;
 
-        const where = { is_draft: { [Op.not]: true } };
+        const where = { 
+            [Op.or]: [
+                { is_draft: false },
+                { is_draft: null }
+            ]
+        };
         const include = [
             { model: Category, as: 'parentCategory' },
             { model: AssetCategory, as: 'assetCategory' },
@@ -214,7 +219,7 @@ router.get('/', cache('products', 1800), async (req, res) => {
             include,
             attributes: [
                 'products_id', 'title', 'description', 'price', 'compared_price', 'slug',
-                'thumbnail', 'video', 'video_url', 'updatedAt',
+                'thumbnail', 'video', 'updatedAt',
                 'parent_category_id', 'asset_category_id', 'asset_sub_category_id',
                 'asset_type_id', 'asset_variant_id', 'asset_orientation_id',
                 // Single pre-aggregated join instead of N correlated subqueries
