@@ -81,7 +81,12 @@ function CreateProduct() {
 
     useEffect(() => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        fetch(`${apiUrl}/api/products/master-data`)
+        const token = getAuthToken();
+        // Use the admin endpoint — it has NO Redis cache so new sub-categories appear instantly.
+        // The public /api/products/master-data is cached for 24h and would show stale data.
+        fetch(`${apiUrl}/api/admin/master-data`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        })
             .then(r => r.ok ? r.json() : Promise.reject("Failed to load master data"))
             .then(data => {
                 if (data && !data.error) setMasterData(data);

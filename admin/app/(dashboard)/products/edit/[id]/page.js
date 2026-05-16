@@ -90,8 +90,12 @@ function EditProduct() {
         const fetchData = async () => {
             try {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-                // Fetch master data
-                const mdRes = await fetch(`${apiUrl}/api/products/master-data`);
+                // Fetch master data from the ADMIN endpoint (no Redis cache)
+                // so newly added sub-categories appear immediately without waiting 24h.
+                const token = getAuthToken();
+                const mdRes = await fetch(`${apiUrl}/api/admin/master-data`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
                 if (mdRes.ok) {
                     const md = await mdRes.json();
                     if (md && !md.error) setMasterData(md);
