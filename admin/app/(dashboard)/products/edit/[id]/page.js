@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter, useParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faEdit, faArrowLeft, faPlus, faTimes, faTrash, faVideo, faPlay, faPencilAlt, faCloudUploadAlt, faSpinner, faFileUpload, faCheckCircle, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faEdit, faArrowLeft, faPlus, faTimes, faTrash, faVideo, faPlay, faPencilAlt, faCloudUploadAlt, faSpinner, faFileUpload, faCheckCircle, faFolderOpen, faExpand, faSync } from '@fortawesome/free-solid-svg-icons';
 import { getAuthToken, getAuthUser, hasPermission } from '../../../../../utils/auth';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -55,6 +55,8 @@ function EditProduct() {
     const [summary, setSummary] = useState([]);
     const [customizations, setCustomizations] = useState([]);
     const [thumbnailPreview, setThumbnailPreview] = useState("");
+    const [thumbnailLightboxOpen, setThumbnailLightboxOpen] = useState(false);
+    const [showVideoCapture, setShowVideoCapture] = useState(false);
     const [editingCustIndex, setEditingCustIndex] = useState(null); // Track which group is being edited
 
     // Temporary Inputs
@@ -903,24 +905,51 @@ function EditProduct() {
                                 </div>
                             )}
                             {!uploadingThumbnail && (formData.thumbnail || thumbnailPreview) && (
-                                <div className="relative mt-2 w-32 h-32 rounded-xl border border-[#2d1b4e] overflow-hidden">
-                                    <Image 
-                                        src={thumbnailPreview || formData.thumbnail} 
-                                        fill 
-                                        className="object-cover" 
-                                        alt="Thumbnail Preview" 
-                                        sizes="(max-width: 768px) 100vw, 128px" 
-                                    />
+                                <div className="mt-3 flex items-start gap-3">
+                                    {/* Clickable thumbnail preview */}
+                                    <div
+                                        className="relative w-32 h-32 rounded-xl border border-[#2d1b4e] overflow-hidden cursor-pointer group flex-shrink-0"
+                                        onClick={() => setThumbnailLightboxOpen(true)}
+                                        title="Click to preview"
+                                    >
+                                        <Image
+                                            src={thumbnailPreview || formData.thumbnail}
+                                            fill
+                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                            alt="Thumbnail Preview"
+                                            sizes="128px"
+                                        />
+                                        {/* Expand icon overlay */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                                            <FontAwesomeIcon icon={faExpand} className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg" />
+                                        </div>
+                                    </div>
+                                    {/* Change Thumbnail button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (thumbnailPreview && thumbnailPreview.startsWith('blob:')) {
+                                                URL.revokeObjectURL(thumbnailPreview);
+                                            }
+                                            setThumbnailPreview('');
+                                            setFormData(prev => ({ ...prev, thumbnail: '' }));
+                                            setShowVideoCapture(true);
+                                        }}
+                                        className="flex items-center gap-2 text-[11px] font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg hover:bg-orange-500/20 transition-colors"
+                                        title="Remove thumbnail and recapture from video"
+                                    >
+                                        <FontAwesomeIcon icon={faSync} />
+                                        Change
+                                    </button>
                                 </div>
                             )}
 
                             {/* Show the frame-capture tool ONLY if:
                                  1. A video exists (and it's not a YouTube/Vimeo link)
-                                 2. The admin has NOT already set a thumbnail manually (file upload OR typed URL) */}
+                                 2. The admin has NOT already set a thumbnail — OR explicitly clicked "Change" */}
                             {videos.length > 0
                                 && !(videos[0] instanceof File ? false : (videos[0]?.includes('youtube.com') || videos[0]?.includes('youtu.be')))
-                                && !formData.thumbnail
-                                && !thumbnailPreview
+                                && (!formData.thumbnail && !thumbnailPreview || showVideoCapture)
                                 && (
                                 <div className="mt-4">
                                     <div className="mb-2 p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-[11px] text-purple-300">
@@ -932,6 +961,7 @@ function EditProduct() {
                                         onCapture={(file, previewUrl) => {
                                             setFormData(prev => ({ ...prev, thumbnail: file }));
                                             setThumbnailPreview(previewUrl);
+                                            setShowVideoCapture(false);
                                         }}
                                     />
                                 </div>
@@ -1285,6 +1315,34 @@ function EditProduct() {
                                     className="w-full h-full object-contain"
                                 ></video>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Thumbnail Lightbox Modal */}
+            {thumbnailLightboxOpen && (thumbnailPreview || formData.thumbnail) && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+                    <div
+                        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+                        onClick={() => setThumbnailLightboxOpen(false)}
+                    />
+                    <div className="relative z-10 max-w-4xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl border border-[#2d1b4e] animate-scaleIn">
+                        <button
+                            type="button"
+                            onClick={() => setThumbnailLightboxOpen(false)}
+                            className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-all border border-white/20"
+                        >
+                            <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                        <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+                            <Image
+                                src={thumbnailPreview || formData.thumbnail}
+                                alt="Thumbnail Full Preview"
+                                fill
+                                className="object-contain bg-black"
+                                sizes="(max-width: 1024px) 100vw, 1024px"
+                            />
                         </div>
                     </div>
                 </div>
