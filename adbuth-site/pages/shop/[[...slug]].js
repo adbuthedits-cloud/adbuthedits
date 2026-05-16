@@ -159,9 +159,9 @@ function ProductGrid({ products, loading }) {
                 </div>
             )}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
-                {products.map(p => (
+                {products.map((p, index) => (
                     <div key={p.products_id} className="h-full">
-                        <ProductCard product={p} />
+                        <ProductCard product={p} index={index} />
                     </div>
                 ))}
             </div>
@@ -499,7 +499,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                     {/* Main Shop Grid */}
                     <div id="shop-products" className="flex items-start max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-6 scroll-m-[100px]">
                         {/* ── Left Sidebar (desktop) ── */}
-                        <div className="hidden lg:block sticky top-20 self-start">
+                        <div className="hidden lg:block sticky top-5 self-start">
                             <ShopSidebar
                                 filters={filters}
                                 onFilterChange={handleFilterChange}

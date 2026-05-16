@@ -178,7 +178,7 @@ export default function ShopSidebar({ filters, onFilterChange, masterData, maxPr
     ].length > 0;
 
     return (
-        <aside className={`${isMobile ? 'w-full h-full' : 'w-64 h-[calc(100vh-100px)] border-r'} flex-shrink-0 overflow-y-auto custom-scroll bg-white border-gray-100 flex flex-col`}>
+        <aside className={`${isMobile ? 'w-full h-full' : 'w-64 h-[calc(100vh)] border-r'} flex-shrink-0 overflow-y-auto custom-scroll bg-white border-gray-100 flex flex-col`}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
                 <span className="text-[12px] font-black text-gray-900 uppercase tracking-[0.15em]">Filters</span>

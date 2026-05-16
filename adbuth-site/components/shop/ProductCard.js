@@ -25,7 +25,7 @@ function isNewProduct(updatedAt) {
     return diffDays <= NEW_BADGE_DAYS;
 }
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, index = 0 }) {
     const [wishlisted, setWishlisted] = useState(false);
     const [isInView, setIsInView] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
@@ -117,7 +117,7 @@ export default function ProductCard({ product }) {
                         fill
                         className={`object-cover transition-opacity duration-300 ${isHovered && videoSrc ? 'opacity-0' : 'opacity-100'}`}
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                        priority={isNew}
+                        priority={index < 8}
                     />
                 ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
