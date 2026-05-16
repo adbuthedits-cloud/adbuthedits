@@ -212,20 +212,24 @@ router.get('/', cache('products', 1800), async (req, res) => {
         const products = await Product.findAll({
             where,
             include,
-            attributes: {
-                include: [
-                    [sequelize.literal(`(
-                        SELECT AVG(rating)
-                        FROM ratings
-                        WHERE ratings.products_id = "Product"."products_id" AND ratings.status = 'approved'
-                    )`), 'averageRating'],
-                    [sequelize.literal(`(
-                        SELECT COUNT(*)
-                        FROM ratings
-                        WHERE ratings.products_id = "Product"."products_id" AND ratings.status = 'approved'
-                    )`), 'reviewCount']
-                ]
-            }
+            attributes: [
+                'products_id', 'title', 'description', 'price', 'compared_price', 'slug',
+                'thumbnail', 'video', 'video_url', 'updatedAt',
+                'parent_category_id', 'asset_category_id', 'asset_sub_category_id',
+                'asset_type_id', 'asset_variant_id', 'asset_orientation_id',
+                // Single pre-aggregated join instead of N correlated subqueries
+                [sequelize.literal(`(
+                    SELECT ROUND(AVG(r.rating)::numeric, 1)
+                    FROM ratings r
+                    WHERE r.products_id = "Product"."products_id" AND r.status = 'approved'
+                )`), 'averageRating'],
+                [sequelize.literal(`(
+                    SELECT COUNT(*)
+                    FROM ratings r
+                    WHERE r.products_id = "Product"."products_id" AND r.status = 'approved'
+                )`), 'reviewCount']
+            ],
+            order: [['updatedAt', 'DESC']]
         });
 
         res.json(products);
