@@ -2229,6 +2229,7 @@ router.post('/master-data/types', checkPermission('settings', 'edit'), async (re
             return res.status(400).json({ error: `This ${field} already exists.`, field });
         }
         const record = await AssetType.create(req.body);
+        await clearCache(['master-data']);
         res.status(201).json(record);
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2242,12 +2243,14 @@ router.put('/master-data/types/:id', checkPermission('settings', 'edit'), async 
         }
         const [n] = await AssetType.update(req.body, { where: { type_id: req.params.id } });
         if (!n) return res.status(404).json({ error: 'Not found' });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/master-data/types/:id', checkPermission('settings', 'edit'), async (req, res) => {
     try {
         await AssetType.destroy({ where: { type_id: req.params.id } });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2262,6 +2265,7 @@ router.post('/master-data/variants', checkPermission('settings', 'edit'), async 
             return res.status(400).json({ error: `This ${field} already exists.`, field });
         }
         const record = await AssetVariant.create(req.body);
+        await clearCache(['master-data']);
         res.status(201).json(record);
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2275,12 +2279,14 @@ router.put('/master-data/variants/:id', checkPermission('settings', 'edit'), asy
         }
         const [n] = await AssetVariant.update(req.body, { where: { variant_id: req.params.id } });
         if (!n) return res.status(404).json({ error: 'Not found' });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/master-data/variants/:id', checkPermission('settings', 'edit'), async (req, res) => {
     try {
         await AssetVariant.destroy({ where: { variant_id: req.params.id } });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2295,6 +2301,7 @@ router.post('/master-data/orientations', checkPermission('settings', 'edit'), as
             return res.status(400).json({ error: `This ${field} already exists.`, field });
         }
         const record = await AssetOrientation.create(req.body);
+        await clearCache(['master-data']);
         res.status(201).json(record);
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2308,12 +2315,14 @@ router.put('/master-data/orientations/:id', checkPermission('settings', 'edit'),
         }
         const [n] = await AssetOrientation.update(req.body, { where: { orientation_id: req.params.id } });
         if (!n) return res.status(404).json({ error: 'Not found' });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/master-data/orientations/:id', checkPermission('settings', 'edit'), async (req, res) => {
     try {
         await AssetOrientation.destroy({ where: { orientation_id: req.params.id } });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2329,6 +2338,7 @@ router.post('/master-data/asset-categories', checkPermission('settings', 'edit')
         }
         const slug = await ensureUniqueSlug(name, AssetCategory, 'asset_category_id');
         const record = await AssetCategory.create({ ...req.body, slug });
+        await clearCache(['master-data']);
         res.status(201).json(record);
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2343,12 +2353,14 @@ router.put('/master-data/asset-categories/:id', checkPermission('settings', 'edi
         const slug = await ensureUniqueSlug(name, AssetCategory, 'asset_category_id', req.params.id);
         const [n] = await AssetCategory.update({ ...req.body, slug }, { where: { asset_category_id: req.params.id } });
         if (!n) return res.status(404).json({ error: 'Not found' });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/master-data/asset-categories/:id', checkPermission('settings', 'edit'), async (req, res) => {
     try {
         await AssetCategory.destroy({ where: { asset_category_id: req.params.id } });
+        await clearCache(['master-data']);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2364,6 +2376,7 @@ router.post('/master-data/sub-categories', checkPermission('settings', 'edit'), 
         }
         const slug = await ensureUniqueSlug(name, AssetSubCategory, 'asset_sub_category_id');
         const record = await AssetSubCategory.create({ ...req.body, slug });
+        await clearCache(['master-data']); // Immediately visible in product creation form
         res.status(201).json(record);
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -2378,12 +2391,14 @@ router.put('/master-data/sub-categories/:id', checkPermission('settings', 'edit'
         const slug = await ensureUniqueSlug(name, AssetSubCategory, 'asset_sub_category_id', req.params.id);
         const [n] = await AssetSubCategory.update({ ...req.body, slug }, { where: { asset_sub_category_id: req.params.id } });
         if (!n) return res.status(404).json({ error: 'Not found' });
+        await clearCache(['master-data']); // Immediately visible in product creation form
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/master-data/sub-categories/:id', checkPermission('settings', 'edit'), async (req, res) => {
     try {
         await AssetSubCategory.destroy({ where: { asset_sub_category_id: req.params.id } });
+        await clearCache(['master-data']); // Remove from dropdowns immediately
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
