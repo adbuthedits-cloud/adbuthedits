@@ -18,6 +18,14 @@ export default function VideoThumbnailGenerator({ videoUrl, onCapture, isFile = 
 
     if (!videoUrl) return null;
 
+    // Build the effective video source:
+    // - Local File blobs: use as-is (no CORS issue)
+    // - R2 remote URLs: route through our backend proxy which adds CORS headers
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const effectiveVideoUrl = isFile
+        ? videoUrl
+        : `${API_URL}/api/media/proxy-video?url=${encodeURIComponent(videoUrl)}`;
+
     // Called when the video has loaded enough data to determine dimensions
     const handleVideoLoaded = () => {
         setStatus("ready");
@@ -137,11 +145,10 @@ export default function VideoThumbnailGenerator({ videoUrl, onCapture, isFile = 
                 <div className="w-full md:w-1/2 max-w-xs rounded-lg overflow-hidden bg-black border border-[#2d1b4e] shadow-md">
                     <video
                         ref={videoRef}
-                        src={videoUrl}
+                        src={effectiveVideoUrl}
                         controls
                         playsInline
                         preload="metadata"
-                        crossOrigin={!isFile ? "anonymous" : undefined}
                         onLoadedData={handleVideoLoaded}
                         onCanPlay={handleVideoLoaded}
                         onError={handleVideoError}
@@ -189,11 +196,22 @@ export default function VideoThumbnailGenerator({ videoUrl, onCapture, isFile = 
                     )}
 
                     {status === "error" && errorMsg && (
-                        <div className="text-red-400 text-[11px] font-medium flex flex-col gap-1 max-w-[220px]">
-                            <span className="flex items-center gap-1">
+                        <div className="text-red-400 text-[11px] font-medium flex flex-col gap-2 max-w-[240px] bg-red-500/5 p-3 rounded-lg border border-red-500/10">
+                            <span className="flex items-center gap-2 text-red-500">
                                 <FontAwesomeIcon icon={faExclamationCircle} className="flex-shrink-0" />
-                                {errorMsg}
+                                <strong>Connection Blocked</strong>
                             </span>
+                            <p className="opacity-80 leading-normal">
+                                Your browser blocked access to this video frame. This usually means your **Cloudflare R2 CORS policy** needs to be updated.
+                            </p>
+                            <a 
+                                href="https://developers.cloudflare.com/r2/buckets/cors/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-purple-400 hover:text-purple-300 underline underline-offset-2"
+                            >
+                                How to fix this →
+                            </a>
                         </div>
                     )}
                 </div>

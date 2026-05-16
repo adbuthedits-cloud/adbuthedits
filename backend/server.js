@@ -66,6 +66,7 @@ const cartRoutes = require('./routes/cartRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
 const settingRoutes = require('./routes/settingRoutes');
+const mediaRoutes = require('./routes/mediaRoutes');
 const { runSafeMigrations } = require('./utils/safeSync');
 
 // Use Routes
@@ -82,6 +83,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/enquiry', enquiryRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/media', mediaRoutes);
 
 app.use('/api/settings', settingRoutes);
 
