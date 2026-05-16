@@ -849,7 +849,7 @@ function MasterDataPage() {
     const canEdit = user.is_super_admin || (user.permissions?.master_data && user.permissions.master_data.includes('edit'));
     const canDelete = user.is_super_admin || (user.permissions?.master_data && user.permissions.master_data.includes('delete'));
     
-    const [data, setData] = useState({ types: [], variants: [], orientations: [], categories: [], subCategories: [], parentCategories: [], shopSettings: null });
+    const [data, setData] = useState({ types: [], variants: [], orientations: [], categories: [], subCategories: [], parentCategories: [], shopSettings: null, customizationTemplates: [] });
     const [loading, setLoading] = useState(true);
     const [activeSubCatFilter, setActiveSubCatFilter] = useState(null);
     const [subCatSearch, setSubCatSearch] = useState('');
@@ -890,7 +890,8 @@ function MasterDataPage() {
                 categories: Array.isArray(json.categories) ? json.categories : [],
                 subCategories: Array.isArray(json.subCategories) ? json.subCategories : [],
                 parentCategories: Array.isArray(json.parentCategories) ? json.parentCategories : [],
-                shopSettings: json.shopSettings || null
+                shopSettings: json.shopSettings || null,
+                customizationTemplates: Array.isArray(json.customizationTemplates) ? json.customizationTemplates : []
             };
             setData(safeData);
         } catch (err) {
@@ -940,6 +941,25 @@ function MasterDataPage() {
             fetchAll();
         },
     });
+
+    const handleUpdateShopSettings = async (body) => {
+        const res = await fetch(`${API_URL}/api/admin/master-data/shop-settings`, { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('Update failed');
+        fetchAll();
+    };
+
+    const handleUpdateTemplate = async (id, body) => {
+        const res = await fetch(`${API_URL}/api/admin/master-data/customization-templates/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('Update failed');
+        fetchAll();
+    };
+
+    const handleDeleteTemplate = async (id) => {
+        if (!confirm('Delete this template? Products using it will not be affected, but you cannot load this preset anymore.')) return;
+        const res = await fetch(`${API_URL}/api/admin/master-data/customization-templates/${id}`, { method: 'DELETE', headers: headers() });
+        if (!res.ok) throw new Error('Delete failed');
+        fetchAll();
+    };
 
     const Table = ({ items, fields, idField, crud, variant }) => {
         if (variant === 'detailed') {
@@ -1010,14 +1030,7 @@ function MasterDataPage() {
                 <ShopSettingsSection
                     settings={data.shopSettings}
                     onLibraryClick={openLibrary}
-                    onUpdate={async (body) => {
-                        await fetch(`${API_URL}/api/admin/master-data/shop-settings`, {
-                            method: 'POST',
-                            headers: headers(),
-                            body: JSON.stringify(body)
-                        });
-                        fetchAll();
-                    }}
+                    onUpdate={handleUpdateShopSettings}
                 />
 
                 {/* Primary Store Categories */}
@@ -1142,6 +1155,44 @@ function MasterDataPage() {
                             onAdd={subCatCRUD.add}
                         />
                     )}
+                </SectionCard>
+
+                {/* Customization Templates */}
+                <SectionCard title="Customization Templates" icon={faTag}>
+                    <p className="text-xs text-gray-500 mb-4 px-2 italic">Management of customization form presets. You can save new templates directly from the Product Creation/Edit forms.</p>
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-white/5 text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                                <th className="py-3 px-4">Template Name</th>
+                                <th className="py-3 px-4">Description</th>
+                                <th className="py-3 px-4">Fields Count</th>
+                                <th className="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.customizationTemplates.map(t => (
+                                <tr key={t.template_id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                    <td className="py-3 px-4 text-sm font-bold text-white">{t.name}</td>
+                                    <td className="py-3 px-4 text-sm text-gray-400">{t.description || 'No description'}</td>
+                                    <td className="py-3 px-4 text-sm text-purple-400 font-mono">{t.fields?.length || 0} groups</td>
+                                    <td className="py-3 px-4 text-right">
+                                        <div className="flex gap-2 justify-end">
+                                            {canDelete && (
+                                                <button onClick={() => handleDeleteTemplate(t.template_id)} className="p-1.5 rounded bg-red-600/20 text-red-400 hover:bg-red-600/40">
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {data.customizationTemplates.length === 0 && (
+                                <tr>
+                                    <td colSpan="4" className="py-10 text-center text-gray-500 italic text-sm">No templates saved yet.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </SectionCard>
             </div>
         </div>
