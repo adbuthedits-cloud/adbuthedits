@@ -648,7 +648,6 @@ function EditProduct() {
             };
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const token = getAuthToken();
             await axios.put(`${apiUrl}/api/admin/products/${id}`, dataToSubmit, {
                 headers: { Authorization: `Bearer ${token}` }
             });
