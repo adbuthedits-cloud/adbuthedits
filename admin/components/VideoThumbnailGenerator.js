@@ -149,6 +149,7 @@ export default function VideoThumbnailGenerator({ videoUrl, onCapture, isFile = 
                         controls
                         playsInline
                         preload="metadata"
+                        crossOrigin="anonymous"
                         onLoadedData={handleVideoLoaded}
                         onCanPlay={handleVideoLoaded}
                         onError={handleVideoError}
