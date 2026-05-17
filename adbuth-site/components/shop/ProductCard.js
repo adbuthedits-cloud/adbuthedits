@@ -129,16 +129,17 @@ export default function ProductCard({ product, index = 0 }) {
                     </div>
                 )}
 
-                {/* Video - Only rendered when in view and swapped on hover */}
-                {isInView && videoSrc && isHovered && (
+                {/* Video - Always rendered when in view, but only visible on hover */}
+                {isInView && videoSrc && (
                     <video
+                        key={videoSrc}
                         ref={videoRef}
                         src={videoSrc}
-                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         muted
                         loop
                         playsInline
-                        autoPlay
+                        preload="none"
                     />
                 )}
 

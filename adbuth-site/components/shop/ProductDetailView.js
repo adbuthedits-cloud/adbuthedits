@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faPlus, faShareAlt, faCheck, faStar, faPlay, faEnvelope, faLink, faTimes, faSpinner, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faPlus, faShareAlt, faCheck, faStar, faPlay, faEnvelope, faLink, faTimes, faSpinner, faSearch, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import { faWhatsapp, faXTwitter, faFacebook } from '@fortawesome/free-brands-svg-icons';
 import { Star, Heart } from 'lucide-react';
@@ -21,6 +21,38 @@ import toast from 'react-hot-toast';
 import SeoHead from '../SeoHead';
 
 const ReviewSection = dynamic(() => import('../ReviewSection'), { loading: () => <p className="text-center py-10">Loading Reviews...</p> });
+
+// ─── Product Slider with Arrow Controls ───────────────────────────────────────
+function ProductSlider({ products, title, cardWidth = '160px', cardWidthSm = '190px' }) {
+    const sliderRef = useRef(null);
+    const scroll = (dir) => {
+        if (sliderRef.current) {
+            sliderRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
+        }
+    };
+    return (
+        <div className="pt-10 mt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900 uppercase tracking-tight">{title}</h3>
+                <div className="flex gap-2">
+                    <button onClick={() => scroll(-1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors">
+                        <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
+                    </button>
+                    <button onClick={() => scroll(1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors">
+                        <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
+                    </button>
+                </div>
+            </div>
+            <div ref={sliderRef} className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+                {products.map(p => (
+                    <div key={p.products_id} style={{ width: cardWidth, minWidth: cardWidth }} className={`flex-none snap-start sm:!w-[${cardWidthSm}]`}>
+                        <ProductCard product={p} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 export default function ProductDetailView({ slug }) {
     const router = useRouter();
@@ -477,16 +509,7 @@ export default function ProductDetailView({ slug }) {
 
                         {/* Related Products Slider (Compact for Sidebar area) */}
                         {relatedProducts.length > 0 && (
-                            <div className="pt-10 mt-6 border-t border-gray-100">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6 uppercase tracking-tight">Recommended For You</h3>
-                                <div className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
-                                    {relatedProducts.map(p => (
-                                        <div key={p.products_id} className="w-[160px] sm:w-[190px] flex-none snap-start">
-                                            <ProductCard product={p} />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <ProductSlider products={relatedProducts} title="Recommended For You" cardWidth="160px" cardWidthSm="190px" />
                         )}
                     </div>
                 </div>
@@ -503,23 +526,23 @@ export default function ProductDetailView({ slug }) {
                         <div className="mt-20 space-y-16 px-4 sm:px-6 lg:px-8">
                             {occasionGroups.map((group, idx) => (
                                 <div key={group.name} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
-                                    <div className="flex items-end justify-between mb-8">
+                                    <div className="flex items-end justify-between mb-6 sm:mb-8">
                                         <div>
-                                            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter uppercase">
+                                            <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-gray-900 tracking-tighter uppercase">
                                                 {group.name}
                                             </h2>
-                                            <div className="h-1 w-12 bg-purple-600 mt-2" />
+                                            <div className="h-1 w-10 sm:w-12 bg-purple-600 mt-2" />
                                         </div>
                                         <Link
                                             href={`/shop?parentCategory=${product.parentCategory?.slug || 'all'}&assetCategory=${product.assetCategory?.slug || ''}&assetSubCategory=${group.slug}`}
-                                            className="text-sm font-bold text-purple-700 hover:text-purple-900 flex items-center gap-2 group transition-all"
+                                            className="text-xs sm:text-sm font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 sm:gap-2 group transition-all"
                                         >
                                             VIEW ALL
                                             <span className="group-hover:translate-x-1 transition-transform">→</span>
                                         </Link>
                                     </div>
 
-                                    <div className="flex overflow-x-auto gap-4  no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+                                    <div className="flex overflow-x-auto gap-4 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
                                         {group.products.map(p => (
                                             <div key={p.products_id} className="w-[200px] sm:w-[240px] flex-none snap-start">
                                                 <ProductCard product={p} />
