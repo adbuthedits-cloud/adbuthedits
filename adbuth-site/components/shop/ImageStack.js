@@ -105,10 +105,10 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                                 opacity: isCenter ? 1 : isVisible ? 0.4 : 0,
                                 scale: isCenter ? 1 : isVisible ? 0.82 : 0.8,
                                 zIndex: isCenter ? 30 : isNext ? 20 : isPrev ? 10 : 0,
-                                y: layout === 'horizontal' ? 0 : (isPrev ? -offset : isNext ? offset : 0),
-                                x: layout === 'horizontal' ? (isPrev ? -offset : isNext ? offset : 0) : 0,
-                                rotateX: layout === 'vertical' ? (isPrev ? 12 : isNext ? -12 : 0) : 0,
-                                rotateY: layout === 'horizontal' ? (isPrev ? -12 : isNext ? 12 : 0) : 0,
+                                y: 0,
+                                x: isPrev ? -offset : isNext ? offset : 0,
+                                rotateX: 0,
+                                rotateY: isPrev ? -12 : isNext ? 12 : 0,
                                 filter: isCenter ? 'blur(0px)' : isVisible ? 'blur(2px)' : 'blur(4px)',
                             }}
                             transition={{ type: "spring", stiffness: 260, damping: 25 }}
