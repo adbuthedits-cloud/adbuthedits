@@ -31,6 +31,7 @@ export default function ProductCard({ product, index = 0 }) {
     const [isHovered, setIsHovered] = useState(false);
     const videoRef = useRef(null);
     const containerRef = useRef(null);
+    const hoverTimer = useRef(null);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -65,14 +66,7 @@ export default function ProductCard({ product, index = 0 }) {
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
 
     const thumbnail = product.thumbnail || null;
-    // Resolve video: check video[] array first, then fall back to video_url string
-    const rawVideoUrl = (product.video && Array.isArray(product.video) && product.video.length > 0)
-        ? product.video[0]
-        : (product.video_url || null);
-    // Append #t=1 so the browser seeks to frame 1 as a poster on load
-    const videoSrc = (rawVideoUrl && typeof rawVideoUrl === 'string')
-        ? (rawVideoUrl.includes('#t=') ? rawVideoUrl : `${rawVideoUrl}#t=1`)
-        : null;
+    const videoSrc = product.video?.[0] || product.video_url || null;
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount
@@ -87,12 +81,23 @@ export default function ProductCard({ product, index = 0 }) {
                     // Silence the AbortError that occurs when play() is interrupted by pause()
                 });
             }
+            
+            // Auto pause after 10 seconds
+            if (hoverTimer.current) clearTimeout(hoverTimer.current);
+            hoverTimer.current = setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.pause();
+                }
+            }, 10000);
         }
     };
 
     const handleMouseLeave = () => {
+        if (hoverTimer.current) clearTimeout(hoverTimer.current);
         if (videoRef.current) {
             videoRef.current.pause();
+            // Reset to beginning so next hover starts fresh
+            videoRef.current.currentTime = 0; 
         }
     };
 

@@ -82,7 +82,7 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                 className="relative w-full flex items-start justify-center overflow-hidden"
                 style={{
                     height: layout === 'horizontal'
-                        ? 'clamp(200px, 55vw, 380px)'   // shorter for 16:9 cards
+                        ? 'clamp(200px, 60vw, 460px)'   // shorter for 16:9 cards, increased to fit wider card
                         : 'clamp(410px, 83vw, 640px)'   // taller for 9:16 portrait cards
                 }}
             >
@@ -93,8 +93,8 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
 
                     const isVisible = isCenter || isNext || isPrev || mediaItems.length <= 3;
 
-                    // Responsive offsets: smaller on mobile
-                    const offset = 130;
+                    // Responsive offsets: larger for horizontal cards because they are wider
+                    const offset = layout === 'horizontal' ? 250 : 130;
 
                     return (
                         <motion.div
@@ -102,7 +102,7 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                             layout
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{
-                                opacity: isCenter ? 1 : isVisible ? 0.35 : 0,
+                                opacity: isCenter ? 1 : isVisible ? 0.4 : 0,
                                 scale: isCenter ? 1 : isVisible ? 0.82 : 0.8,
                                 zIndex: isCenter ? 30 : isNext ? 20 : isPrev ? 10 : 0,
                                 y: layout === 'horizontal' ? 0 : (isPrev ? -offset : isNext ? offset : 0),
@@ -117,7 +117,7 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                                 // Horizontal (16:9): wider card, landscape ratio
                                 // Vertical (9:16): narrower card, portrait ratio
                                 width: layout === 'horizontal'
-                                    ? 'clamp(260px, 60vw, 520px)'
+                                    ? 'clamp(280px, 85vw, 580px)'
                                     : 'clamp(200px, 42vw, 330px)',
                                 aspectRatio: layout === 'horizontal' ? '16 / 9' : '9 / 16',
                                 pointerEvents: isVisible ? 'auto' : 'none',
@@ -125,7 +125,7 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                             onClick={() => {
                                 if (isVisible) handleCardClick(i, isCenter);
                             }}
-                            className={`absolute rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-black border border-gray-100 ${isCenter ? 'cursor-zoom-in' : 'cursor-pointer'}`}
+                            className={`absolute rounded-2xl sm:rounded-3xl overflow-hidden  bg-black border border-gray-100 ${isCenter ? 'cursor-zoom-in' : 'cursor-pointer'}`}
                         >
                             {item.type === 'video' ? (
                                 <video

@@ -54,7 +54,7 @@ function ProductSlider({ products, title, cardWidth = '160px', cardWidthSm = '19
     );
 }
 
-export default function ProductDetailView({ slug }) {
+export default function ProductDetailView({ slug, masterData }) {
     const router = useRouter();
     // State
     const [product, setProduct] = useState(null);
@@ -388,13 +388,21 @@ export default function ProductDetailView({ slug }) {
                 <span className="font-medium">Link copied to clipboard!</span>
             </motion.div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-10   md:mt-0 relative bg-[#fff]">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-24 lg:mt-8 lg:mb-12">
-                    <div className="lg:sticky lg:top-24">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-10  md:mt-0 relative bg-[#fff]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 lg:mt-8 lg:mb-12">
+                    <div className="lg:sticky lg:top-16 self-start">
                         {(() => {
-                            const orientCode = (product.assetOrientation?.code || '').toLowerCase();
-                            const orientName = (product.assetOrientation?.name || '').toLowerCase();
-                            const isHorizontal = orientCode.includes('hor') || orientCode.includes('land') || orientCode === 'h' || orientCode === 'l' || orientName.includes('hor') || orientName.includes('land');
+                            // Find orientation in masterData using the product's asset_orientation_id
+                            const orientation = masterData?.orientations?.find(o => o.orientation_id === product.asset_orientation_id)
+                                || product.assetOrientation || {};
+
+                            const orientCode = (orientation.code || '').toLowerCase();
+                            const orientName = (orientation.name || '').toLowerCase();
+
+                            const isHorizontal = orientCode.includes('hor') || orientCode.includes('land') ||
+                                orientCode === 'h' || orientCode === 'l' ||
+                                orientName.includes('hor') || orientName.includes('land');
+
                             return <ImageStack media={prodMedia} layout={isHorizontal ? 'horizontal' : 'vertical'} productTitle={product.title} onCardClick={(i) => { setLightboxIndex(i); setLightboxOpen(true); }} />;
                         })()}
                     </div>
