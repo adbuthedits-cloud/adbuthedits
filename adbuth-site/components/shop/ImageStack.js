@@ -80,7 +80,11 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 className="relative w-full flex items-start justify-center overflow-hidden"
-                style={{ height: 'clamp(410px, 83vw, 640px)' }}
+                style={{
+                    height: layout === 'horizontal'
+                        ? 'clamp(200px, 55vw, 380px)'   // shorter for 16:9 cards
+                        : 'clamp(410px, 83vw, 640px)'   // taller for 9:16 portrait cards
+                }}
             >
                 {mediaItems.map((item, i) => {
                     const isCenter = i === index;
@@ -110,8 +114,12 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                             transition={{ type: "spring", stiffness: 260, damping: 25 }}
                             style={{
                                 perspective: 1200,
-                                width: 'clamp(200px, 42vw, 330px)',
-                                aspectRatio: '9 / 16',
+                                // Horizontal (16:9): wider card, landscape ratio
+                                // Vertical (9:16): narrower card, portrait ratio
+                                width: layout === 'horizontal'
+                                    ? 'clamp(260px, 60vw, 520px)'
+                                    : 'clamp(200px, 42vw, 330px)',
+                                aspectRatio: layout === 'horizontal' ? '16 / 9' : '9 / 16',
                                 pointerEvents: isVisible ? 'auto' : 'none',
                             }}
                             onClick={() => {

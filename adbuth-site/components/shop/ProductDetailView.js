@@ -43,7 +43,7 @@ function ProductSlider({ products, title, cardWidth = '160px', cardWidthSm = '19
                     </button>
                 </div>
             </div>
-            <div ref={sliderRef} className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div ref={sliderRef} className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth  px-4 sm:mx-0 sm:px-0">
                 {products.map(p => (
                     <div key={p.products_id} style={{ width: cardWidth, minWidth: cardWidth }} className={`flex-none snap-start sm:!w-[${cardWidthSm}]`}>
                         <ProductCard product={p} />
@@ -391,7 +391,12 @@ export default function ProductDetailView({ slug }) {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-10   md:mt-0 relative bg-[#fff]">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-24 lg:mt-8 lg:mb-12">
                     <div className="lg:sticky lg:top-24">
-                        <ImageStack media={prodMedia} layout="horizontal" productTitle={product.title} onCardClick={(i) => { setLightboxIndex(i); setLightboxOpen(true); }} />
+                        {(() => {
+                            const orientCode = (product.assetOrientation?.code || '').toLowerCase();
+                            const orientName = (product.assetOrientation?.name || '').toLowerCase();
+                            const isHorizontal = orientCode.includes('hor') || orientCode.includes('land') || orientCode === 'h' || orientCode === 'l' || orientName.includes('hor') || orientName.includes('land');
+                            return <ImageStack media={prodMedia} layout={isHorizontal ? 'horizontal' : 'vertical'} productTitle={product.title} onCardClick={(i) => { setLightboxIndex(i); setLightboxOpen(true); }} />;
+                        })()}
                     </div>
 
                     <div className="space-y-3 sm:space-y-4 mb-4">
@@ -523,9 +528,9 @@ export default function ProductDetailView({ slug }) {
 
                     {/* Occasion-based Recommendations */}
                     {occasionGroups.length > 0 && (
-                        <div className="mt-20 space-y-16 px-4 sm:px-6 lg:px-8">
+                        <div className="mt-10 md:mt-20 space-y-10 md:space-y-16 px-4 sm:px-6 lg:px-8">
                             {occasionGroups.map((group, idx) => (
-                                <div key={group.name} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
+                                <div key={group.name} className="animate-in mt-10 md:mt-20 fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
                                     <div className="flex items-end justify-between mb-6 sm:mb-8">
                                         <div>
                                             <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-gray-900 tracking-tighter uppercase">
