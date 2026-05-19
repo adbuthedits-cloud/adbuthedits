@@ -923,6 +923,390 @@ router.get('/products/export', checkPermission('products', 'view'), async (req, 
     }
 });
 
+// --- PRODUCT IMPORT TEMPLATE (Download sample .xlsx) ---
+router.get('/products/import-template', checkPermission('products', 'edit'), async (req, res) => {
+    try {
+        const wb = XLSX.utils.book_new();
+
+        // ── Sheet 1: Import Template ──────────────────────────────────────────
+        const headers = [
+            'Title',
+            'Slug',
+            'Parent Category',
+            'Type',
+            'Variant',
+            'Category',
+            'Sub-Category',
+            'Orientation',
+            'Serial Number',
+            'Price (₹)',
+            'Compared Price (₹)',
+            'Product Description',
+            'Meta Title',
+            'Meta Description',
+            'Meta Keywords',
+            'Canonical URL',
+            'Tag Key 1',
+            'Tag Value 1',
+            'Tag Key 2',
+            'Tag Value 2',
+            'Target Audience',
+            'Thumbnail URL',
+            'Images Gallery',
+            'Video Showcase',
+            'Resource File (ZIP)',
+            'Load Template',
+            'Custom Group Name',
+            'Custom Fields',
+        ];
+
+        const sampleRow = {
+            'Title': 'Elegant Wedding Invitation - Gold Floral',
+            'Slug': '',
+            'Parent Category': 'Digital Invitations',
+            'Type': 'VI',
+            'Variant': 'WI',
+            'Category': 'PE',
+            'Sub-Category': 'WED',
+            'Orientation': 'HOR',
+            'Serial Number': '1001',
+            'Price (₹)': '999',
+            'Compared Price (₹)': '1499',
+            'Product Description': 'A beautiful gold floral wedding invitation video with elegant animation. Perfect for sharing digitally with all your loved ones.',
+            'Meta Title': 'Wedding Video Invitation - Gold Floral | Adbuth',
+            'Meta Description': 'Send beautiful digital wedding invitations with gold floral animation. Instantly shareable, beautifully crafted by Adbuth.',
+            'Meta Keywords': 'wedding invitation, digital invite, video card, floral wedding',
+            'Canonical URL': '',
+            'Tag Key 1': 'Brand',
+            'Tag Value 1': 'Adbuth',
+            'Tag Key 2': 'Quality',
+            'Tag Value 2': 'Premium',
+            'Target Audience': 'Bride and Groom, Couples',
+            'Thumbnail URL': 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/thumb.jpg',
+            'Images Gallery': 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/img1.jpg | https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/img2.jpg',
+            'Video Showcase': 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/vid.mp4',
+            'Resource File (ZIP)': 'https://private.r2.dev/sample/file.zip',
+            'Load Template': 'Wedding With Images',
+            'Custom Group Name': '',
+            'Custom Fields': '',
+        };
+
+        const ws = XLSX.utils.json_to_sheet([sampleRow], { header: headers });
+
+        // Set column widths
+        ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 4, 22) }));
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Import Template');
+
+        // ── Sheet 2: Rules & Valid Values ─────────────────────────────────────
+        const rulesData = [
+            { Field: '--- GENERAL RULES ---', Rule: '' },
+            { Field: 'Title', Rule: 'REQUIRED. Plain text. Each word is auto-capitalised.' },
+            { Field: 'Slug', Rule: 'OPTIONAL. Leave empty to auto-generate from Title (duplicate-safe). Use lowercase-with-hyphens if you provide one.' },
+            { Field: 'Serial Number', Rule: 'OPTIONAL. Integer (e.g. 1001). Leave empty to auto-assign next available serial for the selected category combination.' },
+            { Field: 'Price (₹)', Rule: 'REQUIRED. Number only, no ₹ symbol.' },
+            { Field: 'Compared Price (₹)', Rule: 'OPTIONAL. Leave empty if no strike-through price is needed.' },
+            { Field: 'Compared Price (₹)', Rule: 'Must be higher than Price if provided.' },
+            { Field: 'Images Gallery', Rule: 'Separate multiple image URLs with  |  (space-pipe-space). E.g.: https://url1.jpg | https://url2.jpg' },
+            { Field: 'Video Showcase', Rule: 'Separate multiple video URLs with  |  (space-pipe-space).' },
+            { Field: 'Target Audience', Rule: 'Comma-separated values. E.g.: Bride and Groom, Couples, Parents' },
+            { Field: 'Load Template', Rule: 'Exact template name from the system. See Sheet 3 for all available templates.' },
+            { Field: 'Custom Group Name', Rule: 'OPTIONAL. Add an extra customization group on top of the loaded template.' },
+            { Field: 'Custom Fields', Rule: 'Required only if Custom Group Name is filled. Format: FieldName:type | FieldName:type. Valid types: text, date, time, media' },
+            { Field: '--- MEDIA RULES ---', Rule: '' },
+            { Field: 'Thumbnail URL', Rule: 'Must be a public HTTPS URL already uploaded to R2/CDN.' },
+            { Field: 'Resource File (ZIP)', Rule: 'Must be a private HTTPS URL. This is the downloadable file sent to customers after purchase.' },
+            { Field: '--- DUPLICATE HANDLING ---', Rule: '' },
+            { Field: 'Slug Duplicates', Rule: 'If a slug already exists in the DB, a suffix (-1, -2 ...) is automatically appended.' },
+            { Field: 'SKU Duplicates', Rule: 'If the same Type+Variant+Category+SubCategory+Orientation+Serial already exists, that row is SKIPPED with an error.' },
+            { Field: '--- VALID PARENT CATEGORIES ---', Rule: '' },
+            { Field: 'Digital Invitations', Rule: 'Use exactly: Digital Invitations' },
+            { Field: 'Greetings', Rule: 'Use exactly: Greetings' },
+            { Field: '--- VALID TYPE CODES ---', Rule: '' },
+            { Field: 'PO', Rule: 'Poster' },
+            { Field: 'VI', Rule: 'Video' },
+            { Field: '--- VALID VARIANT CODES ---', Rule: '' },
+            { Field: 'WI', Rule: 'With Image' },
+            { Field: 'WO', Rule: 'Without Image' },
+            { Field: '--- VALID CATEGORY CODES ---', Rule: '' },
+            { Field: 'PE', Rule: 'Personal Events' },
+            { Field: 'BI', Rule: 'Business Invites' },
+            { Field: 'PAE', Rule: 'Party Events' },
+            { Field: 'FW', Rule: 'Festival Wishes' },
+            { Field: 'PEG', Rule: 'Personal Greetings' },
+            { Field: 'P&S', Rule: 'Political & Social' },
+            { Field: 'PG', Rule: 'Professional Greetings' },
+            { Field: '--- VALID SUB-CATEGORY CODES ---', Rule: '' },
+            { Field: 'WED', Rule: 'Weddings' },
+            { Field: 'EN', Rule: 'Engagement' },
+            { Field: 'BIR', Rule: 'Birthdays' },
+            { Field: 'AN', Rule: 'Anniversaries' },
+            { Field: 'BS', Rule: 'Baby Shower' },
+            { Field: 'HA', Rule: 'Haldi' },
+            { Field: 'ME', Rule: 'Mehandi' },
+            { Field: 'SA', Rule: 'Sangeeth' },
+            { Field: 'RE', Rule: 'Reception' },
+            { Field: 'DF', Rule: 'Dhoti Function' },
+            { Field: 'NY', Rule: 'New Year' },
+            { Field: 'DIW', Rule: 'Diwali' },
+            { Field: 'CHR', Rule: 'Christmas' },
+            { Field: 'EID', Rule: 'EID' },
+            { Field: 'GO', Rule: 'Grand Opening' },
+            { Field: 'PL', Rule: 'Product Launch' },
+            { Field: 'PP', Rule: 'Pool Party' },
+            { Field: 'RU', Rule: 'Reunion' },
+            { Field: 'PRO', Rule: 'Promotion' },
+            { Field: 'WA', Rule: 'Work Anniversary' },
+            { Field: '--- VALID ORIENTATION CODES ---', Rule: '' },
+            { Field: 'HOR', Rule: 'Horizontal' },
+            { Field: 'VER', Rule: 'Vertical' },
+            { Field: 'H&V', Rule: 'Horizontal & Vertical' },
+        ];
+
+        const wsRules = XLSX.utils.json_to_sheet(rulesData, { header: ['Field', 'Rule'] });
+        wsRules['!cols'] = [{ wch: 30 }, { wch: 80 }];
+        XLSX.utils.book_append_sheet(wb, wsRules, 'Rules & Valid Values');
+
+        // ── Sheet 3: Available Templates ──────────────────────────────────────
+        const { CustomizationTemplate: CT } = require('../models');
+        const templates = await CT.findAll({ attributes: ['name', 'description', 'fields'], order: [['name', 'ASC']] });
+        const templatesData = templates.map(t => ({
+            'Template Name (use exactly)': t.name,
+            'Description': t.description || '',
+            'Fields Preview': JSON.stringify(t.fields || []),
+        }));
+        const wsTemplates = XLSX.utils.json_to_sheet(templatesData);
+        wsTemplates['!cols'] = [{ wch: 35 }, { wch: 25 }, { wch: 100 }];
+        XLSX.utils.book_append_sheet(wb, wsTemplates, 'Available Templates');
+
+        const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=adbuth-product-import-template.xlsx');
+        return res.send(buf);
+    } catch (err) {
+        console.error('[Import Template Error]:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- PRODUCT BULK IMPORT (Process rows sequentially) ---
+const importUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB max
+
+router.post('/products/import', checkPermission('products', 'edit'), importUpload.single('file'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    if (ext !== '.xlsx' && ext !== '.xls') {
+        return res.status(400).json({ error: 'Only .xlsx or .xls files are supported.' });
+    }
+
+    try {
+        // ── 1. Parse spreadsheet ──────────────────────────────────────────────
+        const wb = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (!rows.length) return res.status(400).json({ error: 'The spreadsheet is empty.' });
+
+        // ── 2. Pre-load all master data (one DB round trip) ───────────────────
+        const [parentCategories, assetTypes, assetVariants, assetCategories, assetSubCategories, assetOrientations, custTemplates] = await Promise.all([
+            Category.findAll({ attributes: ['category_id', 'category_name'] }),
+            require('../models/AssetType').findAll({ attributes: ['type_id', 'name', 'code'] }),
+            require('../models/AssetVariant').findAll({ attributes: ['variant_id', 'name', 'code'] }),
+            AssetCategory.findAll({ attributes: ['asset_category_id', 'name', 'code'] }),
+            AssetSubCategory.findAll({ attributes: ['asset_sub_category_id', 'name', 'code'] }),
+            AssetOrientation.findAll({ attributes: ['orientation_id', 'name', 'code'] }),
+            require('../models').CustomizationTemplate.findAll({ attributes: ['template_id', 'name', 'fields'] }),
+        ]);
+
+        // Build lookup maps
+        const parentCatMap = Object.fromEntries(parentCategories.map(c => [c.category_name.toLowerCase(), c.category_id]));
+        const typeMap = Object.fromEntries(assetTypes.map(t => [t.code.toLowerCase(), t.type_id]));
+        const variantMap = Object.fromEntries(assetVariants.map(v => [v.code.toLowerCase(), v.variant_id]));
+        const categoryMap = Object.fromEntries(assetCategories.map(c => [c.code.toLowerCase(), c.asset_category_id]));
+        const subCategoryMap = Object.fromEntries(assetSubCategories.map(s => [s.code.toLowerCase(), s.asset_sub_category_id]));
+        const orientationMap = Object.fromEntries(assetOrientations.map(o => [o.code.toLowerCase(), o.orientation_id]));
+        const templateMap = Object.fromEntries(custTemplates.map(t => [t.name.toLowerCase(), t.fields]));
+
+        const results = [];
+        let successCount = 0;
+        let failCount = 0;
+
+        // ── 3. Process rows one-by-one (sequential, no race conditions) ───────
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const rowNum = i + 2; // Excel row number (header is row 1)
+            const rowTitle = String(row['Title'] || '').trim();
+
+            try {
+                // Validate required fields
+                if (!rowTitle) throw new Error('Title is required.');
+                if (!row['Parent Category']) throw new Error('Parent Category is required.');
+                if (!row['Type']) throw new Error('Type code is required.');
+                if (!row['Variant']) throw new Error('Variant code is required.');
+                if (!row['Category']) throw new Error('Category code is required.');
+                if (!row['Sub-Category']) throw new Error('Sub-Category code is required.');
+                if (!row['Orientation']) throw new Error('Orientation code is required.');
+                if (!row['Price (₹)'] && row['Price (₹)'] !== 0) throw new Error('Price is required.');
+
+                // Resolve IDs from codes
+                const parentCatId = parentCatMap[String(row['Parent Category']).toLowerCase().trim()];
+                if (!parentCatId) throw new Error(`Unknown Parent Category: "${row['Parent Category']}". Valid: Digital Invitations, Greetings`);
+
+                const typeId = typeMap[String(row['Type']).toLowerCase().trim()];
+                if (!typeId) throw new Error(`Unknown Type code: "${row['Type']}". Valid: PO, VI`);
+
+                const variantId = variantMap[String(row['Variant']).toLowerCase().trim()];
+                if (!variantId) throw new Error(`Unknown Variant code: "${row['Variant']}". Valid: WI, WO`);
+
+                const categoryId = categoryMap[String(row['Category']).toLowerCase().trim()];
+                if (!categoryId) throw new Error(`Unknown Category code: "${row['Category']}". Valid: PE, BI, PAE, FW, PEG, P&S, PG`);
+
+                const subCategoryId = subCategoryMap[String(row['Sub-Category']).toLowerCase().trim()];
+                if (!subCategoryId) throw new Error(`Unknown Sub-Category code: "${row['Sub-Category']}". See Rules sheet for valid codes.`);
+
+                const orientationId = orientationMap[String(row['Orientation']).toLowerCase().trim()];
+                if (!orientationId) throw new Error(`Unknown Orientation code: "${row['Orientation']}". Valid: HOR, VER, H&V`);
+
+                // ── Slug generation (unique) ──────────────────────────────────
+                const rawSlug = String(row['Slug'] || '').trim() || rowTitle;
+                const slug = await ensureUniqueSlug(rawSlug, Product, 'products_id');
+
+                // ── Serial Number (auto-assign if empty) ─────────────────────
+                let serialNumber = String(row['Serial Number'] || '').trim();
+                if (!serialNumber) {
+                    // Find max serial for this combination and increment
+                    const maxSerial = await Product.max('serial_number', {
+                        where: {
+                            parent_category_id: parentCatId,
+                            asset_type_id: typeId,
+                            asset_variant_id: variantId,
+                            asset_category_id: categoryId,
+                            asset_sub_category_id: subCategoryId,
+                            asset_orientation_id: orientationId,
+                        }
+                    });
+                    serialNumber = ((parseInt(maxSerial) || 1000) + 1).toString();
+                }
+
+                // Build SKU
+                const typeCode = assetTypes.find(t => t.type_id === typeId)?.code || '';
+                const variantCode = assetVariants.find(v => v.variant_id === variantId)?.code || '';
+                const categoryCode = assetCategories.find(c => c.asset_category_id === categoryId)?.code || '';
+                const subCategoryCode = assetSubCategories.find(s => s.asset_sub_category_id === subCategoryId)?.code || '';
+                const orientationCode = assetOrientations.find(o => o.orientation_id === orientationId)?.code || '';
+                const parentCatName = parentCategories.find(c => c.category_id === parentCatId)?.category_name?.replace(/\s+/g, '') || '';
+                const internalSku = `JAP-${typeCode}-${variantCode}-${categoryCode}-${subCategoryCode}-${orientationCode}-${serialNumber}`;
+
+                // Check for SKU duplicate
+                const existingSku = await Product.findOne({ where: { internal_sku: internalSku } });
+                if (existingSku) throw new Error(`SKU "${internalSku}" already exists. Change the Serial Number.`);
+
+                // ── Tags ──────────────────────────────────────────────────────
+                const tags = {};
+                if (row['Tag Key 1'] && row['Tag Value 1']) tags[String(row['Tag Key 1']).trim()] = String(row['Tag Value 1']).trim();
+                if (row['Tag Key 2'] && row['Tag Value 2']) tags[String(row['Tag Key 2']).trim()] = String(row['Tag Value 2']).trim();
+
+                // ── Target Audience ───────────────────────────────────────────
+                const to_person = row['Target Audience']
+                    ? String(row['Target Audience']).split(',').map(s => s.trim()).filter(Boolean)
+                    : [];
+
+                // ── Media arrays (pipe-separated) ─────────────────────────────
+                const parseUrlList = (val) => val
+                    ? String(val).split('|').map(s => s.trim()).filter(s => s.startsWith('http'))
+                    : [];
+
+                const images = parseUrlList(row['Images Gallery']);
+                const video = parseUrlList(row['Video Showcase']);
+
+                // ── Customization JSON ────────────────────────────────────────
+                let customization = [];
+                const templateName = String(row['Load Template'] || '').trim().toLowerCase();
+                if (templateName) {
+                    const templateFields = templateMap[templateName];
+                    if (!templateFields) throw new Error(`Template not found: "${row['Load Template']}". Check Sheet 3 for valid template names.`);
+                    customization = JSON.parse(JSON.stringify(templateFields)); // deep clone
+                }
+
+                // Append custom group if provided
+                const customGroupName = String(row['Custom Group Name'] || '').trim();
+                const customFieldsRaw = String(row['Custom Fields'] || '').trim();
+                if (customGroupName && customFieldsRaw) {
+                    const customFields = customFieldsRaw.split('|').map(f => {
+                        const parts = f.trim().split(':');
+                        const fieldName = parts[0]?.trim() || '';
+                        const fieldType = (['text', 'date', 'time', 'media'].includes(parts[1]?.trim())) ? parts[1].trim() : 'text';
+                        return [fieldName, fieldType];
+                    }).filter(f => f[0]);
+                    if (customFields.length > 0) {
+                        customization.push({ [customGroupName]: customFields });
+                    }
+                }
+
+                // Price validation
+                const price = parseFloat(row['Price (₹)']);
+                if (isNaN(price) || price < 0) throw new Error('Price must be a valid positive number.');
+                const compared_price = row['Compared Price (₹)'] ? parseFloat(row['Compared Price (₹)']) : null;
+                if (compared_price !== null && compared_price <= price) throw new Error('Compared Price must be higher than Price.');
+
+                // ── Create the product ────────────────────────────────────────
+                await Product.create({
+                    title: rowTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                    slug,
+                    description: String(row['Product Description'] || '').trim() || null,
+                    price,
+                    compared_price,
+                    parent_category_id: parentCatId,
+                    asset_type_id: typeId,
+                    asset_variant_id: variantId,
+                    asset_category_id: categoryId,
+                    asset_sub_category_id: subCategoryId,
+                    asset_orientation_id: orientationId,
+                    serial_number: parseInt(serialNumber),
+                    internal_sku: internalSku,
+                    thumbnail: String(row['Thumbnail URL'] || '').trim() || null,
+                    images,
+                    video,
+                    resource_file: String(row['Resource File (ZIP)'] || '').trim() || null,
+                    tags,
+                    to_person,
+                    customization,
+                    meta_title: String(row['Meta Title'] || '').trim() || rowTitle,
+                    meta_description: String(row['Meta Description'] || '').trim() || null,
+                    meta_keywords: String(row['Meta Keywords'] || '').trim() || null,
+                    canonical_url: String(row['Canonical URL'] || '').trim() || null,
+                    is_draft: false,
+                    is_active: true,
+                });
+
+                successCount++;
+                results.push({ row: rowNum, title: rowTitle, status: 'success', sku: internalSku, slug });
+
+            } catch (rowErr) {
+                failCount++;
+                results.push({ row: rowNum, title: rowTitle || `Row ${rowNum}`, status: 'error', reason: rowErr.message });
+            }
+        }
+
+        // Invalidate cache after all rows are processed
+        if (successCount > 0) {
+            await clearCache(['products', 'product', 'products-meta']);
+        }
+
+        res.json({
+            total: rows.length,
+            success: successCount,
+            failed: failCount,
+            results,
+        });
+
+    } catch (err) {
+        console.error('[Bulk Import Error]:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.get('/products/:id', checkPermission('products', 'view'), async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id, {

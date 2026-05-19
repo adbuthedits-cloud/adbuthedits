@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { getAuthToken, getAuthUser, hasPermission } from '../../../utils/auth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash, faSearch, faStar, faCircleNotch, faFilter, faTimes, faChevronDown, faFileExport, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEdit, faTrash, faSearch, faStar, faCircleNotch, faFilter, faTimes, faChevronDown, faFileExport, faEye, faFileImport, faDownload, faUpload, faCheckCircle, faTimesCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageTransition, CardSkeleton, SlideIn } from '../../../components/Animations';
@@ -35,6 +35,12 @@ function Products() {
     const [minRating, setMinRating] = useState('');
     const [exporting, setExporting] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
+
+    // Import state
+    const [showImportMenu, setShowImportMenu] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState(null); // null | { total, current, results[] }
+    const importFileRef = useRef(null);
 
     useEffect(() => {
         fetchProducts();
@@ -166,6 +172,56 @@ function Products() {
         }
     };
 
+    const handleDownloadSample = async () => {
+        setShowImportMenu(false);
+        const token = getAuthToken();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        try {
+            const response = await axios({
+                url: `${apiUrl}/api/admin/products/import-template`,
+                method: 'GET',
+                responseType: 'blob',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'adbuth-product-import-template.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error('Sample download failed', error);
+            alert('Failed to download sample format');
+        }
+    };
+
+    const handleImportFile = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+        setShowImportMenu(false);
+        setImporting(true);
+        setImportProgress({ total: 0, current: 0, results: [], processing: true });
+
+        const token = getAuthToken();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await axios.post(`${apiUrl}/api/admin/products/import`, formData, {
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+            });
+            setImportProgress({ ...res.data, processing: false });
+            if (res.data.success > 0) fetchProducts();
+        } catch (err) {
+            const msg = err.response?.data?.error || err.message;
+            setImportProgress({ total: 0, success: 0, failed: 1, results: [{ row: '-', title: file.name, status: 'error', reason: msg }], processing: false });
+        } finally {
+            setImporting(false);
+        }
+    };
+
     return (
         <>
             {/* Page Header */}
@@ -175,6 +231,51 @@ function Products() {
                     <p className="text-gray-400 text-sm mt-1">Here is the inventory you are selling. Manage them easily.</p>
                 </div>
                 <div className="flex items-center gap-3 relative">
+                    {/* Hidden file input */}
+                    <input ref={importFileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImportFile} />
+
+                    {/* Import Button */}
+                    {canEdit && (
+                        <div className="relative">
+                            <motion.button
+                                onClick={() => { setShowImportMenu(!showImportMenu); setShowExportMenu(false); }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                disabled={importing}
+                                className="px-5 py-2.5 rounded-lg border border-[#2d1b4e] text-gray-200 font-semibold hover:bg-[#2d1b4e] hover:text-white transition-colors flex items-center gap-2 bg-[#1E1628] text-sm shadow-[0_2px_10px_rgba(0,0,0,0.2)] disabled:opacity-50"
+                            >
+                                {importing ? (
+                                    <FontAwesomeIcon icon={faSpinner} className="animate-spin text-sm" />
+                                ) : (
+                                    <FontAwesomeIcon icon={faFileImport} className="text-sm" />
+                                )}
+                                <span>Import</span>
+                                <FontAwesomeIcon icon={faChevronDown} className={`text-[10px] ml-1 transition-transform ${showImportMenu ? 'rotate-180' : ''}`} />
+                            </motion.button>
+
+                            <AnimatePresence>
+                                {showImportMenu && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute top-full left-0 mt-2 w-56 bg-[#1E1628] border border-[#2d1b4e] rounded-xl shadow-2xl z-50 overflow-hidden"
+                                    >
+                                        <button onClick={handleDownloadSample} className="w-full text-left px-4 py-3 hover:bg-[#2d1b4e] text-gray-300 hover:text-white text-sm flex items-center gap-3 transition-colors border-b border-[#2d1b4e]">
+                                            <FontAwesomeIcon icon={faDownload} className="text-blue-400 w-4" />
+                                            Download Sample Format
+                                        </button>
+                                        <button onClick={() => { setShowImportMenu(false); importFileRef.current?.click(); }} className="w-full text-left px-4 py-3 hover:bg-[#2d1b4e] text-gray-300 hover:text-white text-sm flex items-center gap-3 transition-colors">
+                                            <FontAwesomeIcon icon={faUpload} className="text-emerald-400 w-4" />
+                                            Import from Excel (.xlsx)
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+
+                    {/* Export Button */}
                     <div className="relative">
                         <motion.button
                             onClick={() => setShowExportMenu(!showExportMenu)}
@@ -575,6 +676,116 @@ function Products() {
                     </motion.div>
                 )
             }
+
+            {/* Import Progress Modal */}
+            <AnimatePresence>
+                {importProgress && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+                        onClick={(e) => { if (!importProgress.processing && e.target === e.currentTarget) setImportProgress(null); }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-[#1E1628] border border-[#2d1b4e] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2d1b4e]">
+                                <div className="flex items-center gap-3">
+                                    {importProgress.processing ? (
+                                        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-purple-400 text-lg" />
+                                    ) : importProgress.failed === 0 ? (
+                                        <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-400 text-lg" />
+                                    ) : (
+                                        <FontAwesomeIcon icon={faTimesCircle} className="text-amber-400 text-lg" />
+                                    )}
+                                    <h2 className="text-white font-bold text-lg">
+                                        {importProgress.processing ? 'Processing Import...' : 'Import Complete'}
+                                    </h2>
+                                </div>
+                                {!importProgress.processing && (
+                                    <button onClick={() => setImportProgress(null)} className="w-8 h-8 rounded-full bg-[#2d1b4e] text-gray-400 hover:text-white flex items-center justify-center transition-colors">
+                                        <FontAwesomeIcon icon={faTimes} className="text-xs" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Summary Stats */}
+                            {!importProgress.processing && (
+                                <div className="grid grid-cols-3 gap-4 px-6 py-4 border-b border-[#2d1b4e]">
+                                    <div className="bg-[#2d1b4e] rounded-xl p-3 text-center">
+                                        <div className="text-2xl font-bold text-white">{importProgress.total}</div>
+                                        <div className="text-xs text-gray-400 mt-1">Total Rows</div>
+                                    </div>
+                                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
+                                        <div className="text-2xl font-bold text-emerald-400">{importProgress.success}</div>
+                                        <div className="text-xs text-gray-400 mt-1">Imported</div>
+                                    </div>
+                                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+                                        <div className="text-2xl font-bold text-red-400">{importProgress.failed}</div>
+                                        <div className="text-xs text-gray-400 mt-1">Failed</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Row Results */}
+                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+                                {importProgress.processing ? (
+                                    <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-purple-400 text-4xl" />
+                                        <p className="text-gray-400">Processing your spreadsheet row by row...</p>
+                                        <p className="text-gray-500 text-xs">Do not close this window</p>
+                                    </div>
+                                ) : (
+                                    importProgress.results?.map((r, i) => (
+                                        <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border text-sm ${
+                                            r.status === 'success'
+                                                ? 'bg-emerald-500/5 border-emerald-500/20'
+                                                : 'bg-red-500/5 border-red-500/20'
+                                        }`}>
+                                            <div className="mt-0.5 shrink-0">
+                                                {r.status === 'success' ? (
+                                                    <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-400" />
+                                                ) : (
+                                                    <FontAwesomeIcon icon={faTimesCircle} className="text-red-400" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-gray-500 text-xs font-mono">Row {r.row}</span>
+                                                    <span className="text-gray-200 font-semibold truncate">{r.title}</span>
+                                                </div>
+                                                {r.status === 'success' ? (
+                                                    <div className="text-gray-500 text-xs mt-1 font-mono">{r.sku} · /{r.slug}</div>
+                                                ) : (
+                                                    <div className="text-red-400 text-xs mt-1">{r.reason}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Footer */}
+                            {!importProgress.processing && (
+                                <div className="px-6 py-4 border-t border-[#2d1b4e] flex justify-between items-center">
+                                    <p className="text-gray-500 text-xs">Products list has been refreshed automatically.</p>
+                                    <button
+                                        onClick={() => setImportProgress(null)}
+                                        className="px-5 py-2 bg-[#7C3AED] text-white rounded-lg text-sm font-semibold hover:bg-[#6D28D9] transition-colors"
+                                    >
+                                        Done
+                                    </button>
+                                </div>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }

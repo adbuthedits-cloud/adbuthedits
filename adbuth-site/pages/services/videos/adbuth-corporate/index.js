@@ -4,7 +4,7 @@ import Image from 'next/image';
 import SeoHead from '../../../../components/SeoHead';
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faVolumeUp, faVolumeMute, faPlay } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
@@ -14,16 +14,27 @@ export default function AdbuthCorporate() {
 
     const VideoPlayer = ({ src, className = "" }) => {
         const [isMuted, setIsMuted] = useState(true);
+        const videoRef = useRef(null);
+        const isInView = useInView(videoRef, { once: false, margin: "400px" });
+
+        useEffect(() => {
+            if (isInView && videoRef.current) {
+                videoRef.current.play().catch(() => {});
+            } else if (!isInView && videoRef.current) {
+                videoRef.current.pause();
+            }
+        }, [isInView]);
+
         return (
             <div className={`absolute inset-0 overflow-hidden ${className}`}>
                 <video
-                    src={src}
+                    ref={videoRef}
+                    src={isInView ? src : ""}
                     className="w-full h-full object-cover"
-                    autoPlay
                     muted={isMuted}
                     loop
                     playsInline
-                    preload="auto"
+                    preload="none"
                 />
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}

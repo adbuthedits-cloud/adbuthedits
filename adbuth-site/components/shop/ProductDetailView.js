@@ -388,7 +388,7 @@ export default function ProductDetailView({ slug, masterData }) {
                 <span className="font-medium">Link copied to clipboard!</span>
             </motion.div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-10  md:mt-0 relative bg-[#fff]">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-10 md:pt-0 md:mt-0 relative bg-[#fff]">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 lg:mt-8 lg:mb-12">
                     <div className="lg:sticky lg:top-24 self-start">
                         {(() => {

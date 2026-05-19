@@ -4,7 +4,7 @@ import Image from 'next/image';
 import SeoHead from '../../../../components/SeoHead';
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight, faChevronLeft, faChevronRight, faArrowLeft, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
@@ -55,17 +55,29 @@ export default function AdbuthPolitics() {
 
     const VideoPlayer = ({ src, className = "" }) => {
         const [isMuted, setIsMuted] = useState(true);
+        const videoRef = useRef(null);
+        const isInView = useInView(videoRef, { once: false, margin: "400px" });
+
+        useEffect(() => {
+            if (isInView && videoRef.current) {
+                videoRef.current.play().catch(() => {});
+            } else if (!isInView && videoRef.current) {
+                videoRef.current.pause();
+            }
+        }, [isInView]);
+
         return (
             <div className={`absolute inset-0 overflow-hidden ${className}`}>
-                <video 
-                    src={src} 
+                <video
+                    ref={videoRef}
+                    src={isInView ? src : ""}
                     className="w-full h-full object-cover"
-                    autoPlay
                     muted={isMuted}
                     loop
                     playsInline
+                    preload="none"
                 />
-                <button 
+                <button
                     onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
                     className="absolute bottom-4 right-4 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 pointer-events-auto"
                 >
@@ -230,8 +242,8 @@ export default function AdbuthPolitics() {
                 </section>
 
                 {/* Our Services Section */}
-                <section ref={containerRef} className="py-24 px-6 md:px-24 bg-white overflow-hidden">
-                    <h2 className="text-4xl font-bold mb-16 text-center md:text-left">Our Services</h2>
+                <section ref={containerRef} className="py-6 md:py-10 px-6 md:px-24 bg-white overflow-hidden">
+                    <h2 className="text-4xl font-bold mb-10 md:mb-16 text-center md:text-left">Our Services</h2>
 
                     {/* Mobile Carousel View */}
                     <div className="block md:hidden max-w-[360px] mx-auto relative cursor-grab active:cursor-grabbing">

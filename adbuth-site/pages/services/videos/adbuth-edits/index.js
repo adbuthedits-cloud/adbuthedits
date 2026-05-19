@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import SeoHead from '../../../../components/SeoHead';
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
@@ -49,16 +49,27 @@ const craftServices = [
 
 const VideoPlayer = ({ src }) => {
     const [isMuted, setIsMuted] = useState(true);
+    const videoRef = useRef(null);
+    const isInView = useInView(videoRef, { once: false, margin: "400px" });
+
+    useEffect(() => {
+        if (isInView && videoRef.current) {
+            videoRef.current.play().catch(() => {});
+        } else if (!isInView && videoRef.current) {
+            videoRef.current.pause();
+        }
+    }, [isInView]);
+
     return (
         <div className="absolute inset-0 group">
             <video
-                src={src}
+                ref={videoRef}
+                src={isInView ? src : ""}
                 className="w-full h-full object-cover"
-                autoPlay
                 muted={isMuted}
                 loop
                 playsInline
-                preload="auto"
+                preload="none"
             />
             <button
                 onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}

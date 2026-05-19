@@ -2,16 +2,46 @@ import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons"
 import SeoHead from "../components/SeoHead"
 import useSeo from "../hooks/useSeo"
 
 export default function About() {
-  const slides = ["https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/about-us.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/about-us.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/about-us.png"]
+  const officeImages = [
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_789.png",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_777.png",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_768.png",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1138%20copy.jpg.jpeg",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1129%20copy.jpg.jpeg",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1077%20copy.jpg.jpeg",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1046%20copy.jpg.jpeg",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1045%20copy.jpg.jpeg",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1039%20copy.jpg.jpeg",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1025%20copy.jpg.jpeg",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1013%20office.png",
+    "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/office/IMG_1006%20copy.jpg.jpeg"
+  ]
   const [isExpanded, setIsExpanded] = useState(false)
   const { seoData } = useSeo("about")
+  const [duration, setDuration] = useState(120)
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setDuration(60)
+      } else if (window.innerWidth < 1024) {
+        setDuration(40)
+      } else {
+        setDuration(80)
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <div>
@@ -24,18 +54,35 @@ export default function About() {
       <Navbar highlight="about" isdark={false} />
 
       <main className="pt-24">
-        {/* Slider Section - Simplified for performance */}
-        <div className="w-full overflow-hidden bg-gray-950">
-          <div className="relative w-full md:h-86 h-[50vh]">
-            <Image
-              src={slides[0]}
-              alt="About Us"
-              fill
-              className="object-cover opacity-100"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
-          </div>
+        {/* Slider Section - Infinite scroll with no gaps */}
+        <div className="w-full overflow-hidden bg-gray-950 relative h-[30vh] md:h-[60vh] flex items-center">
+          <motion.div
+            className="flex w-max h-full"
+            animate={{
+              x: ["0%", "-50%"],
+            }}
+            transition={{
+              x: {
+                repeat: Infinity,
+                repeatType: "loop",
+                duration: duration,
+                ease: "linear",
+              },
+            }}
+          >
+            {[...officeImages, ...officeImages].map((src, index) => (
+              <Image
+                key={index}
+                src={src}
+                alt={`Adbuth Office ${index}`}
+                width={800}
+                height={600}
+                className="h-full w-auto object-cover max-w-none flex-shrink-0"
+                priority={true}
+              />
+            ))}
+          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent pointer-events-none" />
         </div>
 
         {/* About Us Text Section */}

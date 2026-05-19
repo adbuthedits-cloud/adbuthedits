@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import SeoHead from '../../../../components/SeoHead';
+import ProductCard from '../../../../components/shop/ProductCard';
 
-const DigitalInvitations = () => {
+const DigitalInvitations = ({ masterData, initialProducts }) => {
     const [activeOccasion, setActiveOccasion] = useState(0);
 
-    const occasions = [
+    const defaultOccasions = [
         {
             title: "Birthday Invitations",
             desc: "Make every year unforgettable with templates for him, her, kids, or friends from classic elegance to playful fun.",
@@ -31,26 +32,33 @@ const DigitalInvitations = () => {
         }
     ];
 
+    const occasions = masterData?.parentCategories?.length > 0
+        ? masterData.parentCategories.map(cat => ({
+            title: cat.category_name,
+            desc: cat.description || `Explore our amazing ${cat.category_name} collection.`,
+            image: cat.category_image || cat.banner_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/occation-birthday-invitation.png",
+            slug: cat.slug
+        }))
+        : defaultOccasions;
+
     const templateCategories = [
         {
             title: "Birthday Invitations",
             tagline: "Make every year unforgettable with templates for him, her, kids, or friends from classic elegance to playful fun.",
-            templates: [1, 2, 3, 4]
+            templates: initialProducts?.filter(p => p.assetSubCategory?.slug === 'birthdays').slice(0, 4) || [],
+            viewMoreLink: "/shop?assetSubCategory=birthdays"
         },
         {
             title: "Anniversary Invitations",
             tagline: "Celebrate timeless love with beautifully crafted digital invitations for every milestone.",
-            templates: [1, 2, 3, 4]
+            templates: initialProducts?.filter(p => p.assetSubCategory?.slug === 'anniversaries').slice(0, 4) || [],
+            viewMoreLink: "/shop?assetSubCategory=anniversaries"
         },
         {
-            title: "Expression Cards",
-            tagline: "Say it your way love, thanks, sorry, or just because.",
-            templates: [1, 2, 3, 4]
-        },
-        {
-            title: "Event Invitations",
-            tagline: "Say it your way love, thanks, sorry, or just because.",
-            templates: [1, 2, 3, 4]
+            title: "Engagement Invitations",
+            tagline: "Begin your journey of love with our beautiful engagement templates.",
+            templates: initialProducts?.filter(p => p.assetSubCategory?.slug === 'engagement').slice(0, 4) || [],
+            viewMoreLink: "/shop?assetSubCategory=engagement"
         }
     ];
 
@@ -69,7 +77,7 @@ const DigitalInvitations = () => {
                 </div>
 
                 {/* Content */}
-                <div className="lg:leading-normal relative z-10 max-w-4xl mx-24 text-white">
+                <div className="lg:leading-normal relative z-10 max-w-4xl mx-24 text-white text-center md:text-start">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -103,7 +111,7 @@ const DigitalInvitations = () => {
             </div>
 
             {/* Explore By Occasion */}
-            <section className="py-24 pl-24  mx-auto overflow-x-clip">
+            <section className="py-10 md:py-24 px-6 lg:px-0 lg:pl-20 mx-auto overflow-x-clip">
                 <h2 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent max-w-xl">
                     Explore By Occasion
                 </h2>
@@ -111,9 +119,10 @@ const DigitalInvitations = () => {
                     Choose your moment, and we'll help you say it in style.
                 </p>
 
-                <div className="flex flex-col lg:flex-row gap-12 lg:gap-32 items-start">
+                {/* Desktop View: Sticky titles & scrolling images */}
+                <div className="hidden lg:flex gap-32 items-start">
                     {/* Left side: Sticky Titles and Descriptions */}
-                    <div className="lg:w-[450px] lg:sticky lg:top-32">
+                    <div className="w-[450px] sticky top-32">
                         <div className="flex flex-col space-y-2">
                             {occasions.map((item, idx) => (
                                 <div key={idx} className="py-6 border-b border-gray-100 last:border-0">
@@ -152,32 +161,47 @@ const DigitalInvitations = () => {
                         ))}
                     </div>
                 </div>
+
+                {/* Mobile & Tablet View: Stacked layout */}
+                <div className="flex flex-col gap-16 lg:hidden">
+                    {occasions.map((item, idx) => (
+                        <div key={idx} className="flex flex-col gap-6">
+                            <div>
+                                <h3 className="text-3xl font-semibold text-black mb-3">{item.title}</h3>
+                                <p className="text-gray-500 text-md leading-relaxed">{item.desc}</p>
+                            </div>
+                            <div className="w-full aspect-[5/4] max-w-xl mx-auto  rounded-2xl overflow-hidden shadow-xl">
+                                <img
+                                    src={item.image}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover object-right"
+                                    onError={(e) => {
+                                        e.target.src = "https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=2070&auto=format&fit=crop";
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </section>
 
             {/* Template Sections */}
             {
-                templateCategories.map((cat, categoryIdx) => (
-                    <section key={categoryIdx} className="py-20 px-6  max-w-7xl mx-auto">
+                templateCategories.filter(cat => cat.templates.length > 0).map((cat, categoryIdx) => (
+                    <section key={categoryIdx} className="py-6 md:py-10 px-6 max-w-7xl mx-auto">
                         <div className="flex flex-col mb-12">
                             <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent w-fit">{cat.title}</h2>
                             <p className="text-gray-600 text-lg font-normal max-w-4xl">{cat.tagline}</p>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {cat.templates.map((_, idx) => (
-                                <motion.div
-                                    key={idx}
-                                    whileHover={{ scale: 1.02 }}
-                                    className="aspect-[3/4] bg-[#C1C1C1] rounded-none overflow-hidden shadow-sm transition-all cursor-pointer relative group"
-                                >
-                                    {/* Placeholder styling to match image */}
-                                    <div className="absolute inset-0 border-[3px] border-transparent group-first:border-[#38BDF8] transition-colors" />
-                                </motion.div>
+                            {cat.templates.map((product, idx) => (
+                                <ProductCard key={product.products_id || idx} product={product} />
                             ))}
                         </div>
 
                         <div className="flex justify-end mt-8">
-                            <Link href="/shop" className="flex items-center text-black text-sm font-semibold hover:translate-x-1 transition-transform">
+                            <Link href={cat.viewMoreLink} className="flex items-center text-black text-sm font-semibold hover:translate-x-1 transition-transform">
                                 View More <span className="ml-2 text-xs">→</span>
                             </Link>
                         </div>
@@ -186,7 +210,7 @@ const DigitalInvitations = () => {
             }
 
             {/* Featured Templates Marquee */}
-            <section className="py-24 bg-white overflow-hidden">
+            <section className="py-10 md:py-16 bg-white overflow-hidden">
                 <div className="max-w-7xl mx-auto mb-16 text-center">
                     <h2 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent">Featured Templates</h2>
                     <p className="text-gray-600 max-w-2xl mx-auto text-lg">Hundreds of ready-to-edit templates designed for every mood, every moment.</p>
@@ -236,7 +260,7 @@ const DigitalInvitations = () => {
             </section>
 
             {/* Why Choose Adbuth */}
-            <section className="py-24 px-6  max-w-7xl mx-auto">
+            <section className="py-10 md:py-16 px-6 max-w-7xl mx-auto">
                 <div className="text-left mb-16">
                     <h2 className="text-4xl lg:text-5xl font-semibold mb-2 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent">Why Choose Adbuth</h2>
                     <p className="text-gray-700 text-lg">Templates for Every Emotion</p>
@@ -265,16 +289,16 @@ const DigitalInvitations = () => {
             </section>
 
             {/* Bottom CTA */}
-            <section className="py-24 px-6 lg:px-24 bg-[#7D287E] ">
+            <section className="py-12 md:py-16 px-6 lg:px-24 bg-[#7D287E]">
 
                 <div className="relative z-10 text-left max-w-7xl mx-auto">
-                    <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent">
+                    <h2 className="text-4xl lg:text-5xl font-bold mb-6  bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent">
                         Start Your Invitation Journey Today!
                     </h2>
                     <p className="text-xl text-white mb-16 max-w-4xl font-normal leading-relaxed">
                         Bring your celebrations to life with digital cards that are beautiful, meaningful, and uniquely yours.
                     </p>
-                    <div className="flex flex-col md:flex-row items-center justify-start gap-6">
+                    <div className="flex flex-col md:flex-row items-left justify-start gap-6">
                         <Link href="/shop">
                             <button className="bg-white text-black px-12 py-5 rounded-full text-xl font-semibold hover:bg-[#b0aaaa] transition-all">
                                 Explore Templates
@@ -318,12 +342,12 @@ const ScrollTriggerImage = ({ item, index, onInView }) => {
         <div ref={ref} className="relative aspect-[5/4] lg:aspect-[4/3] w-full ml-auto">
             <motion.div
                 style={{ opacity, x, scale }}
-                className="w-full h-full rounded-2xl shadow-2xl overflow-hidden shadow-black/5"
+                className="w-full h-full rounded-l-2xl shadow-2xl overflow-hidden shadow-black/5"
             >
                 <img
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-full object-fit object-center  transition-transform duration-700 group-hover:scale-105 rounded-2xl"
+                    className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => {
                         e.target.src = "https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=2070&auto=format&fit=crop";
                     }}
@@ -333,5 +357,32 @@ const ScrollTriggerImage = ({ item, index, onInView }) => {
         </div>
     );
 };
+
+export async function getServerSideProps(context) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    try {
+        const [masterRes, productsRes] = await Promise.all([
+            fetch(`${API_URL}/api/products/master-data`),
+            fetch(`${API_URL}/api/products`)
+        ]);
+
+        if (!masterRes.ok || !productsRes.ok) throw new Error('API fetch failed');
+
+        const masterData = await masterRes.json();
+        const initialProducts = await productsRes.json();
+
+        return {
+            props: {
+                masterData: masterData || {},
+                initialProducts: initialProducts || [],
+            },
+        };
+    } catch (err) {
+        console.error('DigitalInvitations getServerSideProps error:', err);
+        return {
+            props: { masterData: {}, initialProducts: [] },
+        };
+    }
+}
 
 export default DigitalInvitations;
