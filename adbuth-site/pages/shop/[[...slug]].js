@@ -509,14 +509,14 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                 {/* Main content pushed down to account for absolute navbar */}
                 <main className="pt-24">
                     {/* Shop Banner */}
-                    <ShopBanner
+                    {/* <ShopBanner
                         masterData={masterData}
                         activeParentSlug={bannerParentSlug}
                         isShopBase={isShopBase}
                         onBrowseClick={() => {
                             document.getElementById('shop-products')?.scrollIntoView({ behavior: 'smooth' });
                         }}
-                    />
+                    /> */}
 
                     {/* Main Shop Grid */}
                     <div id="shop-products" className="flex items-start max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-6 scroll-m-[100px]">
@@ -563,15 +563,13 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                                 <>
                                     <ProductGrid products={visibleProducts} loading={filterLoading} />
 
-                                    {/* Load More */}
+                                    {/* Load More Trigger */}
                                     {hasMore && (
-                                        <div className="flex justify-center mt-10">
-                                            <button
-                                                onClick={() => setDisplayCount(c => c + PAGE_SIZE)}
-                                                className="px-8 py-3 border border-purple-700 text-purple-700 text-sm font-bold hover:bg-purple-700 hover:text-white transition-colors"
-                                            >
-                                                View More ({filteredProducts.length - displayCount} remaining)
-                                            </button>
+                                        <div id="load-more-trigger" className="w-full flex justify-center py-8">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 border-2 border-purple-200 border-t-purple-700 rounded-full animate-spin" />
+                                                <span className="text-sm font-semibold text-gray-500">Loading templates...</span>
+                                            </div>
                                         </div>
                                     )}
                                 </>

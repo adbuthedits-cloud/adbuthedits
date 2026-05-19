@@ -1,6 +1,7 @@
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import SeoHead from '../../../../components/SeoHead';
@@ -41,24 +42,66 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
         }))
         : defaultOccasions;
 
+    // Group digital invitation products by subcategory
+    const digitalProducts = initialProducts?.filter(p => p.parentCategory?.slug === 'digital-invitations') || [];
+    const digitalSubCategoryMap = {};
+    digitalProducts.forEach(p => {
+        const subSlug = p.assetSubCategory?.slug;
+        const subName = p.assetSubCategory?.name;
+        if (subSlug) {
+            if (!digitalSubCategoryMap[subSlug]) {
+                digitalSubCategoryMap[subSlug] = {
+                    slug: subSlug,
+                    name: subName,
+                    products: []
+                };
+            }
+            digitalSubCategoryMap[subSlug].products.push(p);
+        }
+    });
+
+    const topDigitalSubCategories = Object.values(digitalSubCategoryMap)
+        .sort((a, b) => b.products.length - a.products.length)
+        .slice(0, 4);
+
+    const digitalTemplates = topDigitalSubCategories.map(sub => sub.products[0]).filter(Boolean);
+
+    // Group greetings products by subcategory
+    const greetingsProducts = initialProducts?.filter(p => p.parentCategory?.slug === 'greetings') || [];
+    const greetingsSubCategoryMap = {};
+    greetingsProducts.forEach(p => {
+        const subSlug = p.assetSubCategory?.slug;
+        const subName = p.assetSubCategory?.name;
+        if (subSlug) {
+            if (!greetingsSubCategoryMap[subSlug]) {
+                greetingsSubCategoryMap[subSlug] = {
+                    slug: subSlug,
+                    name: subName,
+                    products: []
+                };
+            }
+            greetingsSubCategoryMap[subSlug].products.push(p);
+        }
+    });
+
+    const topGreetingsSubCategories = Object.values(greetingsSubCategoryMap)
+        .sort((a, b) => b.products.length - a.products.length)
+        .slice(0, 4);
+
+    const greetingsTemplates = topGreetingsSubCategories.map(sub => sub.products[0]).filter(Boolean);
+
     const templateCategories = [
         {
-            title: "Birthday Invitations",
-            tagline: "Make every year unforgettable with templates for him, her, kids, or friends from classic elegance to playful fun.",
-            templates: initialProducts?.filter(p => p.assetSubCategory?.slug === 'birthdays').slice(0, 4) || [],
-            viewMoreLink: "/shop?assetSubCategory=birthdays"
+            title: "Digital Invitations",
+            tagline: "Celebrate life’s special moments with personalized e-invites that speak your heart.",
+            templates: digitalTemplates,
+            viewMoreLink: "/shop?parentCategory=digital-invitations"
         },
         {
-            title: "Anniversary Invitations",
-            tagline: "Celebrate timeless love with beautifully crafted digital invitations for every milestone.",
-            templates: initialProducts?.filter(p => p.assetSubCategory?.slug === 'anniversaries').slice(0, 4) || [],
-            viewMoreLink: "/shop?assetSubCategory=anniversaries"
-        },
-        {
-            title: "Engagement Invitations",
-            tagline: "Begin your journey of love with our beautiful engagement templates.",
-            templates: initialProducts?.filter(p => p.assetSubCategory?.slug === 'engagement').slice(0, 4) || [],
-            viewMoreLink: "/shop?assetSubCategory=engagement"
+            title: "Greetings",
+            tagline: "Send warmth, love, and professional wishes with our custom greeting card templates.",
+            templates: greetingsTemplates,
+            viewMoreLink: "/shop?parentCategory=greetings"
         }
     ];
 
@@ -69,15 +112,22 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
             <Navbar highlight="services" isdark={false} />
 
             {/* Hero Section */}
-            <div className="relative w-full h-[80vh] min-h-[700px] flex flex-col items-start justify-center text-left px-4 overflow-hidden"
+            <div className="relative w-full h-[80vh] min-h-[750px] flex flex-col items-start justify-center text-left px-4  mb-10 overflow-hidden"
             >
                 {/* Background */}
                 <div className="mt-24 absolute inset-0 bg-[#B1B1B1]">
-                    <img src="" alt="e-design hero" className="w-full h-full object-cover" />
+                    <Image
+                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/banner.png"
+                        alt="e-design hero"
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover object-left lg:object-center  "
+                    />
                 </div>
 
                 {/* Content */}
-                <div className="lg:leading-normal relative z-10 max-w-4xl mx-24 text-white text-center md:text-start">
+                <div className="lg:leading-normal relative z-10 max-w-4xl md:mx-10 lg:mx-24 text-white text-center md:text-start">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -85,23 +135,24 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                     >
                         <span className='leading-[1.2]'>Your Moments</span><br />
                         <span className='leading-[1.2]'>Your Style.</span> <br />
-                        <span className="bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent leading-[1.2]">Your Digital Invitation</span>
+                        <span className=" leading-[1.2]">Your Digital Invitation</span>
                     </motion.h1>
 
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-lg md:text-lg text-gray-200 mb-8 max-w-2xl "
+                        className="text-lg md:text-lg text-gray-200 mb-8 max-w-2xl capitalize "
                     >
-                        Custom-crafted invitations that reflect the uniqueness of your celebration.
+                        Celebrate life’s special moments with personalized
+                        <br />e-invites that speak your heart.
                     </motion.p>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="flex flex-col sm:flex-row items-start justify-start gap-4"
+                        className="flex flex-col sm:flex-row items-center md:items-start  justify-start gap-4"
                     >
                         <Link href="#browse" className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
                             Explore Templates
@@ -111,79 +162,81 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
             </div>
 
             {/* Explore By Occasion */}
-            <section className="py-10 md:py-24 px-6 lg:px-0 lg:pl-20 mx-auto overflow-x-clip">
-                <h2 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent max-w-xl">
-                    Explore By Occasion
-                </h2>
-                <p className="text-gray-600 mb-12 text-lg">
-                    Choose your moment, and we'll help you say it in style.
-                </p>
+            {false && (
+                <section className="py-10 md:py-24 px-6 lg:px-0 lg:pl-20 mx-auto overflow-x-clip">
+                    <h2 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent max-w-xl">
+                        Explore By Occasion
+                    </h2>
+                    <p className="text-gray-600 mb-12 text-lg">
+                        Choose your moment, and we'll help you say it in style.
+                    </p>
 
-                {/* Desktop View: Sticky titles & scrolling images */}
-                <div className="hidden lg:flex gap-32 items-start">
-                    {/* Left side: Sticky Titles and Descriptions */}
-                    <div className="w-[450px] sticky top-32">
-                        <div className="flex flex-col space-y-2">
+                    {/* Desktop View: Sticky titles & scrolling images */}
+                    <div className="hidden lg:flex gap-32 items-start">
+                        {/* Left side: Sticky Titles and Descriptions */}
+                        <div className="w-[450px] sticky top-32">
+                            <div className="flex flex-col space-y-2">
+                                {occasions.map((item, idx) => (
+                                    <div key={idx} className="py-6 border-b border-gray-100 last:border-0">
+                                        <h3
+                                            className={`text-3xl font-semibold transition-all duration-500 cursor-pointer ${activeOccasion === idx ? 'text-black opacity-100' : 'text-gray-300 opacity-40'
+                                                }`}
+                                        >
+                                            {item.title}
+                                        </h3>
+                                        <AnimatePresence>
+                                            {activeOccasion === idx && (
+                                                <motion.p
+                                                    initial={{ height: 0, opacity: 0, y: 10 }}
+                                                    animate={{ height: 'auto', opacity: 1, y: 0 }}
+                                                    exit={{ height: 0, opacity: 0, y: 10 }}
+                                                    className="text-gray-500 text-lg leading-relaxed mt-4 pr-4 overflow-hidden"
+                                                >
+                                                    {item.desc}
+                                                </motion.p>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Right side: Scrolling Images */}
+                        <div className="flex-1 space-y-32 py-32">
                             {occasions.map((item, idx) => (
-                                <div key={idx} className="py-6 border-b border-gray-100 last:border-0">
-                                    <h3
-                                        className={`text-3xl font-semibold transition-all duration-500 cursor-pointer ${activeOccasion === idx ? 'text-black opacity-100' : 'text-gray-300 opacity-40'
-                                            }`}
-                                    >
-                                        {item.title}
-                                    </h3>
-                                    <AnimatePresence>
-                                        {activeOccasion === idx && (
-                                            <motion.p
-                                                initial={{ height: 0, opacity: 0, y: 10 }}
-                                                animate={{ height: 'auto', opacity: 1, y: 0 }}
-                                                exit={{ height: 0, opacity: 0, y: 10 }}
-                                                className="text-gray-500 text-lg leading-relaxed mt-4 pr-4 overflow-hidden"
-                                            >
-                                                {item.desc}
-                                            </motion.p>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                                <ScrollTriggerImage
+                                    key={idx}
+                                    item={item}
+                                    index={idx}
+                                    onInView={() => setActiveOccasion(idx)}
+                                />
                             ))}
                         </div>
                     </div>
 
-                    {/* Right side: Scrolling Images */}
-                    <div className="flex-1 space-y-32 py-32">
+                    {/* Mobile & Tablet View: Stacked layout */}
+                    <div className="flex flex-col gap-16 lg:hidden">
                         {occasions.map((item, idx) => (
-                            <ScrollTriggerImage
-                                key={idx}
-                                item={item}
-                                index={idx}
-                                onInView={() => setActiveOccasion(idx)}
-                            />
+                            <div key={idx} className="flex flex-col gap-6">
+                                <div>
+                                    <h3 className="text-3xl font-semibold text-black mb-3">{item.title}</h3>
+                                    <p className="text-gray-500 text-md leading-relaxed">{item.desc}</p>
+                                </div>
+                                <div className="w-full aspect-[5/4] max-w-xl mx-auto  rounded-2xl overflow-hidden shadow-xl">
+                                    <img
+                                        src={item.image}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover object-right"
+                                        onError={(e) => {
+                                            e.target.src = "https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=2070&auto=format&fit=crop";
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         ))}
                     </div>
-                </div>
-
-                {/* Mobile & Tablet View: Stacked layout */}
-                <div className="flex flex-col gap-16 lg:hidden">
-                    {occasions.map((item, idx) => (
-                        <div key={idx} className="flex flex-col gap-6">
-                            <div>
-                                <h3 className="text-3xl font-semibold text-black mb-3">{item.title}</h3>
-                                <p className="text-gray-500 text-md leading-relaxed">{item.desc}</p>
-                            </div>
-                            <div className="w-full aspect-[5/4] max-w-xl mx-auto  rounded-2xl overflow-hidden shadow-xl">
-                                <img
-                                    src={item.image}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover object-right"
-                                    onError={(e) => {
-                                        e.target.src = "https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=2070&auto=format&fit=crop";
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* Template Sections */}
             {
@@ -200,7 +253,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                             ))}
                         </div>
 
-                        <div className="flex justify-end mt-8">
+                        <div className="flex justify-end mt-4">
                             <Link href={cat.viewMoreLink} className="flex items-center text-black text-sm font-semibold hover:translate-x-1 transition-transform">
                                 View More <span className="ml-2 text-xs">→</span>
                             </Link>

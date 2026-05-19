@@ -7,12 +7,16 @@ const ZohoSalesIQ = () => {
 
     useEffect(() => {
         const updateZohoVisitor = () => {
-            if (window.$zoho && window.$zoho.salesiq) {
+            if (window.$zoho && window.$zoho.salesiq && window.$zoho.salesiq.visitor) {
                 if (user) {
                     // Identify the user to Zoho
                     const fullName = user.name || (user.first_name ? `${user.first_name} ${user.last_name}` : '');
-                    if (fullName) window.$zoho.salesiq.visitor.name(fullName);
-                    if (user.email) window.$zoho.salesiq.visitor.email(user.email);
+                    if (fullName && typeof window.$zoho.salesiq.visitor.name === 'function') {
+                        window.$zoho.salesiq.visitor.name(fullName);
+                    }
+                    if (user.email && typeof window.$zoho.salesiq.visitor.email === 'function') {
+                        window.$zoho.salesiq.visitor.email(user.email);
+                    }
                 }
             }
         };

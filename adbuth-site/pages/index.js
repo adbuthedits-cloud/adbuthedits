@@ -41,6 +41,7 @@ export async function getStaticProps() {
         slug: b.slug,
         title: b.title,
         excerpt: b.meta_description || b.content.substring(0, 150) + '...',
+        meta_description: b.meta_description || '',
         image: b.thumbnail || 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/blog-1.png'
       }));
 
