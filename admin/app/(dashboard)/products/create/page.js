@@ -469,6 +469,7 @@ function CreateProduct() {
         // Only accept image files
         if (!file.type.startsWith("image/")) {
             alert("Please select a valid image file (JPG, PNG, WebP, etc.)");
+            e.target.value = "";
             return;
         }
         // Release any previous captured preview URL to free memory
@@ -477,6 +478,7 @@ function CreateProduct() {
         }
         setFormData(prev => ({ ...prev, thumbnail: file }));
         setThumbnailPreview(URL.createObjectURL(file));
+        e.target.value = "";
     };
 
     const handleGalleryUpload = (e) => {
@@ -484,6 +486,7 @@ function CreateProduct() {
         if (files.length > 0) {
             setImages(prev => [...prev, ...files]);
         }
+        e.target.value = "";
     };
 
     const handleVideoUpload = (e) => {
@@ -491,6 +494,7 @@ function CreateProduct() {
         if (files.length > 0) {
             setVideos(prev => [...prev, ...files]);
         }
+        e.target.value = "";
     };
 
     const handleResourceFileUpload = (e) => {
@@ -498,6 +502,7 @@ function CreateProduct() {
         if (file) {
             setFormData(prev => ({ ...prev, resource_file: file }));
         }
+        e.target.value = "";
     };
 
     return (

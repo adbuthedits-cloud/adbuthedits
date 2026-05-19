@@ -497,6 +497,7 @@ function EditProduct() {
         if (file) {
             setFormData(prev => ({ ...prev, thumbnail: file }));
         }
+        e.target.value = '';
     };
 
     const handleGalleryUpload = (e) => {
@@ -504,6 +505,7 @@ function EditProduct() {
         if (files.length > 0) {
             setImages(prev => [...prev, ...files]);
         }
+        e.target.value = '';
     };
 
     const handleVideoUpload = (e) => {
@@ -511,6 +513,7 @@ function EditProduct() {
         if (files.length > 0) {
             setVideos(prev => [...prev, ...files]);
         }
+        e.target.value = '';
     };
 
     const handleResourceFileUpload = (e) => {
@@ -518,6 +521,7 @@ function EditProduct() {
         if (file) {
             setFormData(prev => ({ ...prev, resource_file: file }));
         }
+        e.target.value = '';
     };
 
     const handleSubmit = async (e) => {
