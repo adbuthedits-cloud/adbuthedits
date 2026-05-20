@@ -18,6 +18,7 @@ const upload = multer({
         s3: publicS3,
         bucket: process.env.R2_PUBLIC_BUCKET,
         contentType: multerS3.AUTO_CONTENT_TYPE,
+        cacheControl: 'public, max-age=31536000, immutable',
         metadata: function (req, file, cb) {
             cb(null, { fieldName: file.fieldname });
         },

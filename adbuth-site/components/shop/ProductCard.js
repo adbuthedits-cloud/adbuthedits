@@ -27,29 +27,8 @@ function isNewProduct(updatedAt) {
 
 export default function ProductCard({ product, index = 0 }) {
     const [wishlisted, setWishlisted] = useState(false);
-    const [isInView, setIsInView] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const videoRef = useRef(null);
     const containerRef = useRef(null);
-    const hoverTimer = useRef(null);
-
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
-            const observer = new IntersectionObserver(
-                (entries) => {
-                    entries.forEach((entry) => {
-                        setIsInView(entry.isIntersecting);
-                    });
-                },
-                { rootMargin: '400px' } // Pre-render when within 400px of viewport
-            );
-
-            observer.observe(containerRef.current);
-            return () => observer.disconnect();
-        }
-    }, [product]); // Re-run if product changes to ensure observer is attached to the new element
 
     if (!product) return null;
 
@@ -74,31 +53,11 @@ export default function ProductCard({ product, index = 0 }) {
         : 0;
 
     const handleMouseEnter = () => {
-        if (videoRef.current) {
-            const playPromise = videoRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                    // Silence the AbortError that occurs when play() is interrupted by pause()
-                });
-            }
-            
-            // Auto pause after 10 seconds
-            if (hoverTimer.current) clearTimeout(hoverTimer.current);
-            hoverTimer.current = setTimeout(() => {
-                if (videoRef.current) {
-                    videoRef.current.pause();
-                }
-            }, 10000);
-        }
+        // Handled automatically by dynamic mounting
     };
 
     const handleMouseLeave = () => {
-        if (hoverTimer.current) clearTimeout(hoverTimer.current);
-        if (videoRef.current) {
-            videoRef.current.pause();
-            // Reset to beginning so next hover starts fresh
-            videoRef.current.currentTime = 0; 
-        }
+        // Handled automatically by dynamic mounting
     };
 
     return (
@@ -111,11 +70,9 @@ export default function ProductCard({ product, index = 0 }) {
                 ref={containerRef}
                 onMouseEnter={() => {
                     setIsHovered(true);
-                    handleMouseEnter();
                 }}
                 onMouseLeave={() => {
                     setIsHovered(false);
-                    handleMouseLeave();
                 }}
             >
                 {/* Default Thumbnail - Always present for performance */}
@@ -134,17 +91,16 @@ export default function ProductCard({ product, index = 0 }) {
                     </div>
                 )}
 
-                {/* Video - Always rendered when in view, but only visible on hover */}
-                {isInView && videoSrc && (
+                {/* Video - Dynamic Mount Only On Hover for Peak GPU Performance */}
+                {isHovered && videoSrc && (
                     <video
-                        key={videoSrc}
-                        ref={videoRef}
                         src={videoSrc}
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        className="absolute inset-0 w-full h-full object-cover"
                         muted
                         loop
                         playsInline
-                        preload="none"
+                        autoPlay
+                        preload="auto"
                     />
                 )}
 
