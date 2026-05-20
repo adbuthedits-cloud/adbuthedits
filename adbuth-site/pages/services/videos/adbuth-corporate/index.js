@@ -4,48 +4,49 @@ import Image from 'next/image';
 import SeoHead from '../../../../components/SeoHead';
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faVolumeUp, faVolumeMute, faPlay } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
 
+// ─── VideoPlayer defined outside parent to prevent hydration mismatch ──────────
+function VideoPlayer({ src, shouldPlay, className = "" }) {
+    const [isMuted, setIsMuted] = useState(true);
+    const videoRef = useRef(null);
+
+    useEffect(() => {
+        if (!videoRef.current) return;
+        if (shouldPlay) {
+            videoRef.current.play().catch(() => {});
+        } else {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    }, [shouldPlay]);
+
+    return (
+        <div className={`absolute inset-0 overflow-hidden ${className}`}>
+            <video
+                ref={videoRef}
+                src={src}
+                className="w-full h-full object-cover"
+                muted={isMuted}
+                loop
+                playsInline
+                preload="metadata"
+            />
+            <button
+                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                className="absolute bottom-4 right-4 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 pointer-events-auto"
+            >
+                <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className="text-[10px]" />
+            </button>
+        </div>
+    );
+}
+
 export default function AdbuthCorporate() {
     const { seoData } = useSeo('adbuth-corporate');
-
-    const VideoPlayer = ({ src, shouldPlay, className = "" }) => {
-        const [isMuted, setIsMuted] = useState(true);
-        const videoRef = useRef(null);
-
-        useEffect(() => {
-            if (!videoRef.current) return;
-            if (shouldPlay) {
-                videoRef.current.play().catch(() => {});
-            } else {
-                videoRef.current.pause();
-                videoRef.current.currentTime = 0;
-            }
-        }, [shouldPlay]);
-
-        return (
-            <div className={`absolute inset-0 overflow-hidden ${className}`}>
-                <video
-                    ref={videoRef}
-                    src={src}
-                    className="w-full h-full object-cover"
-                    muted={isMuted}
-                    loop
-                    playsInline
-                    preload="metadata"
-                />
-                <button
-                    onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
-                    className="absolute bottom-4 right-4 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 pointer-events-auto"
-                >
-                    <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className="text-[10px]" />
-                </button>
-            </div>
-        );
-    };
 
     // ─── Card data ─────────────────────────────────────────────────────────────
     const CARDS = [

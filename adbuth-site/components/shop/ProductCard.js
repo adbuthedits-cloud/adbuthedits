@@ -28,8 +28,14 @@ function isNewProduct(updatedAt) {
 export default function ProductCard({ product, index = 0 }) {
     const [wishlisted, setWishlisted] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
     const containerRef = useRef(null);
     const videoRef = useRef(null);
+
+    // Ensure video is only rendered client-side to avoid SSR hydration mismatch
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Programmatically control video play/pause on hover
     useEffect(() => {
@@ -37,14 +43,12 @@ export default function ProductCard({ product, index = 0 }) {
         if (isHovered) {
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    // Autoplay prevented or interrupted
-                    console.log("Playback interrupted: ", error);
+                playPromise.catch(() => {
+                    // Autoplay prevented or interrupted - silently ignore
                 });
             }
         } else {
             videoRef.current.pause();
-            // Reset to beginning
             videoRef.current.currentTime = 0;
         }
     }, [isHovered]);
@@ -110,8 +114,8 @@ export default function ProductCard({ product, index = 0 }) {
                     </div>
                 )}
 
-                {/* Always-Mounted Video with Smart Preloading & Programmatic Controls */}
-                {videoSrc && (
+                {/* Client-only video element to avoid SSR hydration mismatch */}
+                {isMounted && videoSrc && (
                     <video
                         ref={videoRef}
                         src={videoSrc}
