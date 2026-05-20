@@ -21,18 +21,21 @@ import ZohoSalesIQ from '../components/ZohoSalesIQ'
 function MyApp({ Component, pageProps }) {
   const router = useRouter()
   const [isPageLoading, setIsPageLoading] = useState(false)
-  const [showMaintenance, setShowMaintenance] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('adbuth_maintenance') === 'true'
+  // Always start with server-safe defaults to avoid hydration mismatch #418
+  // localStorage is read inside useEffect (client-only) below
+  const [showMaintenance, setShowMaintenance] = useState(false)
+  const [isCheckingMaintenance, setIsCheckingMaintenance] = useState(true)
+
+  // Seed from localStorage cache immediately on client mount (no flicker)
+  useEffect(() => {
+    const cached = localStorage.getItem('adbuth_maintenance');
+    const isBypassed = localStorage.getItem('adbuth_bypass') === 'true';
+    const isAdminRoute = router.pathname.startsWith('/admin');
+    if (cached !== null) {
+      setShowMaintenance(cached === 'true' && !isBypassed && !isAdminRoute);
     }
-    return false
-  })
-  const [isCheckingMaintenance, setIsCheckingMaintenance] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('adbuth_maintenance') === null
-    }
-    return true
-  })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchMaintenanceStatus = async () => {
