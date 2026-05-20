@@ -12,6 +12,52 @@ if (typeof window !== 'undefined') {
     gsap.registerPlugin(ScrollTrigger);
 }
 
+const FeatureCard = ({ feature, idx, scrollYProgress, totalFeatures }) => {
+    // Calculate when THIS specific idx should be centered
+    // idx 1 -> scroll 0, idx 4 -> scroll 1
+    const targetScroll = (idx - 1) / (totalFeatures - 1);
+
+    // Restored a bit of smoothness (0.12 interval) to avoid jarring pops
+    const cardOpacity = useTransform(scrollYProgress,
+        [targetScroll - 0.12, targetScroll, targetScroll + 0.12],
+        [0.3, 1, 0.3]
+    );
+    const cardScale = useTransform(scrollYProgress,
+        [targetScroll - 0.12, targetScroll, targetScroll + 0.12],
+        [0.9, 1.05, 0.9]
+    );
+    const cardRotate = useTransform(scrollYProgress,
+        [targetScroll - 0.12, targetScroll, targetScroll + 0.12],
+        [10, 0, -10]
+    );
+    const cardBg = useTransform(scrollYProgress,
+        [targetScroll - 0.08, targetScroll, targetScroll + 0.08],
+        ["#F9FAFB", "#FFFFFF", "#F9FAFB"]
+    );
+    const titleColor = useTransform(scrollYProgress,
+        [targetScroll - 0.08, targetScroll, targetScroll + 0.08],
+        ["#111827", "#7D287E", "#111827"]
+    );
+
+    return (
+        <motion.div
+            style={{
+                opacity: cardOpacity,
+                scale: cardScale,
+                rotateX: cardRotate,
+                backgroundColor: cardBg
+            }}
+            className="p-8 md:p-10 rounded-2xl shadow-xl border border-gray-100 w-[80%] lg:max-w-[340px] md:max-w-[280px] h-[300px] flex flex-col justify-center"
+        >
+            <motion.div className="w-12 h-12  mb-6 flex items-center justify-center">
+                <img src={feature.image} alt={feature.title} className="w-12 h-12 object-contain" />
+            </motion.div>
+            <motion.h3 style={{ color: titleColor }} className="text-xl md:text-2xl font-bold mb-4">{feature.title}</motion.h3>
+            <p className="text-gray-500 text-sm md:text-base leading-relaxed">{feature.desc}</p>
+        </motion.div>
+    );
+};
+
 const AnimatedCoreFeatures = () => {
     const containerRef = useRef(null);
     const { scrollYProgress } = useScroll({
@@ -134,66 +180,15 @@ const AnimatedCoreFeatures = () => {
                             style={{ y: springY }}
                             className="relative z-10 w-full flex flex-col items-center gap-10"
                         >
-                            {renderFeatures.map((feature, idx) => {
-                                // Calculate when THIS specific idx should be centered
-                                // idx 1 -> scroll 0, idx 4 -> scroll 1
-                                const targetScroll = (idx - 1) / (features.length - 1);
-
-                                // Restored a bit of smoothness (0.12 interval) to avoid jarring pops
-                                const cardOpacity = useTransform(scrollYProgress,
-                                    [targetScroll - 0.12, targetScroll, targetScroll + 0.12],
-                                    [0.3, 1, 0.3]
-                                );
-                                const cardScale = useTransform(scrollYProgress,
-                                    [targetScroll - 0.12, targetScroll, targetScroll + 0.12],
-                                    [0.9, 1.05, 0.9]
-                                );
-                                const cardRotate = useTransform(scrollYProgress,
-                                    [targetScroll - 0.12, targetScroll, targetScroll + 0.12],
-                                    [10, 0, -10]
-                                );
-                                const cardBg = useTransform(scrollYProgress,
-                                    [targetScroll - 0.08, targetScroll, targetScroll + 0.08],
-                                    ["#F9FAFB", "#FFFFFF", "#F9FAFB"]
-                                );
-                                const iconBg = useTransform(scrollYProgress,
-                                    [targetScroll - 0.08, targetScroll, targetScroll + 0.08],
-                                    ["#E5E7EB", "#7D287E", "#E5E7EB"]
-                                );
-                                const iconText = useTransform(scrollYProgress,
-                                    [targetScroll - 0.08, targetScroll, targetScroll + 0.08],
-                                    ["#9CA3AF", "#FFFFFF", "#9CA3AF"]
-                                );
-                                const titleColor = useTransform(scrollYProgress,
-                                    [targetScroll - 0.08, targetScroll, targetScroll + 0.08],
-                                    ["#111827", "#7D287E", "#111827"]
-                                );
-
-                                // Get real index for label
-                                let realIdx;
-                                if (idx === 0) realIdx = features.length - 1;
-                                else if (idx === renderFeatures.length - 1) realIdx = 0;
-                                else realIdx = idx - 1;
-
-                                return (
-                                    <motion.div
-                                        key={idx}
-                                        style={{
-                                            opacity: cardOpacity,
-                                            scale: cardScale,
-                                            rotateX: cardRotate,
-                                            backgroundColor: cardBg
-                                        }}
-                                        className="p-8 md:p-10 rounded-2xl shadow-xl border border-gray-100 w-[80%] lg:max-w-[340px] md:max-w-[280px] h-[300px] flex flex-col justify-center"
-                                    >
-                                        <motion.div className="w-12 h-12  mb-6 flex items-center justify-center">
-                                            <img src={feature.image} alt={feature.title} className="w-12 h-12 object-contain" />
-                                        </motion.div>
-                                        <motion.h3 style={{ color: titleColor }} className="text-xl md:text-2xl font-bold mb-4">{feature.title}</motion.h3>
-                                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">{feature.desc}</p>
-                                    </motion.div>
-                                );
-                            })}
+                            {renderFeatures.map((feature, idx) => (
+                                <FeatureCard
+                                    key={idx}
+                                    feature={feature}
+                                    idx={idx}
+                                    scrollYProgress={scrollYProgress}
+                                    totalFeatures={features.length}
+                                />
+                            ))}
                         </motion.div>
                     </div>
 

@@ -2,6 +2,7 @@
 const nextConfig = {
     reactStrictMode: true,
     swcMinify: true,
+    transpilePackages: ['@fortawesome/fontawesome-svg-core'],
     images: {
         // unoptimized: true is intentional — images are served from Cloudflare R2/CDN
         // which handles compression and resizing natively. Next.js image optimization

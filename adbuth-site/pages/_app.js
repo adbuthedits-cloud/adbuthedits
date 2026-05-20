@@ -21,8 +21,18 @@ import ZohoSalesIQ from '../components/ZohoSalesIQ'
 function MyApp({ Component, pageProps }) {
   const router = useRouter()
   const [isPageLoading, setIsPageLoading] = useState(false)
-  const [showMaintenance, setShowMaintenance] = useState(false) // Default false until API returns true
-  const [isCheckingMaintenance, setIsCheckingMaintenance] = useState(true)
+  const [showMaintenance, setShowMaintenance] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('adbuth_maintenance') === 'true'
+    }
+    return false
+  })
+  const [isCheckingMaintenance, setIsCheckingMaintenance] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('adbuth_maintenance') === null
+    }
+    return true
+  })
 
   useEffect(() => {
     const fetchMaintenanceStatus = async () => {
@@ -32,6 +42,7 @@ function MyApp({ Component, pageProps }) {
         const data = await res.json();
         
         const isMaintenanceOn = data.maintenance_mode === true;
+        localStorage.setItem('adbuth_maintenance', isMaintenanceOn ? 'true' : 'false');
         
         // Check for bypass in URL or LocalStorage
         const searchParams = new URLSearchParams(window.location.search);
@@ -53,7 +64,11 @@ function MyApp({ Component, pageProps }) {
         }
       } catch (err) {
         console.error('Failed to fetch maintenance status', err);
-        setShowMaintenance(false); // Fallback to live if API fails
+        // Fallback to live or respect cached status if API fails
+        const isBypassed = localStorage.getItem('adbuth_bypass') === 'true';
+        const isAdminRoute = router.pathname.startsWith('/admin');
+        const isMaintenanceOn = localStorage.getItem('adbuth_maintenance') === 'true';
+        setShowMaintenance(isMaintenanceOn && !isBypassed && !isAdminRoute);
       } finally {
         setIsCheckingMaintenance(false);
       }
@@ -87,11 +102,11 @@ function MyApp({ Component, pageProps }) {
 
         <div className={`${inter.variable} ${playfair.variable} ${dmSans.variable} ${montserrat.variable} font-sans`}>
           {isPageLoading && <PageLoader />}
-          {isCheckingMaintenance && <div className="fixed inset-0 bg-black z-[100]" />} {/* Black screen while checking to prevent flash */}
+          {isCheckingMaintenance && <div className="fixed inset-0 bg-black z-[100]" />}
 
-          {!isCheckingMaintenance && showMaintenance ? (
+          {showMaintenance ? (
             <ComingSoon />
-          ) : !isCheckingMaintenance && (
+          ) : (
             <>
               <ErrorBoundary>
                 <AnimatePresence>

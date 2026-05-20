@@ -10,7 +10,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faXmark, faClockRotateLeft, faArrowUpLeft } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faXmark, faClockRotateLeft, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import ProductCard from './ProductCard';
 
 const RECENT_KEY = 'adbuth_recent_searches';
@@ -179,7 +179,7 @@ export default function ShopSearchBar({ masterData, allProducts, onSearch, curre
                                     {s.type}
                                 </span>
                                 <span className="text-sm text-gray-800 group-hover:text-purple-700">{s.label}</span>
-                                <FontAwesomeIcon icon={faArrowUpLeft} className="ml-auto text-gray-300 text-xs group-hover:text-purple-400" />
+                                <FontAwesomeIcon icon={faArrowUp} className="ml-auto text-gray-300 text-xs group-hover:text-purple-400 -rotate-45" />
                             </button>
                         ))}
                         {term.length >= 2 && sugg.length === 0 && (

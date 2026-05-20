@@ -69,7 +69,7 @@ export default function Home({ items }) {
       <Navbar />
       <main className='bg-white'>
         <Hero />
-        <WhatWeDo videos={['/videos/v1.mp4', '/videos/v2.mp4', '/videos/v3.mp4']} />
+        <WhatWeDo />
         <FeaturedBlogs items={items || []} />
         <FAQ questions={faqs} />
         <ContactForm />

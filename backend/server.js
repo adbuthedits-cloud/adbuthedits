@@ -85,8 +85,6 @@ app.use('/api/enquiry', enquiryRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/media', mediaRoutes);
 
-app.use('/api/settings', settingRoutes);
-
 // Database connection and server start
 const startServer = async () => {
     try {
