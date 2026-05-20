@@ -29,6 +29,25 @@ export default function ProductCard({ product, index = 0 }) {
     const [wishlisted, setWishlisted] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const containerRef = useRef(null);
+    const videoRef = useRef(null);
+
+    // Programmatically control video play/pause on hover
+    useEffect(() => {
+        if (!videoRef.current) return;
+        if (isHovered) {
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Autoplay prevented or interrupted
+                    console.log("Playback interrupted: ", error);
+                });
+            }
+        } else {
+            videoRef.current.pause();
+            // Reset to beginning
+            videoRef.current.currentTime = 0;
+        }
+    }, [isHovered]);
 
     if (!product) return null;
 
@@ -81,7 +100,7 @@ export default function ProductCard({ product, index = 0 }) {
                         src={thumbnail}
                         alt={product.title || 'Product Image'}
                         fill
-                        className={`object-cover transition-opacity duration-300 ${isHovered && videoSrc ? 'opacity-0' : 'opacity-100'}`}
+                        className={`object-cover transition-opacity duration-300 ${isHovered && videoSrc ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                         priority={index < 8}
                     />
@@ -91,16 +110,16 @@ export default function ProductCard({ product, index = 0 }) {
                     </div>
                 )}
 
-                {/* Video - Dynamic Mount Only On Hover for Peak GPU Performance */}
-                {isHovered && videoSrc && (
+                {/* Always-Mounted Video with Smart Preloading & Programmatic Controls */}
+                {videoSrc && (
                     <video
+                        ref={videoRef}
                         src={videoSrc}
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         muted
                         loop
                         playsInline
-                        autoPlay
-                        preload="auto"
+                        preload={index < 8 ? "auto" : "metadata"}
                     />
                 )}
 

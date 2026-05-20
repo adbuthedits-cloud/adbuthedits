@@ -12,29 +12,30 @@ import useSeo from '../../../../hooks/useSeo';
 export default function AdbuthCorporate() {
     const { seoData } = useSeo('adbuth-corporate');
 
-    const VideoPlayer = ({ src, className = "" }) => {
+    const VideoPlayer = ({ src, shouldPlay, className = "" }) => {
         const [isMuted, setIsMuted] = useState(true);
         const videoRef = useRef(null);
-        const isInView = useInView(videoRef, { once: false, margin: "400px" });
 
         useEffect(() => {
-            if (isInView && videoRef.current) {
+            if (!videoRef.current) return;
+            if (shouldPlay) {
                 videoRef.current.play().catch(() => {});
-            } else if (!isInView && videoRef.current) {
+            } else {
                 videoRef.current.pause();
+                videoRef.current.currentTime = 0;
             }
-        }, [isInView]);
+        }, [shouldPlay]);
 
         return (
             <div className={`absolute inset-0 overflow-hidden ${className}`}>
                 <video
                     ref={videoRef}
-                    src={isInView ? src : ""}
+                    src={src}
                     className="w-full h-full object-cover"
                     muted={isMuted}
                     loop
                     playsInline
-                    preload="none"
+                    preload="metadata"
                 />
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
@@ -54,6 +55,7 @@ export default function AdbuthCorporate() {
     ];
     // Triple the array so the user can scroll infinitely in both directions
     const [activeCard, setActiveCard] = useState(0);   
+    const [hoveredIndex, setHoveredIndex] = useState(null);
     const scrollContainerRef = useRef(null);
     const isUserInteracting = useRef(false);
     const currentAbsRef = useRef(0);         
@@ -225,10 +227,12 @@ export default function AdbuthCorporate() {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.2, duration: 0.5, ease: 'easeOut' }}
                                 whileHover={{ scale: 1.07, transition: { type: 'tween', ease: 'easeOut', duration: 0.16 } }}
+                                onMouseEnter={() => setHoveredIndex(index)}
+                                onMouseLeave={() => setHoveredIndex(null)}
                                 className="relative text-white rounded-xl aspect-[3/4] flex flex-col justify-end overflow-hidden cursor-pointer bg-gray-900"
                             >
                                 {card.video ? (
-                                    <VideoPlayer src={card.video} />
+                                    <VideoPlayer src={card.video} shouldPlay={hoveredIndex === index} />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-[#1a2151]">
                                         <FontAwesomeIcon icon={faPlay} className="text-4xl opacity-10" />
@@ -265,7 +269,7 @@ export default function AdbuthCorporate() {
                                 className="snap-center flex-shrink-0 w-[58vw] aspect-[3/4] rounded-2xl flex flex-col justify-end shadow-lg relative overflow-hidden text-white"
                             >
                                 {card.video ? (
-                                    <VideoPlayer src={card.video} />
+                                    <VideoPlayer src={card.video} shouldPlay={activeCard === index} />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-[#1a2151]">
                                         <FontAwesomeIcon icon={faPlay} className="text-4xl opacity-10" />

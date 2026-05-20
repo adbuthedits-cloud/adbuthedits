@@ -71,14 +71,12 @@ export default function About() {
             }}
           >
             {[...officeImages, ...officeImages].map((src, index) => (
-              <Image
+              <img
                 key={index}
                 src={src}
                 alt={`Adbuth Office ${index}`}
-                width={800}
-                height={600}
-                className="h-full w-auto object-cover max-w-none flex-shrink-0"
-                priority={true}
+                className="h-full aspect-[4/3] object-cover max-w-none flex-shrink-0"
+                loading="eager"
               />
             ))}
           </motion.div>
@@ -257,10 +255,10 @@ export default function About() {
             <div className="md:hidden overflow-hidden space-y-6">
               {/* First Row - Scroll Right */}
               <motion.div
-                className="flex gap-4"
+                className="flex gap-4 w-max"
                 style={{ willChange: "transform" }}
                 animate={{
-                  x: [0, -1000],
+                  x: ["0%", "-50%"],
                 }}
                 transition={{
                   x: {
@@ -271,8 +269,8 @@ export default function About() {
                   },
                 }}
               >
-                {[...Array(3)].map((_, repeatIndex) => (
-                  <div key={repeatIndex} className="flex gap-4">
+                {[...Array(2)].map((_, repeatIndex) => (
+                  <div key={repeatIndex} className="flex gap-4 flex-nowrap">
                     {[
                       { name: "Rakesh Mungara", role: "Business Development Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Rakesh%20Mungara.png" },
                       { name: "Murali Krishna", role: "HR Manager", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Murali%20Krishna.png" },
@@ -299,10 +297,10 @@ export default function About() {
 
               {/* Second Row - Scroll Left */}
               <motion.div
-                className="flex gap-4"
+                className="flex gap-4 w-max"
                 style={{ willChange: "transform" }}
                 animate={{
-                  x: [-1000, 0],
+                  x: ["-50%", "0%"],
                 }}
                 transition={{
                   x: {
@@ -313,8 +311,8 @@ export default function About() {
                   },
                 }}
               >
-                {[...Array(3)].map((_, repeatIndex) => (
-                  <div key={repeatIndex} className="flex gap-4">
+                {[...Array(2)].map((_, repeatIndex) => (
+                  <div key={repeatIndex} className="flex gap-4 flex-nowrap">
                     {[
                       { name: "Simhadri", role: "Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Simahadri.png" },
                       { name: "Praneeth", role: "Junior Editor", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/about/Praneeth%20..png" },

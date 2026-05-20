@@ -23,11 +23,18 @@ import SeoHead from '../SeoHead';
 const ReviewSection = dynamic(() => import('../ReviewSection'), { loading: () => <p className="text-center py-10">Loading Reviews...</p> });
 
 // ─── Product Slider with Arrow Controls ───────────────────────────────────────
-function ProductSlider({ products, title, cardWidth = '160px', cardWidthSm = '190px' }) {
+function ProductSlider({ products, title }) {
     const sliderRef = useRef(null);
     const scroll = (dir) => {
         if (sliderRef.current) {
-            sliderRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
+            const firstChild = sliderRef.current.firstChild;
+            if (firstChild) {
+                const cardWidth = firstChild.getBoundingClientRect().width;
+                const gap = 16; // gap-4 is 1rem (16px)
+                sliderRef.current.scrollBy({ left: dir * (cardWidth + gap), behavior: 'smooth' });
+            } else {
+                sliderRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
+            }
         }
     };
     return (
@@ -43,9 +50,9 @@ function ProductSlider({ products, title, cardWidth = '160px', cardWidthSm = '19
                     </button>
                 </div>
             </div>
-            <div ref={sliderRef} className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth  px-4 sm:mx-0 sm:px-0">
+            <div ref={sliderRef} className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth px-4 sm:mx-0 sm:px-0">
                 {products.map(p => (
-                    <div key={p.products_id} style={{ width: cardWidth, minWidth: cardWidth }} className={`flex-none snap-start sm:!w-[${cardWidthSm}]`}>
+                    <div key={p.products_id} className="flex-none snap-start w-[160px] sm:w-[190px]">
                         <ProductCard product={p} />
                     </div>
                 ))}
@@ -522,7 +529,7 @@ export default function ProductDetailView({ slug, masterData }) {
 
                         {/* Related Products Slider (Compact for Sidebar area) */}
                         {relatedProducts.length > 0 && (
-                            <ProductSlider products={relatedProducts} title="Recommended For You" cardWidth="160px" cardWidthSm="190px" />
+                            <ProductSlider products={relatedProducts} title="Recommended For You" />
                         )}
                     </div>
                 </div>
