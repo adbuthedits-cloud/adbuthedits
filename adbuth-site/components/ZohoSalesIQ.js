@@ -1,11 +1,48 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { useAuth } from '../context/AuthContext';
 
 const ZohoSalesIQ = () => {
     const { user } = useAuth();
+    const [shouldLoad, setShouldLoad] = useState(false);
 
     useEffect(() => {
+        // Trigger loading of script
+        const triggerLoad = () => {
+            setShouldLoad(true);
+            cleanup();
+        };
+
+        // Event listeners for interaction
+        const events = ['mousemove', 'scroll', 'touchstart', 'keydown', 'click'];
+        
+        const cleanup = () => {
+            events.forEach(event => {
+                if (typeof window !== 'undefined') {
+                    window.removeEventListener(event, triggerLoad);
+                }
+            });
+        };
+
+        // Add listeners
+        if (typeof window !== 'undefined') {
+            events.forEach(event => {
+                window.addEventListener(event, triggerLoad, { passive: true, once: true });
+            });
+        }
+
+        // Fallback timeout: load after 4 seconds if no interaction
+        const timer = setTimeout(triggerLoad, 4000);
+
+        return () => {
+            cleanup();
+            clearTimeout(timer);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!shouldLoad) return;
+
         const updateZohoVisitor = () => {
             if (window.$zoho && window.$zoho.salesiq && window.$zoho.salesiq.visitor) {
                 if (user) {
@@ -33,7 +70,9 @@ const ZohoSalesIQ = () => {
             updateZohoVisitor();
         };
 
-    }, [user]);
+    }, [user, shouldLoad]);
+
+    if (!shouldLoad) return null;
 
     return (
         <>
