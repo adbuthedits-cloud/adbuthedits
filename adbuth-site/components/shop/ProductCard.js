@@ -114,7 +114,7 @@ export default function ProductCard({ product, index = 0 }) {
                     </div>
                 )}
 
-                {/* Client-only video element to avoid SSR hydration mismatch */}
+                {/* Client-only video element — preload only metadata to avoid heavy network use */}
                 {isMounted && videoSrc && (
                     <video
                         ref={videoRef}
@@ -123,7 +123,7 @@ export default function ProductCard({ product, index = 0 }) {
                         muted
                         loop
                         playsInline
-                        preload={index < 8 ? "auto" : "metadata"}
+                        preload="metadata"
                     />
                 )}
 
@@ -146,11 +146,12 @@ export default function ProductCard({ product, index = 0 }) {
             <button
                 onClick={(e) => { e.preventDefault(); setWishlisted(v => !v); }}
                 className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center hover:bg-white transition-all duration-300 shadow-sm group/wishlist"
-                aria-label="Add to wishlist"
+                aria-label={wishlisted ? `Remove ${product.title} from wishlist` : `Add ${product.title} to wishlist`}
             >
                 <FontAwesomeIcon
                     icon={wishlisted ? faHeartSolid : faHeartOutline}
                     className={`text-sm transition-transform duration-200 group-active/wishlist:scale-125 ${wishlisted ? 'text-red-500' : 'text-gray-900'}`}
+                    aria-hidden="true"
                 />
             </button>
 

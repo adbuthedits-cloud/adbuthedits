@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import { AuthProvider } from '../context/AuthContext'
 import { WishlistProvider } from '../context/WishlistContext'
 import PageLoader from '../components/PageLoader'
-import ComingSoon from '../components/ComingSoon'
+import dynamic from 'next/dynamic'
 
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -15,70 +15,14 @@ config.autoAddCss = false
 import { inter, playfair, dmSans, montserrat } from '../lib/fonts'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from '../components/ErrorBoundary'
-import PromoPopup from '../components/PromoPopup'
-import ZohoSalesIQ from '../components/ZohoSalesIQ'
+
+// Lazy-load heavy non-critical components — keeps initial JS bundle lean
+const PromoPopup = dynamic(() => import('../components/PromoPopup'), { ssr: false })
+const ZohoSalesIQ = dynamic(() => import('../components/ZohoSalesIQ'), { ssr: false })
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter()
   const [isPageLoading, setIsPageLoading] = useState(false)
-  // Always start with server-safe defaults to avoid hydration mismatch #418
-  // localStorage is read inside useEffect (client-only) below
-  const [showMaintenance, setShowMaintenance] = useState(false)
-  const [isCheckingMaintenance, setIsCheckingMaintenance] = useState(true)
-
-  // Seed from localStorage cache immediately on client mount (no flicker)
-  useEffect(() => {
-    const cached = localStorage.getItem('adbuth_maintenance');
-    const isBypassed = localStorage.getItem('adbuth_bypass') === 'true';
-    const isAdminRoute = router.pathname.startsWith('/admin');
-    if (cached !== null) {
-      setShowMaintenance(cached === 'true' && !isBypassed && !isAdminRoute);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const fetchMaintenanceStatus = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${apiUrl}/api/settings/public`);
-        const data = await res.json();
-        
-        const isMaintenanceOn = data.maintenance_mode === true;
-        localStorage.setItem('adbuth_maintenance', isMaintenanceOn ? 'true' : 'false');
-        
-        // Check for bypass in URL or LocalStorage
-        const searchParams = new URLSearchParams(window.location.search);
-        const bypassToken = searchParams.get('bypass');
-
-        if (bypassToken === 'adbuth2024') {
-          localStorage.setItem('adbuth_bypass', 'true');
-          setShowMaintenance(false);
-          // Remove query param from URL
-          router.replace(router.pathname, undefined, { shallow: true });
-        } else if (bypassToken === 'false') {
-          localStorage.removeItem('adbuth_bypass');
-          setShowMaintenance(isMaintenanceOn && !router.pathname.startsWith('/admin'));
-          router.replace(router.pathname, undefined, { shallow: true });
-        } else {
-          const isBypassed = localStorage.getItem('adbuth_bypass') === 'true';
-          const isAdminRoute = router.pathname.startsWith('/admin');
-          setShowMaintenance(isMaintenanceOn && !isBypassed && !isAdminRoute);
-        }
-      } catch (err) {
-        console.error('Failed to fetch maintenance status', err);
-        // Fallback to live or respect cached status if API fails
-        const isBypassed = localStorage.getItem('adbuth_bypass') === 'true';
-        const isAdminRoute = router.pathname.startsWith('/admin');
-        const isMaintenanceOn = localStorage.getItem('adbuth_maintenance') === 'true';
-        setShowMaintenance(isMaintenanceOn && !isBypassed && !isAdminRoute);
-      } finally {
-        setIsCheckingMaintenance(false);
-      }
-    };
-
-    fetchMaintenanceStatus();
-  }, [router.pathname, router.query]);
 
   useEffect(() => {
     const handleStart = () => setIsPageLoading(true)
@@ -105,32 +49,22 @@ function MyApp({ Component, pageProps }) {
 
         <div className={`${inter.variable} ${playfair.variable} ${dmSans.variable} ${montserrat.variable} font-sans`}>
           {isPageLoading && <PageLoader />}
-          {isCheckingMaintenance && <div className="fixed inset-0 bg-black z-[100]" />}
 
-          {showMaintenance ? (
-            <ComingSoon />
-          ) : (
-            <>
-              <ErrorBoundary>
-                <AnimatePresence>
-                  <Component {...pageProps} key={router.pathname} />
-                </AnimatePresence>
-              </ErrorBoundary>
+          <ErrorBoundary>
+            <AnimatePresence>
+              <Component {...pageProps} key={router.pathname} />
+            </AnimatePresence>
+          </ErrorBoundary>
 
-              <Toaster
-                position="bottom-center"
-                toastOptions={{
-                  className: '',
-                  duration: 5000,
-                  style: {
-                    zIndex: 99999,
-                  },
-                }}
-              />
-              <PromoPopup />
-              <ZohoSalesIQ />
-            </>
-          )}
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              duration: 5000,
+              style: { zIndex: 99999 },
+            }}
+          />
+          <PromoPopup />
+          <ZohoSalesIQ />
         </div>
       </WishlistProvider>
     </AuthProvider>

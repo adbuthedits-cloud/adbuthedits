@@ -4,11 +4,11 @@ import Hero from '../components/Hero'
 import SeoHead from '../components/SeoHead'
 import useSeo from '../hooks/useSeo'
 
-const WhatWeDo = dynamic(() => import('../components/WhatWeDo'))
-const FeaturedBlogs = dynamic(() => import('../components/FeaturedBlogs'))
-const FAQ = dynamic(() => import('../components/FAQ'))
-const ContactForm = dynamic(() => import('../components/ContactForm'))
-const Footer = dynamic(() => import('../components/Footer'))
+const WhatWeDo = dynamic(() => import('../components/WhatWeDo'), { ssr: false })
+const FeaturedBlogs = dynamic(() => import('../components/FeaturedBlogs'), { ssr: false })
+const FAQ = dynamic(() => import('../components/FAQ'), { ssr: false })
+const ContactForm = dynamic(() => import('../components/ContactForm'), { ssr: false })
+const Footer = dynamic(() => import('../components/Footer'), { ssr: false })
 
 const sampleBlogs = [
   { slug: 'storytelling-magic', title: 'How to create memorable videos', excerpt: 'Short excerpt...', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/blog-1.png' },

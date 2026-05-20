@@ -74,9 +74,9 @@ export default function About() {
               <img
                 key={index}
                 src={src}
-                alt={`Adbuth Office ${index}`}
+                alt={`Adbuth Verse office - image ${(index % officeImages.length) + 1}`}
                 className="h-full aspect-[4/3] object-cover max-w-none flex-shrink-0"
-                loading="eager"
+                loading={index < 4 ? 'eager' : 'lazy'}
               />
             ))}
           </motion.div>
@@ -137,12 +137,15 @@ export default function About() {
                 {/* View More Button */}
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
+                  aria-expanded={isExpanded}
+                  aria-controls="about-extra-content"
                   className="w-full py-4 text-[#7D287E] font-bold text-sm uppercase tracking-widest    transition-colors active:scale-95 flex items-center justify-center gap-2"
                 >
                   {isExpanded ? "View Less" : "View More"}
                   <FontAwesomeIcon
                     icon={isExpanded ? faChevronUp : faChevronDown}
                     className="text-xs transition-transform duration-300"
+                    aria-hidden="true"
                   />
                 </button>
               </div>

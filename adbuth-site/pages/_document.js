@@ -5,6 +5,18 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <link rel="icon" href="/favicon.ico" />
+
+        {/* ── Preconnect to CDN origins for faster image/video loading ── */}
+        <link rel="preconnect" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" />
+
+        {/* ── Preconnect to Google Fonts (used by next/font/google) ── */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* ── Meta charset / theme ── */}
+        <meta charSet="utf-8" />
+        <meta name="theme-color" content="#0a0118" />
       </Head>
       <body>
         <Main />

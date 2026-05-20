@@ -292,23 +292,28 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
               onMouseLeave={() => setProfileOpen(false)}
             >
               {/* Smart Avatar: shows photo, initials, or icon */}
-              <button className={`${highlight === 'profile' ? 'ring-2 ring-purple-400' : ''} w-10 h-10 rounded-full border-2 border-purple-700 overflow-hidden flex items-center justify-center transition-all duration-300`}>
+              <button
+                aria-label={`Open profile menu for ${user.first_name || user.email || 'user'}`}
+                aria-haspopup="true"
+                aria-expanded={profileOpen}
+                className={`${highlight === 'profile' ? 'ring-2 ring-purple-400' : ''} w-10 h-10 rounded-full border-2 border-purple-700 overflow-hidden flex items-center justify-center transition-all duration-300`}
+              >
                 {user.profile_picture ? (
                   <img
                     src={user.profile_picture}
-                    alt={user.name || 'Profile'}
+                    alt={user.name || 'Profile picture'}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-full h-full bg-purple-700 hover:bg-transparent hover:text-purple-700 flex items-center justify-center text-white text-sm font-bold transition-all duration-300">
+                  <div className="w-full h-full bg-purple-700 hover:bg-transparent hover:text-purple-700 flex items-center justify-center text-white text-sm font-bold transition-all duration-300" aria-hidden="true">
                     {user.first_name && user.last_name
                       ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
                       : user.first_name
                       ? user.first_name[0].toUpperCase()
                       : user.last_name
                       ? user.last_name[0].toUpperCase()
-                      : <FontAwesomeIcon icon={faUser} />}
+                      : <FontAwesomeIcon icon={faUser} aria-hidden="true" />}
                   </div>
                 )}
               </button>
@@ -353,8 +358,8 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
                         </motion.div>
                         <div className="border-t border-gray-100 my-1"></div>
                         <motion.div variants={dropdownItemVariants}>
-                          <button type="button" onClick={logout} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2">
-                            <FontAwesomeIcon icon={faSignOutAlt} /> Logout
+                          <button type="button" onClick={logout} aria-label="Logout from your account" className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2">
+                            <FontAwesomeIcon icon={faSignOutAlt} aria-hidden="true" /> Logout
                           </button>
                         </motion.div>
                       </div>
@@ -382,8 +387,11 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
           <button
             className={`p-2 z-50 relative focus:outline-none ${open ? 'text-white' : (scrolled || !isdark ? 'text-black' : 'text-white')}`}
             onClick={() => setOpen(v => !v)}
+            aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={open}
+            aria-controls="mobile-nav-menu"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
               <motion.path
                 stroke="currentColor"
                 strokeWidth="3"
@@ -428,6 +436,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
       <AnimatePresence>
         {open && (
           <motion.div
+            id="mobile-nav-menu"
             variants={menuVariants}
             initial="initial"
             animate="animate"
