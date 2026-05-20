@@ -24,8 +24,8 @@ const PromoPopup = () => {
                 const availablePromos = res.data.coupons;
                 setPromos(availablePromos);
                 
-                // Always show on reload as requested
-                setTimeout(() => setIsOpen(true), 500);
+                // Delay popup to avoid competing with LCP (hero image / page paint)
+                setTimeout(() => setIsOpen(true), 4000);
             }
         } catch (error) {
             console.error('Failed to fetch promo popup:', error);
@@ -152,9 +152,10 @@ const PromoPopup = () => {
                                     </p>
                                     <button
                                         onClick={handleDismiss}
+                                        aria-label="Close offer popup"
                                         className="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 transition-all flex items-center justify-center -mr-6 -mt-6"
                                     >
-                                        <FontAwesomeIcon icon={faTimes} className="text-sm" />
+                                        <FontAwesomeIcon icon={faTimes} className="text-sm" aria-hidden="true" />
                                     </button>
                                 </div>
 
@@ -178,10 +179,11 @@ const PromoPopup = () => {
                                             <span className="text-sm font-mono font-black text-gray-900 tracking-tighter">{currentPromo.code}</span>
                                         </div>
                                         <button
+                                            aria-label={copied ? 'Coupon code copied' : `Copy coupon code ${currentPromo.code}`}
                                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${copied ? 'bg-green-500 text-white' : 'bg-gray-900 text-white'
                                                 }`}
                                         >
-                                            {copied ? <FontAwesomeIcon icon={faCheck} /> : 'Copy'}
+                                            {copied ? <FontAwesomeIcon icon={faCheck} aria-hidden="true" /> : 'Copy'}
                                         </button>
                                     </div>
                                 </div>
@@ -189,11 +191,11 @@ const PromoPopup = () => {
                                 {/* Carousel Nav */}
                                 {promos.length > 1 && (
                                     <div className="absolute bottom-2 right-4 flex gap-1">
-                                        <button onClick={prevPromo} className="w-5 h-5 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center text-[8px]">
-                                            <FontAwesomeIcon icon={faChevronLeft} />
+                                        <button onClick={prevPromo} aria-label="Previous offer" className="w-5 h-5 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center text-[8px]">
+                                            <FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" />
                                         </button>
-                                        <button onClick={nextPromo} className="w-5 h-5 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center text-[8px]">
-                                            <FontAwesomeIcon icon={faChevronRight} />
+                                        <button onClick={nextPromo} aria-label="Next offer" className="w-5 h-5 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center text-[8px]">
+                                            <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
                                         </button>
                                     </div>
                                 )}

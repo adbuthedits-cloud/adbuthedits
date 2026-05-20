@@ -6,6 +6,14 @@ export default function Document() {
       <Head>
         <link rel="icon" href="/favicon.ico" />
 
+        {/* ── Preload LCP hero background image so it loads before React boots ── */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/hero-section.png"
+          fetchPriority="high"
+        />
+
         {/* ── Preconnect to CDN origins for faster image/video loading ── */}
         <link rel="preconnect" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" />
