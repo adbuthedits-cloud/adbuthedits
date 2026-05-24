@@ -82,19 +82,19 @@ export default function AdbuthLearning() {
             title: "Skill Development at Scale",
             desc: "Empowering teams and creators through AI-driven tools and future-ready learning programs.",
             bg: "bg-[#E6E3FE]", //#7D287E #FCD804 #fff Lightest Purple
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/skill-developmaent.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/index/skill-developmaent.webp"
         },
         {
             title: "AI-Driven Workflows",
             desc: "Automate, organize, and optimize your creative assets with Adbuth DAM built for efficiency.",
             bg: "bg-[#D5D0FC]", // Mid Purple
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/ai-driven.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/index/ai-driven.webp"
         },
         {
             title: "Integrated Ecosystem",
             desc: "Seamlessly integrate Adbuth DAM with your existing tools and workflows to enhance productivity.",
             bg: "bg-[#CDC6FB]", // Darkest Purple
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/integrated-ecosystem.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/index/integrated-ecosystem.webp"
         }
     ];
 
@@ -124,7 +124,7 @@ export default function AdbuthLearning() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Learning | Adbuth Verse"}
                 description={seoData?.meta_description || seoData?.description || "Empowering teams and creators through AI-driven tools and learning programs."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-e-learning.png"}
+                image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/learning/index/services-e-learning.webp"}
                 data={seoData}
             />
             <Navbar highlight='services' isdark={false} />
@@ -185,7 +185,7 @@ export default function AdbuthLearning() {
                             </motion.div>
                             <motion.div variants={slideInLeft} initial="hidden" animate="visible" className="relative w-[300px] lg:w-[450px] md:w-[250px] h-[250px] lg:h-[450px] bg-gray-100 rounded-sm mt-4 flex items-end p-6 ">
                                 <Image
-                                    src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/creative-team-onboard.png"
+                                    src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/creative-team-onboard.webp"
                                     alt="Creative Team Onboard"
                                     fill
                                     sizes="(max-width: 1024px) 300px, 450px"
@@ -194,7 +194,7 @@ export default function AdbuthLearning() {
                                 />
                                 <div className="absolute -right-8 lg:bottom-1/3 bottom-1/4 text-white z-10">
                                     <Image
-                                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/arrow-2.svg"
+                                        src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/arrow-2.svg"
                                         alt="Arrow"
                                         width={100}
                                         height={100}
@@ -224,7 +224,7 @@ export default function AdbuthLearning() {
                             </motion.div>
                             <motion.div variants={slideInLeft} initial="hidden" animate="visible" className="relative w-[300px] lg:w-[450px] md:w-[250px] h-[250px] lg:h-[450px] bg-gray-100 rounded-sm mt-4 flex items-end p-6 ">
                                 <Image
-                                    src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/training-modules.png"
+                                    src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/training-modules.webp"
                                     alt="Training Modules"
                                     fill
                                     sizes="(max-width: 1024px) 300px, 450px"
@@ -247,7 +247,7 @@ export default function AdbuthLearning() {
                             <div className="relative w-full">
                                 <motion.div variants={slideInLeft} initial="hidden" animate="visible" className="relative w-[50%] max-w-[210px] aspect-square bg-gray-100 mt-2 z-20 shadow-xl overflow-hidden">
                                     <Image
-                                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/creative-team-onboard.png"
+                                        src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/creative-team-onboard.webp"
                                         alt="Creative Team Onboard"
                                         fill
                                         sizes="(max-width: 768px) 50vw, 250px"
@@ -260,7 +260,7 @@ export default function AdbuthLearning() {
                                 {/* Arrow pointing to Testimonial */}
                                 <div className="absolute right-[30%] bottom-[0px] w-30 h-30 z-20">
                                     <Image
-                                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/Arrow 3.svg"
+                                        src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/Arrow 3.svg"
                                         alt="Arrow"
                                         width={100}
                                         height={100}
@@ -294,7 +294,7 @@ export default function AdbuthLearning() {
                                 <div className="w-[70%] pl-2 relative z-20">
                                     <motion.div variants={slideInLeft} initial="hidden" animate="visible" className="relative w-full aspect-[4/3.5] bg-gray-100 shadow-2xl overflow-hidden">
                                         <Image
-                                            src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/training-modules.png"
+                                            src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/training-modules.webp"
                                             alt="Training Modules"
                                             fill
                                             sizes="(max-width: 768px) 70vw, 300px"
@@ -335,7 +335,7 @@ export default function AdbuthLearning() {
                             <Link href="/services/learning/adbuth-dam" className="flex flex-col group cursor-pointer block">
                                 <div className="w-full aspect-[4/3] md:aspect-video lg:aspect-square lg:w-[400px] lg:h-[400px] relative mb-6 overflow-hidden">
                                     <Image
-                                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-dam.png"
+                                        src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/services-dam.webp"
                                         alt="Adbuth DAM"
                                         fill
                                         sizes="(max-width: 768px) 100vw, 400px"
@@ -352,7 +352,7 @@ export default function AdbuthLearning() {
                             <Link href="/services/learning/adbuth-e-learning" className="flex flex-col group cursor-pointer block">
                                 <div className="w-full aspect-[4/3] md:aspect-video lg:aspect-square lg:w-[400px] lg:h-[400px] relative mb-6 overflow-hidden">
                                     <Image
-                                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-e-learning.png"
+                                        src="https://assets.adbuthverse.com/website-assets/pages/services/learning/index/services-e-learning.webp"
                                         alt="Adbuth Learnings"
                                         fill
                                         sizes="(max-width: 768px) 100vw, 400px"

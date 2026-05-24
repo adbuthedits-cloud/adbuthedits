@@ -5,6 +5,7 @@ import Footer from '../../../../components/Footer';
 import { motion } from 'framer-motion';
 import { ServicesDesktop, ServicesMobile } from '../../../../components/MusicServices';
 import SeoHead from '../../../../components/SeoHead';
+import { cdnImage } from '../../../../utils/cdn';
 import useSeo from '../../../../hooks/useSeo';
 
 export default function AdbuthMusic() {
@@ -13,22 +14,22 @@ export default function AdbuthMusic() {
         {
             title: "Original Music",
             desc: "Powered by creativity and AI-assisted tools, we compose tracks that are unique, dynamic, and perfectly tuned to your vision. From cinematic scores to contemporary beats, your project gets a soundtrack that truly stands out.",
-            images: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/original-music.png"
+            images: cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/original-music.webp")
         },
         {
             title: "Jingles",
-            desc: "Memorable, catchy, and designed to hook listeners instantly. Our AI-enhanced process ensures every jingle hits the right emotional note, perfect for ads, podcasts, and campaigns.",
-            images: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/jingles.png"
+            desc: "Memorable, catchy, and designed to hook listeners instantly. Our AI-enhanced process ensures every jingle hits the right emotional note, perfect for ads, campaigns, and podcasts.",
+            images: cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/jingles.webp")
         },
         {
             title: "Voiceovers",
             desc: "Professional, expressive, and AI-optimized for clarity and tone. Whether it's narration, storytelling, or brand messaging, we deliver voiceovers that connect instantly with your audience.",
-            images: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/voiceovers.png"
+            images: cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/voiceovers.webp")
         },
         {
             title: "Background Music (BGM)",
             desc: "Set the mood, drive the rhythm, and amplify your visuals. Using AI-assisted audio design, our BGMs seamlessly adapt to your content, enhancing every scene, every frame, every moment.",
-            images: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/background-music.png"
+            images: cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/background-music.webp")
         }
     ];
 
@@ -37,7 +38,7 @@ export default function AdbuthMusic() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Adbuth Music Services"}
                 description={seoData?.meta_description || seoData?.description || "Compose, Create, Captivate with our original music services."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/music-banner.png"}
+                image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/music-banner.webp")}
                 data={seoData}
             />
             <Navbar isdark={true} />
@@ -47,7 +48,7 @@ export default function AdbuthMusic() {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 bg-cover bg-center z-0 opacity-70"
-                    style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/music-banner.png')" }}
+                    style={{ backgroundImage: `url(${cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/music-banner.webp")})` }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-b from-[#0a0118]/30 via-transparent to-[#0a0118]"></div>
                 </div>
@@ -141,27 +142,27 @@ export default function AdbuthMusic() {
                             transition={{ duration: 30, ease: "linear", repeat: Infinity }}
                         >
                             {[...[
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/industry-grade-sound-quality.svg', title: "Industry-Grade Sound Quality", description: "From composition to mastering, our audio workflow matches broadcast and cinematic standards." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/ai-enhanced-precision.svg', title: "AI-Enhanced Precision", description: "We integrate smart tools to speed up production and elevate clarity without losing the human touch." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/genre-versatile-composers.svg', title: "Genre-Versatile Composers", description: "Whether you need emotional orchestral scores, catchy jingles, or upbeat commercial music. We match any style, any tone." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/one-stop-audio-production.svg', title: "One-Stop Audio Production Studio", description: "Music composition, jingles, voiceovers, BGM, SFX and everything handled in house for seamless delivery." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/custom-crafted-sound.svg', title: "100% Custom Crafted Sound", description: "Every piece we create is original, unique, and tailored exclusively to your project and audience." }
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/industry-grade-sound-quality.svg', title: "Industry-Grade Sound Quality", description: "From composition to mastering, our audio workflow matches broadcast and cinematic standards." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/ai-enhanced-precision.svg', title: "AI-Enhanced Precision", description: "We integrate smart tools to speed up production and elevate clarity without losing the human touch." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/genre-versatile-composers.svg', title: "Genre-Versatile Composers", description: "Whether you need emotional orchestral scores, catchy jingles, or upbeat commercial music. We match any style, any tone." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/one-stop-audio-production.svg', title: "One-Stop Audio Production Studio", description: "Music composition, jingles, voiceovers, BGM, SFX and everything handled in house for seamless delivery." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/custom-crafted-sound.svg', title: "100% Custom Crafted Sound", description: "Every piece we create is original, unique, and tailored exclusively to your project and audience." }
                             ], ...[
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/industry-grade-sound-quality.svg', title: "Industry-Grade Sound Quality", description: "From composition to mastering, our audio workflow matches broadcast and cinematic standards." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/ai-enhanced-precision.svg', title: "AI-Enhanced Precision", description: "We integrate smart tools to speed up production and elevate clarity without losing the human touch." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/genre-versatile-composers.svg', title: "Genre-Versatile Composers", description: "Whether you need emotional orchestral scores, catchy jingles, or upbeat commercial music. We match any style, any tone." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/one-stop-audio-production.svg', title: "One-Stop Audio Production Studio", description: "Music composition, jingles, voiceovers, BGM, SFX and everything handled in house for seamless delivery." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/custom-crafted-sound.svg', title: "100% Custom Crafted Sound", description: "Every piece we create is original, unique, and tailored exclusively to your project and audience." }
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/industry-grade-sound-quality.svg', title: "Industry-Grade Sound Quality", description: "From composition to mastering, our audio workflow matches broadcast and cinematic standards." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/ai-enhanced-precision.svg', title: "AI-Enhanced Precision", description: "We integrate smart tools to speed up production and elevate clarity without losing the human touch." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/genre-versatile-composers.svg', title: "Genre-Versatile Composers", description: "Whether you need emotional orchestral scores, catchy jingles, or upbeat commercial music. We match any style, any tone." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/one-stop-audio-production.svg', title: "One-Stop Audio Production Studio", description: "Music composition, jingles, voiceovers, BGM, SFX and everything handled in house for seamless delivery." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/custom-crafted-sound.svg', title: "100% Custom Crafted Sound", description: "Every piece we create is original, unique, and tailored exclusively to your project and audience." }
                             ], ...[
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/industry-grade-sound-quality.svg', title: "Industry-Grade Sound Quality", description: "From composition to mastering, our audio workflow matches broadcast and cinematic standards." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/ai-enhanced-precision.svg', title: "AI-Enhanced Precision", description: "We integrate smart tools to speed up production and elevate clarity without losing the human touch." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/genre-versatile-composers.svg', title: "Genre-Versatile Composers", description: "Whether you need emotional orchestral scores, catchy jingles, or upbeat commercial music. We match any style, any tone." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/one-stop-audio-production.svg', title: "One-Stop Audio Production Studio", description: "Music composition, jingles, voiceovers, BGM, SFX and everything handled in house for seamless delivery." },
-                                { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/custom-crafted-sound.svg', title: "100% Custom Crafted Sound", description: "Every piece we create is original, unique, and tailored exclusively to your project and audience." }
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/industry-grade-sound-quality.svg', title: "Industry-Grade Sound Quality", description: "From composition to mastering, our audio workflow matches broadcast and cinematic standards." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/ai-enhanced-precision.svg', title: "AI-Enhanced Precision", description: "We integrate smart tools to speed up production and elevate clarity without losing the human touch." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/genre-versatile-composers.svg', title: "Genre-Versatile Composers", description: "Whether you need emotional orchestral scores, catchy jingles, or upbeat commercial music. We match any style, any tone." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/one-stop-audio-production.svg', title: "One-Stop Audio Production Studio", description: "Music composition, jingles, voiceovers, BGM, SFX and everything handled in house for seamless delivery." },
+                                { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/custom-crafted-sound.svg', title: "100% Custom Crafted Sound", description: "Every piece we create is original, unique, and tailored exclusively to your project and audience." }
                             ]].map((item, idx) => (
                                 <div key={idx} className="flex flex-col items-center text-center min-w-[180px]">
                                     <div className=" h-12 w-12 flex items-center justify-center mb-6  ">
-                                        <img src={item.icon} alt={item.title} className='w-full h-full object-contain' />
+                                        <img src={cdnImage(item.icon)} alt={item.title} className='w-full h-full object-contain' />
                                     </div>
                                     <h3 className="font-bold text-sm md:text-base mb-2 max-w-[150px] leading-tight md:text-white text-black">{item.title}</h3>
                                     <p className="text-[10px] md:text-xs md:text-gray-400 text-black max-w-[160px]">{item.description}</p>
@@ -176,7 +177,7 @@ export default function AdbuthMusic() {
             <section className="relative py-24 px-6 md:px-20 overflow-hidden" style={{ fontFamily: "DM Sans, sans-serif" }}>
                 <div
                     className="absolute inset-0 bg-cover bg-center "
-                    style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-music/sound-to-life.png')" }}
+                    style={{ backgroundImage: `url(${cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/sound-to-life.webp")})` }}
                 >
 
                 </div>

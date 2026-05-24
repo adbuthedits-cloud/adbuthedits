@@ -234,7 +234,7 @@ export default function Signup() {
                         <Link href="/" className="flex  items-center  gap-2">
                             <div className="relative lg:w-36 md:w-28 sm:w-24 w-28 h-auto aspect-[3/1]">
                                 <Image
-                                    src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/logo.png"
+                                    src="https://assets.adbuthverse.com/website-assets/brand/logo.webp"
                                     alt="logo"
                                     fill
                                     style={{ objectFit: 'contain' }}

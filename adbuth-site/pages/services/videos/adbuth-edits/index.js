@@ -6,6 +6,7 @@ import Footer from '../../../../components/Footer';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
+import { cdnImage, cdnVideo } from '../../../../utils/cdn';
 import useSeo from '../../../../hooks/useSeo';
 
 const craftServices = [
@@ -15,7 +16,7 @@ const craftServices = [
         title: 'Wedding Films',
         description: 'We craft cinematic wedding films that beautifully capture the essence of your big day. From emotional vows to candid laughter, we make sure every moment is told with elegance, artistry, and heart.',
         cards: [
-            { title: 'Wedding Highlights', description: 'Cinematic moments captured forever.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-edits/wedding%20highlights.mp4' },
+            { title: 'Wedding Highlights', description: 'Cinematic moments captured forever.', video: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-edits/wedding%20highlights_web.mp4') },
             { title: 'Candid Shots', description: 'Pure emotions, unscripted.', video: '' },
             { title: 'Storytelling', description: 'Narrative driven edits.', video: '' },
             { title: 'Final Cut', description: 'Polished to perfection.', video: '' }
@@ -27,7 +28,7 @@ const craftServices = [
         title: 'Surprise Edits',
         description: 'Our surprise edits are perfect for birthdays, anniversaries, reunions, or just to say you matter. We stitch together photos, videos, and music into a heartfelt film that speaks louder than words.',
         cards: [
-            { title: 'Birthday Bash', description: 'Celebrate another year of joy.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-edits/Birthday%20bash.mp4' },
+            { title: 'Birthday Bash', description: 'Celebrate another year of joy.', video: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-edits/Birthday%20bash_web.mp4') },
             { title: 'Anniversary Special', description: 'Relive your love story.', video: '' },
             { title: 'Reunion Recap', description: 'Memories with old friends.', video: '' },
             { title: 'Just Because', description: 'Small moments, big smiles.', video: '' }
@@ -40,7 +41,7 @@ const craftServices = [
         description: 'Whether it\'s a life journey, a special trip, or a milestone achievement, we create short films that celebrate you. Our editing style blends emotion with creativity, turning ordinary moments into extraordinary stories.',
         cards: [
             { title: 'Travel Diaries', description: 'Adventures around the world.', video: '' },
-            { title: 'Life Journey', description: 'From childhood to now.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-edits/Life%20journey.mp4.04.mp4' },
+            { title: 'Life Journey', description: 'From childhood to now.', video: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-edits/Life%20journey_web.mp4') },
             { title: 'Milestone Moments', description: 'Achievements worth celebrating.', video: '' },
             { title: 'Daily Vlogs', description: 'Everyday life, elevated.', video: '' }
         ]
@@ -64,7 +65,7 @@ const VideoPlayer = ({ src }) => {
         <div className="absolute inset-0 group">
             <video
                 ref={videoRef}
-                src={isInView ? src : ""}
+                src={isInView ? cdnVideo(src) : ""}
                 className="w-full h-full object-cover"
                 muted={isMuted}
                 loop
@@ -163,7 +164,7 @@ export default function AdbuthEdits() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Adbuth Edits | Professional Video Editing"}
                 description={seoData?.meta_description || seoData?.description || "Turn memories into timeless stories with Adbuth Edits."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"}
+                image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/shared/placeholder.webp")}
                 data={seoData}
             />
             <Navbar highlight="services" />
@@ -212,7 +213,7 @@ export default function AdbuthEdits() {
                                 <div className="hidden md:flex relative h-64 md:h-full min-h-[300px] items-end justify-center">
                                     {/* Replace with actual robot image/illustration */}
                                     <div className="lg:w-80 lg:h-80 md:w-72 md:h-72 flex items-center flex-end">
-                                        <img src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-edits/blue-robot.png" alt="Robot" className="w-full h-full object-cover" />
+                                        <img src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-edits/blue-robot.webp")} alt="Robot" className="w-full h-full object-cover" />
                                     </div>
                                 </div>
 

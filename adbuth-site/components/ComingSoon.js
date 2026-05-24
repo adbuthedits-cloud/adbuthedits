@@ -25,7 +25,7 @@ export default function ComingSoon() {
           className="mb-12"
         >
           <Image 
-            src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/logo.png" 
+            src="https://assets.adbuthverse.com/website-assets/brand/logo.webp" 
             alt="Adbuth Verse Logo" 
             width={240} 
             height={80} 

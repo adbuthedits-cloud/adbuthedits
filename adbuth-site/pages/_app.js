@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import '../styles/globals.css'
-import { AnimatePresence } from 'framer-motion'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { AuthProvider } from '../context/AuthContext'
@@ -23,6 +22,13 @@ const ZohoSalesIQ = dynamic(() => import('../components/ZohoSalesIQ'), { ssr: fa
 function MyApp({ Component, pageProps }) {
   const router = useRouter()
   const [isPageLoading, setIsPageLoading] = useState(false)
+  const [loadDelayed, setLoadDelayed] = useState(false)
+
+  useEffect(() => {
+    // Delay loading heavy components (PromoPopup, Zoho) by 4s to free main thread
+    const timer = setTimeout(() => setLoadDelayed(true), 4000)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const handleStart = () => setIsPageLoading(true)
@@ -51,9 +57,7 @@ function MyApp({ Component, pageProps }) {
           {isPageLoading && <PageLoader />}
 
           <ErrorBoundary>
-            <AnimatePresence>
-              <Component {...pageProps} key={router.pathname} />
-            </AnimatePresence>
+            <Component {...pageProps} key={router.pathname} />
           </ErrorBoundary>
 
           <Toaster
@@ -63,8 +67,12 @@ function MyApp({ Component, pageProps }) {
               style: { zIndex: 99999 },
             }}
           />
-          <PromoPopup />
-          <ZohoSalesIQ />
+          {loadDelayed && (
+            <>
+              <PromoPopup />
+              <ZohoSalesIQ />
+            </>
+          )}
         </div>
       </WishlistProvider>
     </AuthProvider>

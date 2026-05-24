@@ -11,6 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
+import { cdnImage } from '../utils/cdn';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -178,7 +179,7 @@ export default function Orders() {
                                                 {/* Thumbnail */}
                                                 <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
                                                     {(item.product?.thumbnail || item.product?.images?.[0]) && (
-                                                        <img src={item.product.thumbnail || item.product.images[0]} alt={item.product.title} className="w-full h-full object-cover" />
+                                                        <img src={cdnImage(item.product.thumbnail || item.product.images[0])} alt={item.product.title} className="w-full h-full object-cover" />
                                                     )}
                                                 </div>
                                                 {/* Name + status */}

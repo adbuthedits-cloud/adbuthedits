@@ -158,7 +158,7 @@ export default function AdbuthELearning() {
             btnTextCol: "text-[#1FAF65]",
             btnHover: "hover:bg-[#1FAF65] hover:text-white",
             headAreaColor: "bg-[#1FAF65]",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/digital-course.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/digital-course.webp"
         },
         {
             title: "Video Editing Courses",
@@ -170,7 +170,7 @@ export default function AdbuthELearning() {
             btnTextCol: "text-[#F6A440]",
             btnHover: "hover:bg-[#F6A440] hover:text-white",
             headAreaColor: "bg-[#F6A440]",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/video-editing-courses.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/video-editing-courses.webp"
         },
         {
             title: "AI for Content Creation",
@@ -182,7 +182,7 @@ export default function AdbuthELearning() {
             btnTextCol: "text-[#FF66EB]",
             btnHover: "hover:bg-[#FF66EB] hover:text-white",
             headAreaColor: "bg-[#FF66EB]",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/ai-for-content-creation.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/ai-for-content-creation.webp"
         }
     ];
 
@@ -255,29 +255,29 @@ export default function AdbuthELearning() {
 
                             {/* Round Shape */}
                             <div className="relative w-[220px] h-[220px] aspect-circle sm:w-[300px] sm:h-[300px] rounded-full  overflow-hidden">
-                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-1.png" alt="Shape 1" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover " />
+                                <Image src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-1.webp" alt="Shape 1" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover " />
                             </div>
                             {/* Rounded Edge Square Shape */}
                             <div className="relative w-[220px] h-[220px] aspect-square sm:w-[300px] sm:h-[300px] rounded-[40px] sm:rounded-[60px]  overflow-hidden">
-                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-2.png" alt="Shape 2" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover " />
+                                <Image src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-2.webp" alt="Shape 2" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover " />
                             </div>
                             {/* Round Shape */}
                             <div className="relative w-[220px] h-[220px] aspect-circle sm:w-[300px] sm:h-[300px] rounded-full overflow-hidden">
-                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-3.png" alt="Shape 3" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                                <Image src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-3.webp" alt="Shape 3" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
                             </div>
                         </div>
                         <div className="relative w-full h-full flex  items-center gap-[2px] justify-center ">
                             {/* Rounded Edge Square Shape */}
                             <div className="relative w-[220px] h-[220px] aspect-square sm:w-[300px] sm:h-[300px] rounded-[40px] sm:rounded-[60px]  overflow-hidden">
-                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-4.png" alt="Shape 4" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                                <Image src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-4.webp" alt="Shape 4" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
                             </div>
                             {/* Round Shape */}
                             <div className="relative w-[220px] h-[220px] aspect-circle sm:w-[300px] sm:h-[300px] rounded-full overflow-hidden">
-                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-5.png" alt="Shape 5" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                                <Image src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-5.webp" alt="Shape 5" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
                             </div>
                             {/* Rounded Edge Square Shape */}
                             <div className="relative w-[220px] h-[220px] aspect-square sm:w-[300px] sm:h-[300px] rounded-[40px] sm:rounded-[60px]  overflow-hidden">
-                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-6.png" alt="Shape 6" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
+                                <Image src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-e-learning/banner-shape-6.webp" alt="Shape 6" fill sizes="(max-width: 640px) 220px, 300px" className="object-cover" />
                             </div>
                         </div>
                     </div>

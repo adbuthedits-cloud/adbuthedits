@@ -13,7 +13,7 @@ export default function Designing() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Designing Services | Adbuth"}
                 description={seoData?.meta_description || seoData?.description || "Creative designing services including E-Invitations and Graphics."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/designing_the_shapes.png"}
+                image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/designing_the_shapes.webp"}
                 data={seoData}
             />
             <Navbar isdark={true} highlight="services" />
@@ -45,7 +45,7 @@ export default function Designing() {
                 {/* Mobile/Tablet Static Image */}
                 <div className="w-full lg:hidden px-6 md:px-12 mt-12 order-2 z-0">
                     <img
-                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/designing_the_shapes.png"
+                        src="https://assets.adbuthverse.com/website-assets/pages/services/designing/index/designing_the_shapes.webp"
                         alt="Design team collaborating"
                         className="w-full h-auto object-cover"
                     />
@@ -54,7 +54,7 @@ export default function Designing() {
                 {/* Desktop Absolute Image */}
                 <div className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 w-[55%] z-0">
                     <img
-                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/designing_the_shapes.png"
+                        src="https://assets.adbuthverse.com/website-assets/pages/services/designing/index/designing_the_shapes.webp"
                         alt="Design team collaborating"
                         className="w-full h-auto object-cover"
                     />
@@ -76,7 +76,7 @@ export default function Designing() {
                         {/* Mobile/Tablet Image */}
                         <div className="w-full lg:hidden mb-6">
                             <img
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png"
+                                src="https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"
                                 alt="Adbuth E-Invitations Design"
                                 className="w-full h-auto object-cover"
                             />
@@ -94,7 +94,7 @@ export default function Designing() {
                     {/* Desktop Image */}
                     <div className="hidden lg:block lg:w-[50%]">
                         <img
-                            src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png"
+                            src="https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"
                             alt="Adbuth E-Invitations Design"
                             className="w-full h-auto object-cover"
                         />
@@ -106,11 +106,11 @@ export default function Designing() {
                     {/* Desktop Image */}
                     <div className="hidden lg:block lg:w-[50%]">
                         <img
-                            src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_2.png"
+                            src="https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp"
                             alt="Adbuth Graphics Design"
                             className="w-full h-auto object-cover"
                             onError={(e) => {
-                                e.target.src = "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png";
+                                e.target.src = "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp";
                             }}
                         />
                     </div>
@@ -121,11 +121,11 @@ export default function Designing() {
                         {/* Mobile/Tablet Image */}
                         <div className="w-full lg:hidden mb-6">
                             <img
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_2.png"
+                                src="https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp"
                                 alt="Adbuth Graphics Design"
                                 className="w-full h-auto object-cover"
                                 onError={(e) => {
-                                    e.target.src = "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png";
+                                    e.target.src = "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp";
                                 }}
                             />
                         </div>

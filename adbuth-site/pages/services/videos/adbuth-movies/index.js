@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import SeoHead from '../../../../components/SeoHead';
+import { cdnImage } from '../../../../utils/cdn';
 
 const techCards = [
     {
@@ -13,7 +14,7 @@ const techCards = [
         subtitle: "Secure Digital Storage For Cinema Projects",
         description: "Adbuth Vault acts as a protected cloud environment where filmmakers can store, manage, and safeguard raw rushes and project assets throughout the production pipeline.",
         bg: "#595F3E",
-        image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/why-choose-us-1.png"
+        image: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/why-choose-us-1.webp"
     },
     {
         name: "Adbuth AirEdit",
@@ -21,7 +22,7 @@ const techCards = [
         subtitle: "Real-Time Cloud Collaboration",
         description: "Adbuth AirEdit enables filmmakers and teams to review and approve edits instantly through a high speed cloud workflow without downloading large files, allowing seamless collaboration from anywhere.",
         bg: "#343530",
-        image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/why-choose-us-2.png"
+        image: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/why-choose-us-2.webp"
     }
 ];
 
@@ -91,7 +92,7 @@ function TechCard({ card, index, total, scrollYProgress }) {
                 <div className="relative z-10 w-[60%] p-6">
                     <div className="relative w-full h-full rounded-xl overflow-hidden min-h-[300px] shadow-lg">
                         <Image
-                            src={card.image}
+                            src={cdnImage(card.image)}
                             alt={card.name}
                             fill
                             className="object-cover"
@@ -156,7 +157,7 @@ function TechPoweringMobileCarousel({ cards }) {
                             {/* Right Image */}
                             <div className="relative z-10 w-[50%] md:w-[55%] p-3 md:p-6 h-full">
                                 <div className="relative w-full h-full rounded-xl overflow-hidden shadow-lg bg-black/20">
-                                    <Image src={card.image} alt={card.name} fill className="object-cover" />
+                                    <Image src={cdnImage(card.image)} alt={card.name} fill className="object-cover" />
                                 </div>
                             </div>
                         </div>
@@ -236,7 +237,7 @@ export default function AdbuthMovies() {
             <SeoHead
                 title="Adbuth Movies | Crafting Cinema Beyond The Cut"
                 description="At Adbuth Movies, we help filmmakers shape powerful stories through expert editing, cinematic color work, and technology-driven collaboration."
-                image="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"
+                image={cdnImage("https://assets.adbuthverse.com/website-assets/shared/placeholder.webp")}
             />
             <Navbar highlight="services" isdark={true} />
 
@@ -254,7 +255,7 @@ export default function AdbuthMovies() {
                         {/* Background Image & Gradient */}
                         <div className="absolute inset-0 z-0">
                             <Image
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/Untitled%20(1326%20x%20873%20px)%201.png"
+                                src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/Untitled%20(1326%20x%20873%20px)%201.webp")}
                                 alt="Hero Background"
                                 fill
                                 className="object-cover object-center lg:object-right "
@@ -296,7 +297,7 @@ export default function AdbuthMovies() {
                                 whileHover={{ scale: 1.03 }}
                                 className="relative w-full h-[220px] md:h-[400px] lg:h-auto lg:min-h-[230px] lg:flex-[1.5] rounded-xl lg:rounded-lg overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.6)] cursor-pointer"
                             >
-                                <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/1%2013.png" alt="Hero stacked image 1" fill className="object-cover" />
+                                <Image src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/1%2013.webp")} alt="Hero stacked image 1" fill className="object-cover" />
                             </motion.div>
 
                             {/* Images 2 & 3 */}
@@ -308,7 +309,7 @@ export default function AdbuthMovies() {
                                     whileHover={{ scale: 1.03 }}
                                     className="relative w-[65vw] md:w-[45vw] shrink-0 lg:shrink lg:w-full h-full lg:min-h-[230px] lg:flex-[1.5] rounded-xl lg:rounded-lg overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.6)] cursor-pointer"
                                 >
-                                    <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/2%2061.png" alt="Hero stacked image 2" fill className="object-cover" />
+                                    <Image src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/2%2061.webp")} alt="Hero stacked image 2" fill className="object-cover" />
                                 </motion.div>
                                 <motion.div
                                     initial={{ opacity: 0, y: -100 }}
@@ -317,7 +318,7 @@ export default function AdbuthMovies() {
                                     whileHover={{ scale: 1.03 }}
                                     className="relative w-[65vw] md:w-[45vw] shrink-0 lg:shrink lg:w-full h-full lg:min-h-[230px] lg:flex-1 rounded-xl lg:rounded-lg overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.6)] cursor-pointer"
                                 >
-                                    <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/3%2016.png" alt="Hero stacked image 3" fill className="object-cover" />
+                                    <Image src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/3%2016.webp")} alt="Hero stacked image 3" fill className="object-cover" />
                                 </motion.div>
                             </div>
                         </div>
@@ -348,7 +349,7 @@ export default function AdbuthMovies() {
                             className="relative group w-full h-[200px] md:h-[300px] lg:h-auto rounded-2xl lg:rounded-lg overflow-hidden cursor-pointer shadow-2xl text-black"
                         >
                             <Image
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/why-choose-us-1.png"
+                                src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/why-choose-us-1.webp")}
                                 alt="Precision Storytelling"
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -381,7 +382,7 @@ export default function AdbuthMovies() {
                             className="relative group w-1/2 lg:w-[30vw] rounded-2xl lg:rounded-lg overflow-hidden cursor-pointer shadow-2xl"
                         >
                             <Image
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/why-choose-us-2.png"
+                                src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/why-choose-us-2.webp")}
                                 alt="Cinematic Visual Finishing"
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -413,7 +414,7 @@ export default function AdbuthMovies() {
                             className="relative group w-1/2 lg:w-[30vw] rounded-2xl lg:rounded-lg overflow-hidden cursor-pointer shadow-2xl"
                         >
                             <Image
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/why-choose-us-3.png"
+                                src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/why-choose-us-3.webp")}
                                 alt="Technology-Driven Workflow"
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -456,27 +457,27 @@ export default function AdbuthMovies() {
                             {
                                 title: "Movie Rough Cut",
                                 description: "Bringing the director's vision to life by assembling the best takes and shaping the first narrative structure of the film.",
-                                image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/our-services-1.png"
+                                image: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/our-services-1.webp"
                             },
                             {
                                 title: "Teaser & Trailer Cut",
                                 description: "High-impact teasers and trailers designed to build excitement, capture attention, and leave audiences anticipating the full story.",
-                                image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/our-services-2.png"
+                                image: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/our-services-2.webp"
                             },
                             {
                                 title: "Precision Editing",
                                 description: "Frame-perfect editing with seamless transitions and controlled pacing to strengthen storytelling and emotional impact.",
-                                image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/our-services-3.png"
+                                image: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/our-services-3.webp"
                             },
                             {
                                 title: "Color Correction",
                                 description: "Balancing exposure, lighting, and skin tones to ensure visual consistency across every scene.",
-                                image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/our-services-4.png"
+                                image: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/our-services-4.webp"
                             },
                             {
                                 title: "Digital Color Grading",
                                 description: "Crafting a cinematic look and visual tone that enhances the film's atmosphere whether dramatic, vibrant, gritty, or vintage.",
-                                image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-movies/our-services-5.png"
+                                image: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-movies/our-services-5.webp"
                             }
                         ].map((service, index) => (
                             <motion.div
@@ -505,7 +506,7 @@ export default function AdbuthMovies() {
                                 className="relative group h-[500px] md:h-[550px] w-[75vw] md:w-[35vw] lg:w-auto shrink-0 lg:shrink rounded-xl overflow-hidden cursor-pointer shadow-2xl snap-start lg:snap-align-none"
                             >
                                 <Image
-                                    src={service.image}
+                                    src={cdnImage(service.image)}
                                     alt={service.title}
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-110"

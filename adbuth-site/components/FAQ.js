@@ -15,7 +15,7 @@ export default function FAQ({ questions = [] }) {
     <section className="py-24 -mt-24 md:mt-0 md:px-10 px-6 bg-[#E8E8E8] lg:bg-[#fff] text-black overflow-hidden relative min-h-screen">
       <div className="absolute inset-0 z-0 hidden lg:block">
         <Image
-          src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/faq-bg.png"
+          src="https://assets.adbuthverse.com/website-assets/pages/home/faq-bg.webp"
           alt="FAQ Background"
           fill
           className="object-cover"

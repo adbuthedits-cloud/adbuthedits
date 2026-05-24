@@ -127,34 +127,34 @@ export default function AdbuthGraphics() {
         "Posters & Campaign Graphics": {
             subtitle: "Bold visuals that command attention",
             images: [
-                "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_2.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png"]
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
         },
         "Social Media Creatives": {
             subtitle: "Consistent, on-brand content to boost engagement.",
-            images: ["https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_2.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png"]
+            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
         },
         "Branding Designs": {
             subtitle: "Logos, color palettes, and templates that define your identity.",
-            images: ["https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_2.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png"]
+            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
         },
         "Thumbnails": {
             subtitle: "Eye-catching thumbnails to increase clicks and views",
-            images: ["https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_2.png", "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png"]
+            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
         }
     };
 
     // Placeholder Images arrays based on screenshots
     const carouselImages = [
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-1.png", // Example Left Image
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-2.png", // Center Image (from previous page)
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-3.png",
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-4.png", // Example Left Image
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-5.png",
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-1.png", // Example Left Image
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-2.png", // Center Image (from previous page)
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-3.png",
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-4.png", // Example Left Image
-        "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-graphics/graphics-5.png" // Center Image (from previous page)
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-1.webp", // Example Left Image
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-2.webp", // Center Image (from previous page)
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-3.webp",
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-4.webp", // Example Left Image
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-5.webp",
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-1.webp", // Example Left Image
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-2.webp", // Center Image (from previous page)
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-3.webp",
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-4.webp", // Example Left Image
+        "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/graphics-5.webp" // Center Image (from previous page)
     ];
 
     const handlePrev = () => {
@@ -212,7 +212,7 @@ export default function AdbuthGraphics() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Adbuth Graphics | Designing Services"}
                 description={seoData?.meta_description || seoData?.description || "Visuals that captivate, stories that stick. Posters, social media creatives, and thumbails."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_2.png"}
+                image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp"}
                 data={seoData}
             />
 
@@ -335,7 +335,7 @@ export default function AdbuthGraphics() {
                                         }}
                                     >
                                         <img src={src} alt="Graphics Example" className="w-full h-full object-cover rounded shadow-inner" style={{ display: 'block' }} onError={(e) => {
-                                            e.target.src = "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/index/our_design_services_1.png";
+                                            e.target.src = "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp";
                                         }} />
                                         <div className="absolute inset-0 border border-white/10 rounded pointer-events-none"></div>
                                     </div>

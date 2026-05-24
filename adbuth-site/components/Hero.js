@@ -2,6 +2,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import ClipTypeStagger from "./creative/ClipTypeStagger";
+import { cdnUrl } from "../utils/cdn";
+
+const HERO_BG = cdnUrl("https://assets.adbuthverse.com/website-assets/pages/home/hero-section.webp");
 
 export default function Hero() {
   return (
@@ -9,7 +12,7 @@ export default function Hero() {
       {/* Background Image */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Image
-          src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/hero-section.png"
+          src={HERO_BG}
           alt="Hero Background"
           fill
           priority
@@ -28,44 +31,27 @@ export default function Hero() {
         {/* Text Section */}
         <div className="flex flex-col justify-center text-center md:text-left">
           <h1 className="text-4xl md:text-4xl lg:text-7xl font-bold leading-tight tracking-tight">
-            <ClipTypeStagger mode="word" duration={.2} stagger={0.1}>
-              Great stories deserve great editing
-            </ClipTypeStagger>
+            Great stories deserve great editing
           </h1>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0, duration: 0.4 }}
-            className="mt-6"
-          >
+          <div className="mt-6">
             <p className="text-gray-200 text-lg md:text-xl">
               At Adbuth Verse, we make sure your visions don't just come to life, they shine.
             </p>
-          </motion.div>
+          </div>
         </div>
 
         {/* Mobile Card Section - Perfectly Centered */}
         <div className="md:hidden w-full flex justify-center mt-12 -mb-96">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: 0 }}
-            className="w-full max-w-[320px]"
-          >
+          <div className="w-full max-w-[320px]">
             <HeroCard />
-          </motion.div>
+          </div>
         </div>
 
         {/* Desktop Card Section - Unchanged */}
         <div className="hidden md:flex md:justify-end md:ml-auto w-full md:max-w-xs lg:max-w-sm">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: 0 }}
-            className="w-full"
-          >
+          <div className="w-full">
             <HeroCard />
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

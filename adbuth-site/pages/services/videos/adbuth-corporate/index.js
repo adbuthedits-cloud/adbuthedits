@@ -7,6 +7,7 @@ import Footer from '../../../../components/Footer';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faVolumeUp, faVolumeMute, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { cdnImage, cdnVideo } from '../../../../utils/cdn';
 import useSeo from '../../../../hooks/useSeo';
 
 // ─── VideoPlayer defined outside parent to prevent hydration mismatch ──────────
@@ -28,7 +29,7 @@ function VideoPlayer({ src, shouldPlay, className = "" }) {
         <div className={`absolute inset-0 overflow-hidden ${className}`}>
             <video
                 ref={videoRef}
-                src={src}
+                src={cdnVideo(src)}
                 className="w-full h-full object-cover"
                 muted={isMuted}
                 loop
@@ -50,8 +51,8 @@ export default function AdbuthCorporate() {
 
     // ─── Card data ─────────────────────────────────────────────────────────────
     const CARDS = [
-        { title: 'Corporate Films', desc: 'High-quality films that highlight your company\'s values, culture, and achievements.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/corporatefilms-v1.1.mp4' },
-        { title: 'Training Videos', desc: 'Engaging, easy-to-follow content to educate and upskill employees effectively.', video: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/Training.mp4' },
+        { title: 'Corporate Films', desc: 'High-quality films that highlight your company\'s values, culture, and achievements.', video: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/corporatefilms-v1.1_web.mp4' },
+        { title: 'Training Videos', desc: 'Engaging, easy-to-follow content to educate and upskill employees effectively.', video: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/Training_web.mp4' },
         { title: 'Brand Stories', desc: 'Narratives that showcase your brand journey, connect emotionally, and leave a lasting impact.', video: '' },
     ];
     // Triple the array so the user can scroll infinitely in both directions
@@ -116,7 +117,7 @@ export default function AdbuthCorporate() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Corporate Video Services | Adbuth"}
                 description={seoData?.meta_description || seoData?.description || "Producing powerful corporate films that connect, educate, and inspire."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/simplified-communication.png"}
+                image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/simplified-communication.webp")}
                 data={seoData}
             />
             <Navbar highlight="services" isdark={false} />
@@ -154,7 +155,7 @@ export default function AdbuthCorporate() {
                                     </button>
                                 </Link>
                                 {/* Decorative arrow line */}
-                                <img src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/curve-arrow.png" alt="Arrow" className="h-26 hidden md:block opacity-100 w-48 absolute left-64 -top-16" />
+                                <img src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/curve-arrow.webp")} alt="Arrow" className="h-26 hidden md:block opacity-100 w-48 absolute left-64 -top-16" />
                             </div>
                         </motion.div>
                     </div>
@@ -187,10 +188,10 @@ export default function AdbuthCorporate() {
                     {/* Benefits Icons */}
                     <div className="grid grid-cols-4 lg:flex lg:flex-row justify-between items-start gap-4 text-center lg:mx-44 pt-4 lg:pt-16">
                         {[
-                            { icon: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/simplified-communication.png", title: 'Simplified', subtitle: 'Communication' },
-                            { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/employee-engagement.png', title: 'Employee', subtitle: 'Engagement' },
-                            { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/strong-brand-identity.png', title: 'Stronger', subtitle: 'Brand Identity' },
-                            { icon: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-corporate/enhanced-credibility.png', title: 'Enhanced', subtitle: 'Credibility' }
+                            { icon: "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/simplified-communication.webp", title: 'Simplified', subtitle: 'Communication' },
+                            { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/employee-engagement.webp', title: 'Employee', subtitle: 'Engagement' },
+                            { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/strong-brand-identity.webp', title: 'Stronger', subtitle: 'Brand Identity' },
+                            { icon: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/enhanced-credibility.webp', title: 'Enhanced', subtitle: 'Credibility' }
                         ].map((item, index) => (
                             <motion.div
                                 key={index}
@@ -201,7 +202,7 @@ export default function AdbuthCorporate() {
                                 className="flex flex-col items-center"
                             >
                                 <div className="w-10 h-10 lg:w-16 lg:h-16 mb-2 lg:mb-4 text-[#d946ef] flex items-center justify-center">
-                                    <img src={item.icon} alt={item.title} className="w-full h-full object-contain" />
+                                    <img src={cdnImage(item.icon)} alt={item.title} className="w-full h-full object-contain" />
                                 </div>
                                 <div className="flex flex-col">
                                     <h3 className="text-[10px] lg:text-base leading-tight">{item.title}</h3>

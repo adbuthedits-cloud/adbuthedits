@@ -8,6 +8,7 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight, faChevronLeft, faChevronRight, faArrowLeft, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
+import { cdnImage, cdnVideo } from '../../../../utils/cdn';
 import useSeo from '../../../../hooks/useSeo';
 
 export default function AdbuthPolitics() {
@@ -19,12 +20,12 @@ export default function AdbuthPolitics() {
         {
             title: "Political Campaign Films",
             desc: "From campaign launch videos to manifesto explainers. We create high-impact films that showcase your leadership vision, party values, and achievements designed to emotionally engage and energize supporters. Perfect for rallies, social media, and TV ads.",
-            video: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/16%20Political%20Campaign%20Films%20V1.1.mp4"
+            video: cdnVideo("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-politics/16%20Political%20Campaign%20Films%20V1.1_web.mp4")
         },
         {
             title: "Constituency Videos",
             desc: "Every voter wants to know what their leader does. Our constituency videos highlight ground-level development, public interactions, and your role in driving change within the community. These videos strengthen your local reputation and help you stay connected with your people regularly.",
-            video: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/Constituency%20Video-V1.1.mp4"
+            video: cdnVideo("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-politics/Constituency%20Video-V1.1_web.mp4")
         }
     ];
 
@@ -94,7 +95,7 @@ export default function AdbuthPolitics() {
                 <SeoHead
                     title={seoData?.meta_title || seoData?.title || "Adbuth Politics | Political Campaign Services"}
                     description={seoData?.meta_description || seoData?.description || "Shaping narratives and winning hearts with powerful political videos."}
-                    image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/shop/shop-banner.png"}
+                    image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/shop/shop-banner.webp")}
                     data={seoData}
                 />
                 <Navbar highlight="services" isdark={!isMobile} />
@@ -111,7 +112,7 @@ export default function AdbuthPolitics() {
                         {/* Main Hero Image Background */}
                         <div className="absolute inset-0 overflow-hidden">
                             {/* Placeholder for Crowd Image */}
-                            <div className="w-full h-full blur-sm  bg-[url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/shop/shop-banner.png')] bg-cover bg-center"></div>
+                            <div className="w-full h-full blur-sm bg-cover bg-center" style={{ backgroundImage: `url(${cdnImage("https://assets.adbuthverse.com/website-assets/pages/shop/shop-banner.webp")})` }}></div>
                             <div className="absolute inset-0 bg-black/40"></div>
                         </div>
 
@@ -143,7 +144,7 @@ export default function AdbuthPolitics() {
                         {/* Overlapping Gray Box */}
                         <div className=" absolute md:top-24 md:-right-28 lg:-right-44 -bottom-28 right-[50%] md:bottom-0 translate-x-1/2 md:translate-x-0 lg:w-[350px] lg:h-[400px] md:w-[250px] md:h-[300px] w-[200px] h-[250px] bg-gray-400 shadow-2xl overflow-hidden">
                             <Image
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/adbuth-politics-hero-image.png"
+                                src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-politics/adbuth-politics-hero-image.webp")}
                                 alt="Adbuth Politics Hero"
                                 fill
                                 priority
@@ -203,7 +204,7 @@ export default function AdbuthPolitics() {
                                     transition={{ duration: 0.6 }}
                                     className="overflow-hidden w-full aspect-square"
                                 >
-                                    <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/why-politics-1.png" alt="Political Rally" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
+                                    <Image src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-politics/why-politics-1.webp")} alt="Political Rally" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
                                 </motion.div>
                                 <motion.div
                                     initial={{ opacity: 0, y: 30 }}
@@ -212,7 +213,7 @@ export default function AdbuthPolitics() {
                                     transition={{ duration: 0.6, delay: 0.2 }}
                                     className="overflow-hidden w-full aspect-square"
                                 >
-                                    <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/why-politics-3.png" alt="Crowd Action" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
+                                    <Image src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-politics/why-politics-3.webp")} alt="Crowd Action" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
                                 </motion.div>
                             </div>
 
@@ -225,7 +226,7 @@ export default function AdbuthPolitics() {
                                     transition={{ duration: 0.6, delay: 0.1 }}
                                     className="overflow-hidden w-full aspect-square"
                                 >
-                                    <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/why-politics-2.png" alt="Digital Reach" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
+                                    <Image src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-politics/why-politics-2.webp")} alt="Digital Reach" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
                                 </motion.div>
                                 <motion.div
                                     initial={{ opacity: 0, y: 30 }}
@@ -234,7 +235,7 @@ export default function AdbuthPolitics() {
                                     transition={{ duration: 0.6, delay: 0.3 }}
                                     className="overflow-hidden w-full aspect-square"
                                 >
-                                    <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-politics/why-politics-4.png" alt="Government Building" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
+                                    <Image src={cdnImage("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-politics/why-politics-4.webp")} alt="Government Building" width={400} height={400} className="object-cover w-full h-full border-[6px] border-white shadow-sm" />
                                 </motion.div>
                             </div>
                         </div>

@@ -9,25 +9,25 @@ const services = [
     {
         title: "Video Editing",
         description: "Our video-editing services team has the perfect touch to amplify your story. Whether it's a corporate video, a cinematic masterpiece, or a social media content, we tailor every edit to your unique goals ensuring complete satisfaction.",
-        image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/video-editing.png",
+        image: "https://assets.adbuthverse.com/website-assets/pages/home/video-editing.webp",
         color: "#E1CE78",
-        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/video-editing-icon.svg",
+        icons: "https://assets.adbuthverse.com/website-assets/pages/home/video-editing-icon.svg",
         link: "/services/videos"
     },
     {
         title: "Designing",
         description: "From logos to social media creatives, our design team crafts visual identities that resonate with your audience. We blend creativity with strategy to deliver designs that stand out.",
-        image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/designing.png",
+        image: "https://assets.adbuthverse.com/website-assets/pages/home/designing.webp",
         color: "#23423F",
-        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/designing-icon.svg",
+        icons: "https://assets.adbuthverse.com/website-assets/pages/home/designing-icon.svg",
         link: "/services/designing"
     },
     {
         title: "Learning",
         description: "We create compelling commercial advertisements that drive action. From concept to final cut, we handle everything to ensure your brand message is delivered effectively.",
-        image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/commercial.png",
+        image: "https://assets.adbuthverse.com/website-assets/pages/home/commercial.webp",
         color: "#442F2B",
-        icons: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/commercial-icon.svg",
+        icons: "https://assets.adbuthverse.com/website-assets/pages/home/commercial-icon.svg",
         link: "/services/learning"
     }
 ];
@@ -84,6 +84,7 @@ const CardDesktop = ({ i, title, description, image, progress, total, color, ico
                             fill
                             sizes="(max-width: 1280px) 100vw, 500px"
                             priority={i === 0}
+                            loading={i === 0 ? 'eager' : 'lazy'}
                             className="object-cover transition-transform duration-700 hover:scale-105"
                         />
                     </div>
@@ -140,8 +141,9 @@ const CardMobile = ({ i, title, description, image, progress, total, color, icon
                             src={image}
                             alt={title}
                             fill
-                            sizes="(max-width: 768px) 100vw, 80vw"
+                            sizes="(max-width: 480px) 95vw, (max-width: 768px) 80vw, 500px"
                             priority={i === 0}
+                            loading={i === 0 ? 'eager' : 'lazy'}
                             className="object-cover"
                         />
                     </div>
@@ -262,14 +264,32 @@ const WhatWeDoMobile = () => {
 };
 
 export default function WhatWeDo() {
+    const [isMounted, setIsMounted] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(true);
+
+    useEffect(() => {
+        setIsMounted(true);
+        const check = () => setIsDesktop(window.innerWidth >= 1024);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
     return (
         <section className="bg-white p-6">
-            <div className="hidden lg:block">
+            {!isMounted ? (
+                // Server-side / Initial render: render a lightweight static version for SEO without Framer Motion
+                <div className="h-screen flex flex-col items-center justify-center text-center">
+                    <h2 className="text-6xl font-black uppercase tracking-tighter text-black mb-4">WHAT WE DO</h2>
+                    <p className="text-gray-800 text-xl font-medium max-w-xl mx-auto">
+                        At Adbuth Verse post production studio, we don't just edit videos; we curate experiences.
+                    </p>
+                </div>
+            ) : isDesktop ? (
                 <WhatWeDoDesktop />
-            </div>
-            <div className="block lg:hidden">
+            ) : (
                 <WhatWeDoMobile />
-            </div>
+            )}
         </section>
     );
 }

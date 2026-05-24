@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import SeoHead from '../../../components/SeoHead';
+import { cdnImage, cdnVideo } from '../../../utils/cdn';
 import useSeo from '../../../hooks/useSeo';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
@@ -14,35 +15,35 @@ const videoServices = [
         title: 'Adbuth Edits',
         subtitle: 'Personal Stories & Celebrations',
         description: 'Wedding films, surprise edits, and personal storytelling crafted to capture the emotions that matter most. We transform raw footage into memories you can relive forever.',
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Edits.mp4%20V1.1.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/Adbuth%20Edits.mp4%20V1.1.mp4')
     },
     {
         id: 'corporate',
         title: 'Adbuth Corporate',
         subtitle: 'Business Films & Brand Stories',
         description: 'From corporate profiles to employee training modules, we create videos that strengthen your brand identity and enhance internal communication.',
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHCORPORATE-V1.3.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/ADBUTHCORPORATE-V1.3.mp4')
     },
     {
         id: 'adds',
         title: 'Adbuth Ads',
         subtitle: 'Commercial Advertising for TV & Digital',
         description: 'High-impact ad films designed for television, OTT, and social media campaigns crafted to grab attention and drive conversions.',
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHADS.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/ADBUTHADS.mp4')
     },
     {
         id: 'politics',
         title: 'Adbuth Politics',
         subtitle: 'Political Campaigns & Constituency Stories',
         description: 'Strategic storytelling for leaders and campaigns. We design constituency videos, campaign promos, and result-driven communication material.',
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Politics.06.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/Adbuth%20Politics.06.mp4')
     },
     {
         id: 'music',
         title: 'Adbuth Music',
         subtitle: 'Original Music, Jingles & Sound Design',
         description: 'Music that moves people. From original jingles to professional voiceovers and BGM, we give your videos the sound they deserve.',
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Music.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/Music.mp4')
     },
     {
         id: 'movies',
@@ -57,27 +58,27 @@ const heroServices = [
     {
         name: "Adbuth Edits",
         desc: "We craft polished, professional video editing services for brand storytelling that communicates your brand’s message with clarity, impact and enhanced user engagement.",
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Edits.mp4%20V1.1.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/Adbuth%20Edits.mp4%20V1.1.mp4')
     },
     {
         name: "Adbuth Corporate",
         desc: "We create refined, professional corporate video solutions that communicate your brand vision with clarity, credibility, and strong business impact.",
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHCORPORATE-V1.3.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/ADBUTHCORPORATE-V1.3.mp4')
     },
     {
         name: "Adbuth Ads",
         desc: "We produce high-impact advertising videos that capture attention instantly, deliver your message clearly, and drive meaningful audience engagement.",
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/ADBUTHADS.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/ADBUTHADS.mp4')
     },
     {
         name: "Adbuth Politics",
         desc: "We craft strategic political video content that communicates vision, builds trust, and connects effectively with the public and target audience.",
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Adbuth%20Politics.06.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/Adbuth%20Politics.06.mp4')
     },
     {
         name: "Adbuth Music",
         desc: "We create immersive music visuals and audio experiences that enhance storytelling, elevate emotion, and leave a lasting impression.",
-        videoUrl: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/Music.mp4'
+        videoUrl: cdnVideo('https://assets.adbuthverse.com/website-assets/pages/services/videos/index/Music.mp4')
     },
     {
         name: "Adbuth Movies",
@@ -129,7 +130,7 @@ const VideoPlayer = ({ src, buttonSize = "small" }) => {
         <div className="w-full h-full relative overflow-hidden">
             <video 
                 ref={videoRef}
-                src={isInView ? src : ""} 
+                src={isInView ? cdnVideo(src) : ""} 
                 className="w-full h-full object-cover absolute inset-0"
                 muted={isMuted}
                 loop
@@ -162,7 +163,7 @@ export default function Videos() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Video Services | Adbuth"}
                 description={seoData?.meta_description || seoData?.description || "Professional video editing and production services."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/shared/placeholder.jpg"}
+                image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/shared/placeholder.webp")}
                 data={seoData}
             />
             <Navbar highlight="services" />
@@ -172,25 +173,20 @@ export default function Videos() {
                 {/* Hero Section */}
                 <div className="bg-[radial-gradient(circle_600px_at_center,_#2A2158,_transparent)] pt-32 pb-10">
                     <section className=" max-w-7xl mx-auto px-6 lg:mb-24 mb-16 text-center">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+                        <h1
                             className="text-4xl lg:text-6xl md:text-4xl font-bold mb-6 leading-tight"
                         >
                             Smarter Editing. Bigger Impact.<br />
                             All Things <span className="bg-gradient-to-r from-[#AE52FF] to-[#E188E2] bg-clip-text text-transparent">Video, Audio & Storytelling</span><br />
                             In One Place
-                        </motion.h1>
+                        </h1>
 
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
+                        <p
                             className="text-gray-300 max-w-2xl mx-auto mb-8 text-sm md:text-md lg:text-lg "
                         >
                             We craft videos that inspire and sound that moves.<br />
                             From weddings to ads, politics to music, we bring your story to life.
-                        </motion.p>
+                        </p>
 
                         <Link href="/enquiry-form">
                             <motion.button
@@ -257,7 +253,7 @@ export default function Videos() {
                                 className="bg-[#150d22] w-full md:max-w-[400px] lg:max-w-full order-first lg:order-last border border-[#fff] rounded-[2rem] flex items-center justify-center relative group overflow-hidden h-full min-h-[300px] col-span-3 shadow-2xl"
                             >
                                 <VideoPlayer 
-                                    src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/index/02%20Video%20Editing%20%E2%80%93%20Services%20Overview%20V1.1.mp4" 
+                                    src={cdnVideo("https://assets.adbuthverse.com/website-assets/pages/services/videos/index/02%20Video%20Editing%20%E2%80%93%20Services%20Overview%20V1.1_web.mp4")} 
                                     buttonSize="large"
                                 />
                             </motion.div>

@@ -4,16 +4,16 @@ import Hero from '../components/Hero'
 import SeoHead from '../components/SeoHead'
 import useSeo from '../hooks/useSeo'
 
-const WhatWeDo = dynamic(() => import('../components/WhatWeDo'), { ssr: false })
-const FeaturedBlogs = dynamic(() => import('../components/FeaturedBlogs'), { ssr: false })
-const FAQ = dynamic(() => import('../components/FAQ'), { ssr: false })
-const ContactForm = dynamic(() => import('../components/ContactForm'), { ssr: false })
-const Footer = dynamic(() => import('../components/Footer'), { ssr: false })
+const WhatWeDo = dynamic(() => import('../components/WhatWeDo'), { ssr: true });
+const FeaturedBlogs = dynamic(() => import('../components/FeaturedBlogs'), { ssr: true });
+const FAQ = dynamic(() => import('../components/FAQ'), { ssr: true });
+const ContactForm = dynamic(() => import('../components/ContactForm'), { ssr: true });
+const Footer = dynamic(() => import('../components/Footer'), { ssr: true });
 
 const sampleBlogs = [
-  { slug: 'storytelling-magic', title: 'How to create memorable videos', excerpt: 'Short excerpt...', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/blog-1.png' },
-  { slug: 'editing-tips', title: 'How a Good Editing makes a difference', excerpt: 'Short excerpt...', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/blog-2.png' },
-  { slug: 'preserve-moments', title: 'Preserving life\'s special moments', excerpt: 'Short excerpt...', image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/blog-3.png' }
+  { slug: 'storytelling-magic', title: 'How to create memorable videos', excerpt: 'Short excerpt...', image: 'https://assets.adbuthverse.com/website-assets/pages/home/blog-1.webp' },
+  { slug: 'editing-tips', title: 'How a Good Editing makes a difference', excerpt: 'Short excerpt...', image: 'https://assets.adbuthverse.com/website-assets/pages/home/blog-2.webp' },
+  { slug: 'preserve-moments', title: 'Preserving life\'s special moments', excerpt: 'Short excerpt...', image: 'https://assets.adbuthverse.com/website-assets/pages/home/blog-3.webp' }
 ]
 
 const faqs = [
@@ -42,7 +42,7 @@ export async function getStaticProps() {
         title: b.title,
         excerpt: b.meta_description || b.content.substring(0, 150) + '...',
         meta_description: b.meta_description || '',
-        image: b.thumbnail || 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/home/blog-1.png'
+        image: b.thumbnail || 'https://assets.adbuthverse.com/website-assets/pages/home/blog-1.webp'
       }));
 
     return {

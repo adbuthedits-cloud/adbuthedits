@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faCopy, faCheck, faChevronLeft, faChevronRight, faTicketAlt, faIndianRupeeSign } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+
 
 const PromoPopup = () => {
     const [promos, setPromos] = useState([]);
@@ -18,14 +18,16 @@ const PromoPopup = () => {
     const fetchActivePromos = async () => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const res = await axios.get(`${apiUrl}/api/coupons/popup`);
+            const res = await fetch(`${apiUrl}/api/coupons/popup`);
+            if (!res.ok) throw new Error('Failed to fetch promos');
+            const data = await res.json();
 
-            if (res.data.success && res.data.coupons?.length > 0) {
-                const availablePromos = res.data.coupons;
+            if (data.success && data.coupons?.length > 0) {
+                const availablePromos = data.coupons;
                 setPromos(availablePromos);
-                
-                // Delay popup to avoid competing with LCP (hero image / page paint)
-                setTimeout(() => setIsOpen(true), 4000);
+
+                // Show immediately since component mount is already delayed
+                setIsOpen(true);
             }
         } catch (error) {
             console.error('Failed to fetch promo popup:', error);

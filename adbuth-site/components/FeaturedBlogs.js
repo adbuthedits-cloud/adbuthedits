@@ -1,9 +1,19 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 export default function FeaturedBlogs({ items = [] }) {
-  if (!items || items.length === 0) return null;
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+      const check = () => setIsDesktop(window.innerWidth >= 1024);
+      check();
+      window.addEventListener('resize', check);
+      return () => window.removeEventListener('resize', check);
+  }, []);
+
+  if (!items || items.length === 0 || !isDesktop) return null;
 
   const featuredItems = items.slice(0, 3);
   const sidebarItems = items.slice(3, 6);

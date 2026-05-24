@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faInstagram, faFacebook, faYoutube, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
+import { cdnImage } from '../utils/cdn';
+
 
 export default function ContactUs() {
     const { seoData } = useSeo('contact');
@@ -89,7 +91,7 @@ export default function ContactUs() {
             <Navbar highlight="contact" isdark={true} />
 
             {/* Hero / Header Section */}
-            <section className="text-white md:h-[50vh] lg:h-[80vh] h-[65vh]  flex md:items-end items-center px-6 pb-24 lg:px-20 md:px-16 relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/contact/contact-header-bg.png')" }}>
+            <section className="text-white md:h-[50vh] lg:h-[80vh] h-[65vh]  flex md:items-end items-center px-6 pb-24 lg:px-20 md:px-16 relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${cdnImage("https://assets.adbuthverse.com/website-assets/pages/contact/contact-header-bg.webp")}')` }}>
                 <div className="max-w-7xl lg:mx-20 mx-0">
                     <div className="max-w-xl">
                         <h1 className="text-4xl lg:text-6xl md:text-4xl font-bold mb-4 md:mb-14 lg:mb-4">Contact Us</h1>
@@ -126,7 +128,7 @@ export default function ContactUs() {
                     <div className="lg:col-span-7 absolute left-0 right-0 mx-auto w-[90%] lg:w-full lg:max-w-[55%] lg:left-auto lg:right-0 -top-56 lg:-top-64 lg:mr-10">
                         <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
                             {/* Header Image */}
-                            <div className="h-24 lg:h-48 w-full bg-cover bg-center flex items-center justify-center text-center px-4" style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/contact/contact-form-header.png')" }}>
+                            <div className="h-24 lg:h-48 w-full bg-cover bg-center flex items-center justify-center text-center px-4" style={{ backgroundImage: `url('${cdnImage("https://assets.adbuthverse.com/website-assets/pages/contact/contact-form-header.webp")}')` }}>
                                 <h3 className="text-white text-sm lg:text-2xl font-bold leading-relaxed">
                                     Write us a few words about your project and we’ll<br className="hidden lg:block" /> prepare a proposal for you within 24 hours
                                 </h3>

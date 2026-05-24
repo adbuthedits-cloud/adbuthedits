@@ -7,6 +7,8 @@ import { useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
+import { cdnImage } from '../../../../utils/cdn';
+
 
 export default function AdbuthAds() {
     const { seoData } = useSeo('adbuth-ads');
@@ -31,21 +33,21 @@ export default function AdbuthAds() {
             id: '01',
             title: 'Create Concepts That',
             subtitle: 'Hook Audiences Instantly',
-            image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-ads/ams-1.png', // Replace with actual image
+            image: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-ads/ams-1.webp'),
             desc: 'We brainstorm unique ideas that resonate with your target audience.'
         },
         {
             id: '02',
             title: 'Design High-Quality Ads',
             subtitle: 'That Stop The Scroll',
-            image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-ads/ams-2.png', // Replace with actual image
+            image: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-ads/ams-2.webp'),
             desc: 'Visually stunning designs that capture attention in milliseconds.'
         },
         {
             id: '03',
             title: 'Compelling Copy That Convert',
             subtitle: 'Into Customers',
-            image: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-ads/ams-3.png', // Replace with actual image
+            image: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-ads/ams-3.webp'),
             desc: 'Persuasive writing that drives action and sales.'
         }
     ];
@@ -55,7 +57,7 @@ export default function AdbuthAds() {
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Adbuth Ads | Commercial Video Services"}
                 description={seoData?.meta_description || seoData?.description || "Commercial ads that sell, inspire, and stick."}
-                image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/videos/adbuth-ads/ams-1.png"}
+                image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-ads/ams-1.webp"}
                 data={seoData}
             />
             <Navbar highlight="services" isdark={false} />

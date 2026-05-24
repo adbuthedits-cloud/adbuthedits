@@ -9,6 +9,7 @@ const { checkPermission } = require('../middleware/permissionMiddleware');
 const { sendStaffWelcomeEmail } = require('../utils/staffMailer');
 const { sendDeliveryEmail } = require('../utils/orderMailer');
 const { signCustomizationData, signCustomizationUrl } = require('../utils/s3Utils');
+const { generateWebAsset, webpKey, webVideoKey } = require('../utils/webAssets');
 
 // Apply Admin Middleware to all routes — every single route is protected
 router.use(authMiddleware);
@@ -225,7 +226,15 @@ router.post('/upload-blog-image', checkPermission('blogs', 'edit'), blogUpload.s
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        const fileUrl = publicFileUrl(req.file.key);
+        let returnKey = req.file.key;
+        if (req.file.mimetype.startsWith('image/')) {
+            returnKey = webpKey(req.file.key);
+        } else if (req.file.mimetype.startsWith('video/')) {
+            returnKey = webVideoKey(req.file.key);
+        }
+        const fileUrl = publicFileUrl(returnKey);
+        // Trigger background web asset generation
+        generateWebAsset(req.file.key, req.file.mimetype);
         res.json({ url: fileUrl });
     } catch (err) {
         console.error('[Upload] Error processing upload:', err);
@@ -335,7 +344,18 @@ router.post('/upload-media', checkPermission('products', 'edit'), productUpload.
             }
         }
 
-        res.json({ url: fileUrl });
+        // Trigger background web asset generation (except for raw resources)
+        let returnKey = req.file.key;
+        if (subfolder !== 'file') {
+            if (req.file.mimetype.startsWith('image/')) {
+                returnKey = webpKey(req.file.key);
+            } else if (req.file.mimetype.startsWith('video/')) {
+                returnKey = webVideoKey(req.file.key);
+            }
+            generateWebAsset(req.file.key, req.file.mimetype);
+        }
+
+        res.json({ url: publicFileUrl(returnKey) });
     } catch (err) {
         console.error('[Upload] Error:', err);
         res.status(500).json({ error: err.message });
@@ -985,9 +1005,9 @@ router.get('/products/import-template', checkPermission('products', 'edit'), asy
             'Tag Key 2': 'Quality',
             'Tag Value 2': 'Premium',
             'Target Audience': 'Bride and Groom, Couples',
-            'Thumbnail URL': 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/thumb.jpg',
-            'Images Gallery': 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/img1.jpg | https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/img2.jpg',
-            'Video Showcase': 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/sample/vid.mp4',
+            'Thumbnail URL': 'https://assets.adbuthverse.com/sample/thumb.jpg',
+            'Images Gallery': 'https://assets.adbuthverse.com/sample/img1.jpg | https://assets.adbuthverse.com/sample/img2.jpg',
+            'Video Showcase': 'https://assets.adbuthverse.com/sample/vid.mp4',
             'Resource File (ZIP)': 'https://private.r2.dev/sample/file.zip',
             'Load Template': 'Wedding With Images',
             'Custom Group Name': '',
@@ -1097,6 +1117,8 @@ const importUpload = multer({ storage: multer.memoryStorage(), limits: { fileSiz
 
 router.post('/products/import', checkPermission('products', 'edit'), importUpload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+
+    const previewOnly = req.body.previewOnly === 'true';
 
     const ext = path.extname(req.file.originalname).toLowerCase();
     if (ext !== '.xlsx' && ext !== '.xls') {
@@ -1254,34 +1276,36 @@ router.post('/products/import', checkPermission('products', 'edit'), importUploa
                 if (compared_price !== null && compared_price <= price) throw new Error('Compared Price must be higher than Price.');
 
                 // ── Create the product ────────────────────────────────────────
-                await Product.create({
-                    title: rowTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-                    slug,
-                    description: String(row['Product Description'] || '').trim() || null,
-                    price,
-                    compared_price,
-                    parent_category_id: parentCatId,
-                    asset_type_id: typeId,
-                    asset_variant_id: variantId,
-                    asset_category_id: categoryId,
-                    asset_sub_category_id: subCategoryId,
-                    asset_orientation_id: orientationId,
-                    serial_number: parseInt(serialNumber),
-                    internal_sku: internalSku,
-                    thumbnail: String(row['Thumbnail URL'] || '').trim() || null,
-                    images,
-                    video,
-                    resource_file: String(row['Resource File (ZIP)'] || '').trim() || null,
-                    tags,
-                    to_person,
-                    customization,
-                    meta_title: String(row['Meta Title'] || '').trim() || rowTitle,
-                    meta_description: String(row['Meta Description'] || '').trim() || null,
-                    meta_keywords: String(row['Meta Keywords'] || '').trim() || null,
-                    canonical_url: String(row['Canonical URL'] || '').trim() || null,
-                    is_draft: false,
-                    is_active: true,
-                });
+                if (!previewOnly) {
+                    await Product.create({
+                        title: rowTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                        slug,
+                        description: String(row['Product Description'] || '').trim() || null,
+                        price,
+                        compared_price,
+                        parent_category_id: parentCatId,
+                        asset_type_id: typeId,
+                        asset_variant_id: variantId,
+                        asset_category_id: categoryId,
+                        asset_sub_category_id: subCategoryId,
+                        asset_orientation_id: orientationId,
+                        serial_number: parseInt(serialNumber),
+                        internal_sku: internalSku,
+                        thumbnail: String(row['Thumbnail URL'] || '').trim() || null,
+                        images,
+                        video,
+                        resource_file: String(row['Resource File (ZIP)'] || '').trim() || null,
+                        tags,
+                        to_person,
+                        customization,
+                        meta_title: String(row['Meta Title'] || '').trim() || rowTitle,
+                        meta_description: String(row['Meta Description'] || '').trim() || null,
+                        meta_keywords: String(row['Meta Keywords'] || '').trim() || null,
+                        canonical_url: String(row['Canonical URL'] || '').trim() || null,
+                        is_draft: false,
+                        is_active: true,
+                    });
+                }
 
                 successCount++;
                 results.push({ row: rowNum, title: rowTitle, status: 'success', sku: internalSku, slug });
@@ -2263,7 +2287,14 @@ router.post('/coupons', checkPermission('coupons', 'edit'), async (req, res) => 
 // --- Coupon Media Upload ---
 router.post('/coupons/upload', checkPermission('coupons', 'edit'), uploadCouponMedia.single('media'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    res.json({ url: publicFileUrl(req.file.key) });
+    let returnKey = req.file.key;
+    if (req.file.mimetype.startsWith('image/')) {
+        returnKey = webpKey(req.file.key);
+    } else if (req.file.mimetype.startsWith('video/')) {
+        returnKey = webVideoKey(req.file.key);
+    }
+    generateWebAsset(req.file.key, req.file.mimetype);
+    res.json({ url: publicFileUrl(returnKey) });
 });
 
 router.put('/coupons/:id', checkPermission('coupons', 'edit'), async (req, res) => {
@@ -2575,8 +2606,15 @@ router.get('/master-data', checkPermission('master_data', 'view'), async (req, r
 // --- Banner Upload Utility ---
 router.post('/master-data/upload-banner', checkPermission('settings', 'edit'), uploadBanner.single('banner'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    let returnKey = req.file.key;
+    if (req.file.mimetype.startsWith('image/')) {
+        returnKey = webpKey(req.file.key);
+    } else if (req.file.mimetype.startsWith('video/')) {
+        returnKey = webVideoKey(req.file.key);
+    }
+    generateWebAsset(req.file.key, req.file.mimetype);
     // Force usage of the public R2 domain instead of the default S3-compatible location.
-    res.json({ url: publicFileUrl(req.file.key) });
+    res.json({ url: publicFileUrl(returnKey) });
 });
 
 // --- ShopSettings CRUD ---

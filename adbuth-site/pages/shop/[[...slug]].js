@@ -10,7 +10,7 @@
  *     /shop?parentCategory=digital-invitations&assetCategory=business-invites
  *     /shop/category/digital-invitations (legacy, for direct URL access)
  */
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -74,7 +74,7 @@ function ShopBanner({ masterData, activeParentSlug, onBrowseClick, isShopBase })
     if (!bannerData) return null;
 
     const isVideoUrl = (url) => /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
-    const fallbackImage = "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/banners/1776536159973-481757187.png";
+    const fallbackImage = "https://assets.adbuthverse.com/banners/1776536159973-481757187.webp";
 
     return (
         // aspect-video on mobile/tablet, h-screen on desktop (lg+).
@@ -323,14 +323,12 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
     const [filterLoading, setFilterLoading] = useState(false);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-    const prevQueryRef = useRef('');
+    // Stable memoized query string — only changes when the actual query params change
+    const queryStr = useMemo(() => JSON.stringify(queryParams), [queryParams]);
 
     // Sync filters from URL when router query changes
     useEffect(() => {
         if (!router.isReady) return;
-        const qStr = JSON.stringify(queryParams);
-        if (qStr === prevQueryRef.current) return;
-        prevQueryRef.current = qStr;
 
         const f = readFiltersFromQuery(queryParams);
         // If on a category slug URL and no parentCategory in query, derive from slug
@@ -339,7 +337,8 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
         }
         setFilters(f);
         setDisplayCount(PAGE_SIZE);
-    }, [router.isReady, JSON.stringify(queryParams)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router.isReady, queryStr]);
 
     // Scroll to products top when filters are applied
     useEffect(() => {
@@ -352,32 +351,33 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     const handleFilterChange = useCallback((key, value) => {
         setFilterLoading(true);
 
-        let newFilters;
-        if (key === 'bulk') {
-            newFilters = { ...filters, ...value };
-        } else {
-            newFilters = { ...filters, [key]: value };
-        }
-        setFilters(newFilters);
+        setFilters(prev => {
+            const newFilters = key === 'bulk' ? { ...prev, ...value } : { ...prev, [key]: value };
+
+            // Build query object — only include non-empty values
+            const q = {};
+            if (newFilters.parentCategory?.length) q.parentCategory = newFilters.parentCategory.join(',');
+            if (newFilters.assetCategory?.length) q.assetCategory = newFilters.assetCategory.join(',');
+            if (newFilters.assetSubCategory?.length) q.assetSubCategory = newFilters.assetSubCategory.join(',');
+            if (newFilters.assetType?.length) q.assetType = newFilters.assetType.join(',');
+            if (newFilters.assetVariant?.length) q.assetVariant = newFilters.assetVariant.join(',');
+            if (newFilters.orientation?.length) q.orientation = newFilters.orientation.join(',');
+            if (newFilters.maxPrice) q.maxPrice = newFilters.maxPrice;
+            if (newFilters.search) q.search = newFilters.search;
+
+            // If on a category slug URL, preserve the slug and add query params
+            const pathname = slugParentCategory ? `/shop/category/${slugParentCategory}` : '/shop';
+
+            router.push({ pathname, query: q }, undefined, { shallow: true, scroll: false })
+                .then(() => setTimeout(() => setFilterLoading(false), 100));
+
+            return newFilters;
+        });
+
         setDisplayCount(PAGE_SIZE);
-
-        // Build query object — only include non-empty values
-        const q = {};
-        if (newFilters.parentCategory?.length) q.parentCategory = newFilters.parentCategory.join(',');
-        if (newFilters.assetCategory?.length) q.assetCategory = newFilters.assetCategory.join(',');
-        if (newFilters.assetSubCategory?.length) q.assetSubCategory = newFilters.assetSubCategory.join(',');
-        if (newFilters.assetType?.length) q.assetType = newFilters.assetType.join(',');
-        if (newFilters.assetVariant?.length) q.assetVariant = newFilters.assetVariant.join(',');
-        if (newFilters.orientation?.length) q.orientation = newFilters.orientation.join(',');
-        if (newFilters.maxPrice) q.maxPrice = newFilters.maxPrice;
-        if (newFilters.search) q.search = newFilters.search;
-
-        // If on a category slug URL, preserve the slug and add query params
-        const pathname = slugParentCategory ? `/shop/category/${slugParentCategory}` : '/shop';
-
-        router.push({ pathname, query: q }, undefined, { shallow: true, scroll: false })
-            .then(() => setTimeout(() => setFilterLoading(false), 100));
-    }, [filters, router, slugParentCategory]);
+    // router.push is stable; only slugParentCategory can change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [slugParentCategory]);
 
     // ─── Client-side filter + sort ────────────────────────────────────────────
     const filteredProducts = useMemo(() => {
@@ -610,7 +610,14 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
 }
 
 // ─── Server-side data fetch ────────────────────────────────────────────────────
-export async function getServerSideProps(context) {
+export async function getStaticPaths() {
+    return {
+        paths: [],
+        fallback: 'blocking',
+    };
+}
+
+export async function getStaticProps(context) {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     try {
         const [productsRes, masterRes, maxPriceRes] = await Promise.all([
@@ -627,17 +634,40 @@ export async function getServerSideProps(context) {
             maxPriceRes.ok ? maxPriceRes.json() : { maxPrice: 10000 },
         ]);
 
+        const trimmedProducts = (initialProducts || []).map(p => ({
+            products_id: p.products_id || null,
+            title: p.title || null,
+            description: p.description || null,
+            price: p.price || null,
+            compared_price: p.compared_price || null,
+            slug: p.slug || null,
+            thumbnail: p.thumbnail || null,
+            video: p.video || null,
+            video_url: p.video_url || null,
+            updatedAt: p.updatedAt || p.updated_at || null,
+            averageRating: p.averageRating || null,
+            reviewCount: p.reviewCount || null,
+            parentCategory: p.parentCategory ? { slug: p.parentCategory.slug } : null,
+            assetCategory: p.assetCategory ? { slug: p.assetCategory.slug } : null,
+            assetSubCategory: p.assetSubCategory ? { slug: p.assetSubCategory.slug } : null,
+            asset_type_id: p.asset_type_id || null,
+            asset_variant_id: p.asset_variant_id || null,
+            asset_orientation_id: p.asset_orientation_id || null,
+        }));
+
         return {
             props: {
-                initialProducts: initialProducts || [],
+                initialProducts: trimmedProducts,
                 masterData: masterData || {},
                 maxPrice: maxPriceData?.maxPrice || 10000,
             },
+            revalidate: 60, // Refresh every 60 seconds
         };
     } catch (err) {
-        console.error('ShopPage getServerSideProps error:', err);
+        console.error('ShopPage getStaticProps error:', err);
         return {
             props: { initialProducts: [], masterData: {}, maxPrice: 10000 },
+            revalidate: 60,
         };
     }
 }

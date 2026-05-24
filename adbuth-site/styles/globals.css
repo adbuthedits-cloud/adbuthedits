@@ -12,6 +12,11 @@
   }
 }
 
+body {
+  background-color: #0a0118;
+  color: white;
+}
+
 /* Custom Webkit Scrollbar */
 .custom-scroll::-webkit-scrollbar {
   width: 6px;

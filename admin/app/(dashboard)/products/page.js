@@ -36,11 +36,14 @@ function Products() {
     const [exporting, setExporting] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
 
-    // Import state
     const [showImportMenu, setShowImportMenu] = useState(false);
     const [importing, setImporting] = useState(false);
-    const [importProgress, setImportProgress] = useState(null); // null | { total, current, results[] }
+    const [importProgress, setImportProgress] = useState(null); // null | { total, current, results[], isPreview: boolean }
+    const [selectedFile, setSelectedFile] = useState(null);
     const importFileRef = useRef(null);
+
+    // Multi-delete state
+    const [selectedIds, setSelectedIds] = useState([]);
 
     useEffect(() => {
         fetchProducts();
@@ -199,26 +202,76 @@ function Products() {
     const handleImportFile = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        setSelectedFile(file);
         e.target.value = '';
         setShowImportMenu(false);
         setImporting(true);
-        setImportProgress({ total: 0, current: 0, results: [], processing: true });
+        setImportProgress({ total: 0, current: 0, results: [], processing: true, isPreview: true });
 
         const token = getAuthToken();
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         try {
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('previewOnly', 'true');
             const res = await axios.post(`${apiUrl}/api/admin/products/import`, formData, {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
             });
-            setImportProgress({ ...res.data, processing: false });
+            setImportProgress({ ...res.data, processing: false, isPreview: true });
+        } catch (err) {
+            const msg = err.response?.data?.error || err.message;
+            setImportProgress({ total: 0, success: 0, failed: 1, results: [{ row: '-', title: file.name, status: 'error', reason: msg }], processing: false, isPreview: true });
+        } finally {
+            setImporting(false);
+        }
+    };
+
+    const confirmImport = async () => {
+        if (!selectedFile) return;
+        setImportProgress({ ...importProgress, processing: true, isPreview: false });
+
+        const token = getAuthToken();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('previewOnly', 'false');
+            const res = await axios.post(`${apiUrl}/api/admin/products/import`, formData, {
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+            });
+            setImportProgress({ ...res.data, processing: false, isPreview: false });
+            setSelectedFile(null);
             if (res.data.success > 0) fetchProducts();
         } catch (err) {
             const msg = err.response?.data?.error || err.message;
-            setImportProgress({ total: 0, success: 0, failed: 1, results: [{ row: '-', title: file.name, status: 'error', reason: msg }], processing: false });
-        } finally {
-            setImporting(false);
+            setImportProgress({ total: 0, success: 0, failed: 1, results: [{ row: '-', title: selectedFile.name, status: 'error', reason: msg }], processing: false, isPreview: false });
+        }
+    };
+
+    const toggleSelect = (id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    
+    const toggleSelectAll = () => {
+        if (selectedIds.length === visibleProducts.length && visibleProducts.length > 0) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(visibleProducts.map(p => p.products_id));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} products?`)) return;
+        const token = getAuthToken();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        try {
+            await axios.delete(`${apiUrl}/api/admin/products/bulk`, {
+                headers: { Authorization: `Bearer ${token}` },
+                data: { ids: selectedIds }
+            });
+            setSelectedIds([]);
+            await fetchProducts();
+        } catch (error) {
+            alert('Failed to delete products');
+            console.error(error);
         }
     };
 
@@ -317,6 +370,19 @@ function Products() {
                             )}
                         </AnimatePresence>
                     </div>
+
+                    {canDelete && selectedIds.length > 0 && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            onClick={handleBulkDelete}
+                            className="bg-red-500/20 text-red-400 px-6 py-2.5 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-colors shadow-lg border border-red-500/50 flex items-center gap-2 text-sm"
+                        >
+                            <FontAwesomeIcon icon={faTrash} />
+                            Delete Selected ({selectedIds.length})
+                        </motion.button>
+                    )}
+
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         {canEdit ? (
                             <Link href="/products/create" className="bg-[#7C3AED] text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-[#6D28D9] transition-colors shadow-lg shadow-purple-900/20 flex items-center gap-2 text-sm">
@@ -356,6 +422,14 @@ function Products() {
                         </motion.button>
                         <div className="w-px h-6 bg-[#2d1b4e] hidden md:block"></div>
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider hidden md:block">Sort:</span>
+
+                        {/* Select All Checkbox */}
+                        {visibleProducts.length > 0 && (
+                            <button onClick={toggleSelectAll} className="flex items-center gap-2 px-3 py-2 bg-[#2d1b4e] hover:bg-[#3b2a5f] border border-[#3b2a5f] rounded-lg text-xs font-semibold text-gray-300 transition-colors shadow-sm">
+                                <input type="checkbox" checked={selectedIds.length === visibleProducts.length && visibleProducts.length > 0} onChange={() => {}} className="cursor-pointer" />
+                                <span>Select All</span>
+                            </button>
+                        )}
 
                         {/* Custom Sort Dropdown */}
                         <div className="relative">
@@ -516,8 +590,22 @@ function Products() {
                                             delay: index * 0.03
                                         }}
                                         whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                                        className="bg-[#1E1628] rounded-[18px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-xl hover:shadow-purple-900/10 transition-all group relative border border-[#2d1b4e]"
+                                        className={`bg-[#1E1628] rounded-[18px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-xl transition-all group relative border ${selectedIds.includes(product.products_id) ? 'border-[#a78bfa] shadow-purple-900/40' : 'border-[#2d1b4e] hover:shadow-purple-900/10'}`}
+                                        onClick={(e) => {
+                                            // Make the whole card clickable for selection if they click the background
+                                            if (e.target === e.currentTarget) toggleSelect(product.products_id);
+                                        }}
                                     >
+                                        {/* Checkbox for multi-select */}
+                                        <div className="absolute top-4 left-4 z-30" onClick={(e) => e.stopPropagation()}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedIds.includes(product.products_id)}
+                                                onChange={() => toggleSelect(product.products_id)}
+                                                className="w-5 h-5 rounded border-gray-600 text-[#a78bfa] focus:ring-[#a78bfa]/50 cursor-pointer"
+                                            />
+                                        </div>
+
                                         {/* Vertical Ribbon */}
                                         {product.is_draft ? (
                                             <div className="absolute top-0 left-4 w-8 h-12 bg-amber-600 flex items-center justify-center rounded-b-lg shadow-sm z-10 transition-transform hover:scale-110 origin-top">
@@ -530,7 +618,7 @@ function Products() {
                                         )}
 
                                         {/* 3-Dots Menu */}
-                                        <div className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#2d1b4e] cursor-pointer text-gray-500 group-hover:text-[#a78bfa] transition-colors">
+                                        <div className="absolute top-12 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#2d1b4e] cursor-pointer text-gray-500 group-hover:text-[#a78bfa] transition-colors">
                                             <span className="mb-2 text-xl font-bold tracking-widest leading-none">...</span>
                                         </div>
 
@@ -698,85 +786,111 @@ function Products() {
                                 <div className="flex items-center gap-3">
                                     {importProgress.processing ? (
                                         <FontAwesomeIcon icon={faSpinner} className="animate-spin text-purple-400 text-lg" />
+                                    ) : importProgress.isPreview ? (
+                                        <FontAwesomeIcon icon={faEye} className="text-blue-400 text-lg" />
                                     ) : importProgress.failed === 0 ? (
                                         <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-400 text-lg" />
                                     ) : (
                                         <FontAwesomeIcon icon={faTimesCircle} className="text-amber-400 text-lg" />
                                     )}
                                     <h2 className="text-white font-bold text-lg">
-                                        {importProgress.processing ? 'Processing Import...' : 'Import Complete'}
+                                        {importProgress.processing ? 'Processing Import...' : importProgress.isPreview ? 'Import Preview' : 'Import Complete'}
                                     </h2>
                                 </div>
                                 {!importProgress.processing && (
                                     <button onClick={() => setImportProgress(null)} className="w-8 h-8 rounded-full bg-[#2d1b4e] text-gray-400 hover:text-white flex items-center justify-center transition-colors">
-                                        <FontAwesomeIcon icon={faTimes} className="text-xs" />
+                                        <FontAwesomeIcon icon={faTimes} />
                                     </button>
                                 )}
                             </div>
 
-                            {/* Summary Stats */}
-                            {!importProgress.processing && (
-                                <div className="grid grid-cols-3 gap-4 px-6 py-4 border-b border-[#2d1b4e]">
-                                    <div className="bg-[#2d1b4e] rounded-xl p-3 text-center">
-                                        <div className="text-2xl font-bold text-white">{importProgress.total}</div>
-                                        <div className="text-xs text-gray-400 mt-1">Total Rows</div>
-                                    </div>
-                                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
-                                        <div className="text-2xl font-bold text-emerald-400">{importProgress.success}</div>
-                                        <div className="text-xs text-gray-400 mt-1">Imported</div>
-                                    </div>
-                                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
-                                        <div className="text-2xl font-bold text-red-400">{importProgress.failed}</div>
-                                        <div className="text-xs text-gray-400 mt-1">Failed</div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Row Results */}
-                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+                            {/* Modal Body */}
+                            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                                 {importProgress.processing ? (
-                                    <div className="flex flex-col items-center justify-center py-12 gap-4">
-                                        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-purple-400 text-4xl" />
-                                        <p className="text-gray-400">Processing your spreadsheet row by row...</p>
-                                        <p className="text-gray-500 text-xs">Do not close this window</p>
+                                    <div className="flex flex-col items-center justify-center py-12">
+                                        <div className="w-16 h-16 border-4 border-[#2d1b4e] border-t-purple-500 rounded-full animate-spin mb-4"></div>
+                                        <p className="text-gray-400 text-sm">Please wait while we process the spreadsheet...</p>
                                     </div>
                                 ) : (
-                                    importProgress.results?.map((r, i) => (
-                                        <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border text-sm ${
-                                            r.status === 'success'
-                                                ? 'bg-emerald-500/5 border-emerald-500/20'
-                                                : 'bg-red-500/5 border-red-500/20'
-                                        }`}>
-                                            <div className="mt-0.5 shrink-0">
-                                                {r.status === 'success' ? (
-                                                    <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-400" />
-                                                ) : (
-                                                    <FontAwesomeIcon icon={faTimesCircle} className="text-red-400" />
-                                                )}
+                                    <>
+                                        {/* Summary Stats */}
+                                        <div className="grid grid-cols-3 gap-4 mb-6">
+                                            <div className="bg-[#2d1b4e] rounded-xl p-4 text-center border border-[#3b2a5f]">
+                                                <span className="text-3xl font-bold text-white block mb-1">{importProgress.total}</span>
+                                                <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Total Rows</span>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-gray-500 text-xs font-mono">Row {r.row}</span>
-                                                    <span className="text-gray-200 font-semibold truncate">{r.title}</span>
-                                                </div>
-                                                {r.status === 'success' ? (
-                                                    <div className="text-gray-500 text-xs mt-1 font-mono">{r.sku} · /{r.slug}</div>
-                                                ) : (
-                                                    <div className="text-red-400 text-xs mt-1">{r.reason}</div>
-                                                )}
+                                            <div className="bg-emerald-500/10 rounded-xl p-4 text-center border border-emerald-500/20">
+                                                <span className="text-3xl font-bold text-emerald-400 block mb-1">{importProgress.success}</span>
+                                                <span className="text-[10px] text-emerald-500 uppercase tracking-widest font-bold">Valid / Imported</span>
+                                            </div>
+                                            <div className="bg-red-500/10 rounded-xl p-4 text-center border border-red-500/20">
+                                                <span className="text-3xl font-bold text-red-400 block mb-1">{importProgress.failed}</span>
+                                                <span className="text-[10px] text-red-500 uppercase tracking-widest font-bold">Failed / Invalid</span>
                                             </div>
                                         </div>
-                                    ))
+
+                                        {importProgress.isPreview && importProgress.failed > 0 && (
+                                            <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                                                <p className="text-sm text-amber-400"><FontAwesomeIcon icon={faTimesCircle} className="mr-2"/>You have invalid rows. You can either fix the spreadsheet and try again, or confirm the import to only upload the valid rows.</p>
+                                            </div>
+                                        )}
+
+                                        {/* Detailed Results Log */}
+                                        <div className="space-y-2">
+                                            {importProgress.results?.map((r, i) => (
+                                                <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border text-sm ${
+                                                    r.status === 'success'
+                                                        ? 'bg-emerald-500/5 border-emerald-500/20'
+                                                        : 'bg-red-500/5 border-red-500/20'
+                                                }`}>
+                                                    <div className="mt-0.5 shrink-0">
+                                                        {r.status === 'success' ? (
+                                                            <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-400" />
+                                                        ) : (
+                                                            <FontAwesomeIcon icon={faTimesCircle} className="text-red-400" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-gray-500 text-xs font-mono">Row {r.row}</span>
+                                                            <span className="text-gray-200 font-semibold truncate">{r.title}</span>
+                                                        </div>
+                                                        {r.status === 'success' ? (
+                                                            <div className="text-gray-500 text-xs mt-1 font-mono">{r.sku} · /{r.slug}</div>
+                                                        ) : (
+                                                            <div className="text-red-400 text-xs mt-1">{r.reason}</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
                                 )}
                             </div>
-
-                            {/* Footer */}
-                            {!importProgress.processing && (
-                                <div className="px-6 py-4 border-t border-[#2d1b4e] flex justify-between items-center">
-                                    <p className="text-gray-500 text-xs">Products list has been refreshed automatically.</p>
-                                    <button
+                            
+                            {/* Modal Footer */}
+                            {!importProgress.processing && importProgress.isPreview && (
+                                <div className="px-6 py-4 border-t border-[#2d1b4e] bg-[#1a1224] flex justify-end gap-3">
+                                    <button 
+                                        onClick={() => { setImportProgress(null); setSelectedFile(null); }}
+                                        className="px-5 py-2.5 rounded-lg border border-[#2d1b4e] text-gray-300 font-semibold hover:bg-[#2d1b4e] hover:text-white transition-colors text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={confirmImport}
+                                        disabled={importProgress.success === 0}
+                                        className="bg-[#7C3AED] text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-[#6D28D9] transition-colors shadow-lg shadow-purple-900/20 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Confirm & Import {importProgress.success} Valid Products
+                                    </button>
+                                </div>
+                            )}
+                            {!importProgress.processing && !importProgress.isPreview && (
+                                <div className="px-6 py-4 border-t border-[#2d1b4e] bg-[#1a1224] flex justify-end">
+                                    <button 
                                         onClick={() => setImportProgress(null)}
-                                        className="px-5 py-2 bg-[#7C3AED] text-white rounded-lg text-sm font-semibold hover:bg-[#6D28D9] transition-colors"
+                                        className="bg-[#2d1b4e] text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-[#3b2a5f] transition-colors text-sm"
                                     >
                                         Done
                                     </button>

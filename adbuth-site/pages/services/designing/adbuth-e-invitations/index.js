@@ -14,22 +14,22 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
         {
             title: "Birthday Invitations",
             desc: "Make every year unforgettable with templates for him, her, kids, or friends from classic elegance to playful fun.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/occation-birthday-invitation.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/occation-birthday-invitation.webp"
         },
         {
             title: "Anniversary Invitations",
             desc: "Celebrate timeless love with beautifully crafted digital invitations for every milestone.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/occation-annivarsary-invitations.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/occation-annivarsary-invitations.webp"
         },
         {
             title: "Expression Cards",
             desc: "Say it your way love, thanks, sorry, or just because.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/occation-expression-cards.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/occation-expression-cards.webp"
         },
         {
             title: "Event Invitations",
             desc: "Professional and creative designs for any corporate or social gathering.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/occation-event-invitations.png"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/occation-event-invitations.webp"
         }
     ];
 
@@ -37,7 +37,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
         ? masterData.parentCategories.map(cat => ({
             title: cat.category_name,
             desc: cat.description || `Explore our amazing ${cat.category_name} collection.`,
-            image: cat.category_image || cat.banner_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/occation-birthday-invitation.png",
+            image: cat.category_image || cat.banner_image || "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/occation-birthday-invitation.webp",
             slug: cat.slug
         }))
         : defaultOccasions;
@@ -117,7 +117,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                 {/* Background */}
                 <div className="mt-24 absolute inset-0 bg-[#B1B1B1]">
                     <Image
-                        src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/banner.png"
+                        src="https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/banner.webp"
                         alt="e-design hero"
                         fill
                         priority
@@ -321,10 +321,10 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-8">
                     {[
-                        { title: "Templates for Every Emotion", icon: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/every-emotion.svg" },
-                        { title: "Instant Customization", icon: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/instant-customization.svg" },
-                        { title: "Seamless Sharing", icon: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/seamless-sharing.svg" },
-                        { title: "Cloud Storage & Access", icon: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/designing/adbuth-e-invitations/storage-and-access.svg" }
+                        { title: "Templates for Every Emotion", icon: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/every-emotion.svg" },
+                        { title: "Instant Customization", icon: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/instant-customization.svg" },
+                        { title: "Seamless Sharing", icon: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/seamless-sharing.svg" },
+                        { title: "Cloud Storage & Access", icon: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/storage-and-access.svg" }
                     ].map((feature, idx) => (
                         <div
                             key={idx}
@@ -411,7 +411,7 @@ const ScrollTriggerImage = ({ item, index, onInView }) => {
     );
 };
 
-export async function getServerSideProps(context) {
+export async function getStaticProps(context) {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     try {
         const [masterRes, productsRes] = await Promise.all([
@@ -429,11 +429,13 @@ export async function getServerSideProps(context) {
                 masterData: masterData || {},
                 initialProducts: initialProducts || [],
             },
+            revalidate: 60,
         };
     } catch (err) {
-        console.error('DigitalInvitations getServerSideProps error:', err);
+        console.error('DigitalInvitations getStaticProps error:', err);
         return {
             props: { masterData: {}, initialProducts: [] },
+            revalidate: 60,
         };
     }
 }

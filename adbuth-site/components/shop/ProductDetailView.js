@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import toast from 'react-hot-toast';
 import SeoHead from '../SeoHead';
+import { cdnImage, cdnVideo } from '../../utils/cdn';
 
 const ReviewSection = dynamic(() => import('../ReviewSection'), { loading: () => <p className="text-center py-10">Loading Reviews...</p> });
 
@@ -208,7 +209,13 @@ export default function ProductDetailView({ slug, masterData }) {
     const rawImages = Array.isArray(product.images) ? product.images.filter(url => url) : (product.images ? [product.images] : (product.thumbnail ? [product.thumbnail] : []));
     const rawVideos = Array.isArray(product.video) ? product.video.filter(url => url) : (product.video ? [product.video] : []);
     const isVideoUrl = (url) => /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
-    const mediaItems = [...rawImages.map(src => ({ src, type: isVideoUrl(src) ? 'video' : 'image' })), ...rawVideos.map(src => ({ src, type: 'video' }))];
+    const mediaItems = [
+        ...rawImages.map(src => {
+            const type = isVideoUrl(src) ? 'video' : 'image';
+            return { src: type === 'video' ? cdnVideo(src) : cdnImage(src), type };
+        }),
+        ...rawVideos.map(src => ({ src: cdnVideo(src), type: 'video' }))
+    ];
     const seen = new Set();
     let prodMedia = mediaItems.filter(item => { if (seen.has(item.src)) return false; seen.add(item.src); return true; });
     prodMedia.sort((a, b) => (a.type === 'video' ? -1 : 1) - (b.type === 'video' ? -1 : 1));

@@ -14,6 +14,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as faHeartSolid, faStar } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartOutline } from '@fortawesome/free-regular-svg-icons';
+import { cdnImage, cdnVideo } from '../../utils/cdn';
 
 const NEW_BADGE_DAYS = 15;
 
@@ -67,8 +68,11 @@ export default function ProductCard({ product, index = 0 }) {
     const productSlug = product.slug || '';
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
 
-    const thumbnail = product.thumbnail || null;
-    const videoSrc = product.video?.[0] || product.video_url || null;
+    // Use web-optimized versions: WebP for images, _web.mp4 for videos
+    const thumbnail = product.thumbnail ? cdnImage(product.thumbnail) : null;
+    const videoSrc  = product.video?.[0] || product.video_url
+        ? cdnVideo(product.video?.[0] || product.video_url)
+        : null;
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount

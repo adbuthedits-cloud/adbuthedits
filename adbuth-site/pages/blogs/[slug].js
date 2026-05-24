@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import Link from 'next/link'
+import Image from 'next/image'
 import axios from 'axios'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faCalendar, faUser } from '@fortawesome/free-solid-svg-icons';
 import SeoHead from '../../components/SeoHead';
+import { cdnImage } from '../../utils/cdn';
 
 export default function BlogPost() {
   const router = useRouter()
@@ -48,6 +50,8 @@ export default function BlogPost() {
     </div>
   );
 
+  const thumbnail = cdnImage(blog.thumbnail);
+
   return (
     <div className="bg-black min-h-screen text-white font-sans">
       <SeoHead
@@ -55,12 +59,12 @@ export default function BlogPost() {
           meta_title: blog.meta_title,
           meta_description: blog.meta_description,
           meta_keywords: blog.meta_keywords || (blog.tags ? blog.tags.join(', ') : ''),
-          og_image: blog.thumbnail,
+          og_image: thumbnail,
           canonical_url: blog.canonical_url
         }}
         title={`${blog.title} | Adbuth Verse`}
         description={blog.meta_description || blog.content.substring(0, 160)}
-        image={blog.thumbnail}
+        image={thumbnail}
         author={blog.author || "Adbuth Verse"}
       />
       <Navbar highlight="blogs" />
@@ -69,8 +73,8 @@ export default function BlogPost() {
 
         {/* Hero Section */}
         <div className="relative h-[450px] w-full bg-gray-900">
-          {blog.thumbnail ? (
-            <img src={blog.thumbnail} alt={blog.title} className="w-full h-full object-cover opacity-60" />
+          {thumbnail ? (
+            <Image src={thumbnail} alt={blog.title} fill className="object-cover opacity-60" priority />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-600">
               No Cover Image

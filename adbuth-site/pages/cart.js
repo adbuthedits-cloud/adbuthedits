@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
+import { cdnImage } from '../utils/cdn';
 
 export default function Cart() {
     const { seoData } = useSeo('cart');
@@ -294,7 +295,7 @@ export default function Cart() {
                                 <Link href={buildProductUrl(item.product)} className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100 shrink-0 hover:opacity-90 transition-opacity">
                                     {item.product?.images && (
                                         <img
-                                            src={item.product.images[0]}
+                                            src={cdnImage(item.product.images[0])}
                                             alt={item.product.title}
                                             className="w-full h-full object-cover"
                                         />

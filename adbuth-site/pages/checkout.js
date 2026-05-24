@@ -9,6 +9,7 @@ import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
+import { cdnImage } from '../utils/cdn';
 
 export default function Checkout() {
     const { seoData } = useSeo('checkout');
@@ -322,7 +323,7 @@ export default function Checkout() {
                                     <div key={item.cart_item_id} className="flex gap-4 py-4 border-b border-gray-50 last:border-0">
                                         <div className="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100">
                                             {item.product?.images && (
-                                                <img src={item.product.images[0]} className="w-full h-full object-cover" alt={item.product?.title} />
+                                                <img src={cdnImage(item.product.images[0])} className="w-full h-full object-cover" alt={item.product?.title} />
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0 flex flex-col justify-center">

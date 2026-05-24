@@ -69,32 +69,32 @@ const AnimatedCoreFeatures = () => {
         {
             title: "Cloud Storage & Sync",
             desc: "Backed by secure cloud infrastructure (LucidLink / AWS / Wasabi)",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/cloud-storage.svg"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/cloud-storage.svg"
         },
         {
             title: "AI-Powered Search",
             desc: "Find any file by project, date, or even within video scenes (“find bride entry”)",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/ai.svg"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/ai.svg"
         },
         {
             title: "Version Control",
             desc: "Maintain every iteration without overwriting.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/versions.svg"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/versions.svg"
         },
         {
             title: "Collaboration Tools",
             desc: "Review, comment, and approve like Frame.io.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/collaborate.svg"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/collaborate.svg"
         },
         {
             title: "Permissions & Access",
             desc: "Define who sees what: clients, editors, or admins.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/permissions.svg"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/permissions.svg"
         },
         {
             title: "Seamless Integrations",
             desc: "Works with Premiere Pro, DaVinci Resolve, After Effects, and more.",
-            image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/integration.svg"
+            image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/integration.svg"
         }
     ];
 
@@ -199,11 +199,11 @@ const AnimatedCoreFeatures = () => {
 };
 
 const whyChooseCards = [
-    { title: "Scalability That Grows With You", desc: "Whether you're managing 10 or 100 editors, Adbuth DAM keeps your workflows organized and chaos-free.", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/scalability-the-growth.png" },
-    { title: "Smarter, Faster Workflows", desc: "Cut down 30% of time wasted searching for files -- AI tagging and smart search deliver what you need instantly.", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/smarter-faster.png" },
-    { title: "Professional Client Experience", desc: "Impress clients with a sleek, branded portal for reviewing, downloading, and approving content effortlessly.", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/professinal-client.png" },
-    { title: "Intelligent Asset Control", desc: "Maintain full control with permissions, version tracking, and role-based access for your entire team.", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/intelligent-assets.png" },
-    { title: "Built for Business Growth", desc: "Turn your DAM into a revenue stream offer it as a subscription to corporates, creators, and agencies.", image: "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/businees-growth.png" }
+    { title: "Scalability That Grows With You", desc: "Whether you're managing 10 or 100 editors, Adbuth DAM keeps your workflows organized and chaos-free.", image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/scalability-the-growth.webp" },
+    { title: "Smarter, Faster Workflows", desc: "Cut down 30% of time wasted searching for files -- AI tagging and smart search deliver what you need instantly.", image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/smarter-faster.webp" },
+    { title: "Professional Client Experience", desc: "Impress clients with a sleek, branded portal for reviewing, downloading, and approving content effortlessly.", image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/professinal-client.webp" },
+    { title: "Intelligent Asset Control", desc: "Maintain full control with permissions, version tracking, and role-based access for your entire team.", image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/intelligent-assets.webp" },
+    { title: "Built for Business Growth", desc: "Turn your DAM into a revenue stream offer it as a subscription to corporates, creators, and agencies.", image: "https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/businees-growth.webp" }
 ];
 
 export default function AdbuthDAM() {
@@ -329,7 +329,7 @@ export default function AdbuthDAM() {
                         <div className="flex justify-center lg:justify-end relative order-2 lg:order-none w-full">
                             <motion.img
                                 custom={3} variants={fadeInUp} initial="hidden" animate="visible"
-                                src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/dam%20banner.png"
+                                src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/dam%20banner.webp"
                                 alt="Adbuth DAM Dashboard"
                                 className="w-full max-w-md lg:max-w-[80%] object-contain"
                             />
@@ -388,7 +388,7 @@ export default function AdbuthDAM() {
                             <div className="w-full md:col-span-3 order-2 md:order-3 mt-4 md:mt-0">
                                 <motion.img
                                     initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                                    src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/adbuth-dam/what-adbuth-dam.png"
+                                    src="https://assets.adbuthverse.com/website-assets/pages/services/learning/adbuth-dam/what-adbuth-dam.webp"
                                     alt="What is Adbuth DAM Dashboard"
                                     className="w-full object-cover rounded shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
                                 />

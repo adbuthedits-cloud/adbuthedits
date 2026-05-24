@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import SeoHead from '../../components/SeoHead';
 import useSeo from '../../hooks/useSeo';
 import Navbar from '../../components/Navbar';
@@ -8,43 +9,45 @@ import ServiceDrawer from '../../components/ServiceDrawer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
+import { cdnImage } from '../../utils/cdn';
+
 
 const servicesData = [
   {
     id: 'video',
     title: 'VIDEO EDITING',
     description: 'Crafting visual stories that captivate and inspire.',
-    img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/service-video-editing.png',
+    img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/service-video-editing.webp'),
     mainLink: '/services/videos',
     subServices: [
-      { title: 'Adbuth Edits', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-edits.png', link: '/services/videos/adbuth-edits' },
-      { title: 'Adbuth Corporate', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-coporate.png', link: '/services/videos/adbuth-corporate' },
-      { title: 'Adbuth Ads', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-ads.png', link: '/services/videos/adbuth-ads' },
-      { title: 'Adbuth Politics', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-politics.png', link: '/services/videos/adbuth-politics' },
-      { title: 'Adbuth Music', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-music.png', link: '/services/videos/adbuth-music' },
-      { title: 'Adbuth Movies', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/adbuth-movies.png', link: '/services/videos/adbuth-movies' }
+      { title: 'Adbuth Edits', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/adbuth-edits.webp'), link: '/services/videos/adbuth-edits' },
+      { title: 'Adbuth Corporate', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/adbuth-coporate.webp'), link: '/services/videos/adbuth-corporate' },
+      { title: 'Adbuth Ads', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/adbuth-ads.webp'), link: '/services/videos/adbuth-ads' },
+      { title: 'Adbuth Politics', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/adbuth-politics.webp'), link: '/services/videos/adbuth-politics' },
+      { title: 'Adbuth Music', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/adbuth-music.webp'), link: '/services/videos/adbuth-music' },
+      { title: 'Adbuth Movies', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/adbuth-movies.webp'), link: '/services/videos/adbuth-movies' }
     ]
   },
   {
     id: 'design',
     title: 'DESIGN',
     description: 'Creative designs that communicate your brand\'s essence.',
-    img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/service-design.png',
+    img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/service-design.webp'),
     mainLink: '/services/design',
     subServices: [
-      { title: 'Adbuth E-Invitations', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/services-e-invitation.png', link: '/services/designing/adbuth-e-invitations' },
-      { title: 'Adbuth Graphics', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/services-graphics.png', link: '/services/designing/adbuth-graphics' }
+      { title: 'Adbuth E-Invitations', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/services-e-invitation.webp'), link: '/services/designing/adbuth-e-invitations' },
+      { title: 'Adbuth Graphics', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/services-graphics.webp'), link: '/services/designing/adbuth-graphics' }
     ]
   },
   {
     id: 'learning',
     title: 'LEARNING',
     description: 'Strategic solutions to elevate your business presence.',
-    img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/service-commercial.png',
+    img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/service-commercial.webp'),
     mainLink: '/services/learning',
     subServices: [
-      { title: 'Adbuth DAM', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-dam.png', link: '/services/learning/adbuth-dam' },
-      { title: 'Adbuth Learnings', img: 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/learning/index/services-e-learning.png', link: '/services/learning/adbuth-e-learning' }
+      { title: 'Adbuth DAM', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/learning/index/services-dam.webp'), link: '/services/learning/adbuth-dam' },
+      { title: 'Adbuth Learnings', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/learning/index/services-e-learning.webp'), link: '/services/learning/adbuth-e-learning' }
     ]
   }
 ];
@@ -81,7 +84,7 @@ export default function Services() {
       <SeoHead
         title={seoData?.meta_title || seoData?.title || "Services | Adbuth Verse"}
         description={seoData?.meta_description || seoData?.description || "Explore our wide range of digital services tailored for your business."}
-        image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/services/index/service-video-editing.png"}
+        image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/index/service-video-editing.webp"}
         data={seoData}
       />
       <Navbar highlight="services" isdark={false} />
@@ -90,14 +93,12 @@ export default function Services() {
         {/* Header Section */}
         <section className="bg-white w-full px-10 md:px-24 pt-12 pb-10 bg-white  -mb-1 ">
           <div className="flex justify-between items-end mb-8 max-w-7xl mx-auto">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+            <h1
               className="text-5xl lg:text-8xl md:text-6xl font-black uppercase tracking-tighter leading-none "
             >
               <span className="text-[#7D287E]">OUR</span> <br />
               <span className="text-[#FCD804]">SERVICES</span>
-            </motion.h1>
+            </h1>
             <p className="text-[12px] font-medium text-black leading-tight max-w-56 md:block hidden">
               Using state-of-the-art technologies and a collaborative spirit, we strive to exceed expectations, meet deadlines, and bring stories to life with brilliance, one frame at a time.
             </p>
@@ -131,9 +132,15 @@ export default function Services() {
                 >
                   {/* Background Image - Only visible when NOT active */}
                   <div
-                    className={`absolute top-0 left-0 w-full h-[500px] bg-cover bg-center transition-opacity duration-500 ${isActive ? 'opacity-0' : 'opacity-100'}`}
-                    style={{ backgroundImage: `url(${service.img})` }}
+                    className={`absolute top-0 left-0 w-full h-[500px] transition-opacity duration-500 ${isActive ? 'opacity-0' : 'opacity-100'}`}
                   >
+                    <Image
+                      src={service.img}
+                      alt={service.title}
+                      fill
+                      className="object-cover object-center"
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                    />
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors duration-300" />
                   </div>
 

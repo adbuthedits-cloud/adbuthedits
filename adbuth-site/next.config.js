@@ -10,11 +10,20 @@ const nextConfig = {
     // Cloudflare handles compression and resizing natively.
     images: {
         unoptimized: true,
-        minimumCacheTTL: 86400, // Cache images for 24 hours on CDN
+        minimumCacheTTL: 86400,
         remotePatterns: [
             {
                 protocol: 'https',
                 hostname: 'pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev',
+            },
+            {
+                // Custom CDN domain — set NEXT_PUBLIC_CDN_URL to this
+                protocol: 'https',
+                hostname: 'cdn.adbuthverse.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'assets.adbuthverse.com',
             },
             {
                 protocol: 'https',
@@ -23,9 +32,36 @@ const nextConfig = {
         ],
     },
 
-    // Add cache-control headers for all static assets
+    // Add security + cache-control headers for all routes
     async headers() {
         return [
+            // ── Security headers for all pages ──────────────────────────────
+            {
+                source: '/(.*)',
+                headers: [
+                    {
+                        key: 'X-Frame-Options',
+                        value: 'SAMEORIGIN',
+                    },
+                    {
+                        key: 'X-Content-Type-Options',
+                        value: 'nosniff',
+                    },
+                    {
+                        key: 'Referrer-Policy',
+                        value: 'strict-origin-when-cross-origin',
+                    },
+                    {
+                        key: 'Strict-Transport-Security',
+                        value: 'max-age=63072000; includeSubDomains; preload',
+                    },
+                    {
+                        key: 'Permissions-Policy',
+                        value: 'camera=(), microphone=(), geolocation=()',
+                    },
+                ],
+            },
+            // ── Static assets: aggressive long-term caching ─────────────────
             {
                 source: '/_next/static/:path*',
                 headers: [

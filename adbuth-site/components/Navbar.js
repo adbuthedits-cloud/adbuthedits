@@ -152,7 +152,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
       <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/logo.png" alt="Logo" className='lg:w-36 md:w-28 sm:w-24 w-28 object-contain' width={280} height={280} priority />
+            <Image src="https://assets.adbuthverse.com/website-assets/brand/logo.webp" alt="Logo" className='lg:w-36 md:w-28 sm:w-24 w-28 object-contain' width={280} height={280} priority />
           </Link>
         </div>
 

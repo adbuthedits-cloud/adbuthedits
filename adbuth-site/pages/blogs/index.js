@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faShareNodes, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -9,6 +10,8 @@ import { faWhatsapp, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 import SeoHead from '../../components/SeoHead';
 import useSeo from '../../hooks/useSeo';
+import { cdnImage } from '../../utils/cdn';
+
 
 export default function Blogs() {
   const [categories, setCategories] = useState(['All']);
@@ -43,7 +46,7 @@ export default function Blogs() {
           author: blog.author || 'Adbuth Team',
           category: blog.category?.name || 'Uncategorized',
           excerpt: blog.content.replace(/<[^>]+>/g, '').substring(0, 150) + '...', // Strip HTML
-          image: blog.thumbnail || '/images/blog1.jpg' // Fallback image
+          image: cdnImage(blog.thumbnail) || '/images/blog1.jpg' // Fallback image
         }));
         setAllPosts(formattedPosts);
       } catch (error) {
@@ -105,7 +108,7 @@ export default function Blogs() {
       <SeoHead
         title={seoData?.meta_title || seoData?.title || "Our Blog | Adbuth Verse"}
         description={seoData?.meta_description || seoData?.description || "Explore the latest insights, trends, and stories from Adbuth Verse."}
-        image={seoData?.og_image || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/blogs/blogs-header.png"}
+        image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/blogs/blogs-header.webp"}
         author={seoData?.author || "Adbuth Verse"}
         data={seoData} // Pass full object for keywords, canonical
       />
@@ -117,13 +120,13 @@ export default function Blogs() {
         <section
           className="py-32 text-center relative z-10 bg-cover bg-bottom bg-no-repeat"
           style={{
-            backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/blogs/mobile-blogs.png')"
+            backgroundImage: `url('${cdnImage("https://assets.adbuthverse.com/website-assets/pages/blogs/mobile-blogs.webp")}')`
           }}
         >
           {/* Desktop background image override */}
           <div
             className="absolute inset-0 -z-10 hidden md:block bg-cover bg-bottom bg-no-repeat"
-            style={{ backgroundImage: "url('https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/pages/blogs/blogs-header.png')" }}
+            style={{ backgroundImage: `url('${cdnImage("https://assets.adbuthverse.com/website-assets/pages/blogs/blogs-header.webp")}')` }}
           />
 
           <h1 className="text-6xl md:text-7xl font-black uppercase tracking-tighter relative z-10">
@@ -169,10 +172,12 @@ export default function Blogs() {
                           <Link href={`/blogs/${post.slug}`}>
                             <div className="cursor-pointer">
                               <div className="relative h-28 overflow-hidden">
-                                <img
+                                <Image
                                   src={post.image}
                                   alt={post.title}
-                                  className="w-full h-full object-cover"
+                                  fill
+                                  sizes="(max-width: 1024px) 50vw, 33vw"
+                                  className="object-cover"
                                 />
                               </div>
 
@@ -230,7 +235,7 @@ export default function Blogs() {
                           <div className="w-full md:w-1/3 shrink-0">
                             <Link href={`/blogs/${post.slug}`}>
                               <div className="aspect-video bg-gray-800 rounded-lg overflow-hidden cursor-pointer">
-                                <img src={post.image} alt={post.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                <Image src={post.image} alt={post.title} fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover hover:scale-105 transition-transform duration-500" />
                               </div>
                             </Link>
                           </div>
