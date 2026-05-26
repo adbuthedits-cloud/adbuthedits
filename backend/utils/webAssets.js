@@ -38,7 +38,7 @@ const r2 = new S3Client({
 const BUCKET = process.env.R2_PUBLIC_BUCKET || 'adbuth-public';
 
 function webpKey(key)     { return key.replace(/\.(png|jpg|jpeg|gif|tiff|bmp)$/i, '.webp'); }
-function webVideoKey(key) { return key.replace(/\.(mp4|mov|avi|mkv|webm)$/i, '_web.mp4'); }
+function webVideoKey(key) { return key; }
 function isImage(mime)    { return mime && mime.startsWith('image/'); }
 function isVideo(mime)    { return mime && mime.startsWith('video/'); }
 

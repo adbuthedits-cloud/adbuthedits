@@ -259,7 +259,10 @@ router.delete('/delete-file', checkPermission('media_manager', 'delete'), async 
         if (imageExts.includes(ext)) {
             keysToDelete.push({ Key: webpKey(key) });
         } else if (videoExts.includes(ext)) {
-            keysToDelete.push({ Key: webVideoKey(key) });
+            const webVideo = webVideoKey(key);
+            if (webVideo && webVideo !== key) {
+                keysToDelete.push({ Key: webVideo });
+            }
         }
 
         await publicS3.send(new DeleteObjectsCommand({
