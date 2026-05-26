@@ -11,6 +11,7 @@
  * Module keys (must match exactly):
  *   dashboard | seo | orders | products | master_data | blogs | blog_categories
  *   reviews | payments | marketing | users | staff | settings | order_tracking | my_tasks
+ *   media_manager
  *
  * Action keys:
  *   view | edit | delete

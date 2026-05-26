@@ -25,6 +25,7 @@ const ALL_MODULES = [
     { key: "marketing",       label: "Coupons & Promo",  actions: ["view", "edit", "delete"] },
     { key: "users",           label: "Customers",        actions: ["view", "edit", "delete"] },
     { key: "staff",           label: "Staff Members",    actions: ["view", "edit", "delete"] },
+    { key: "media_manager",   label: "Media Manager",    actions: ["view", "edit", "delete"] },
     { key: "settings",        label: "Settings",         actions: ["view", "edit"] },
 ];
 

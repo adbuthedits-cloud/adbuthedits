@@ -29,7 +29,8 @@ import {
     faClockRotateLeft,
     faRoute,
     faClipboardCheck,
-    faEnvelope
+    faEnvelope,
+    faCloudUploadAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { getAuthToken, getAuthUser, canAccessModule } from "../utils/auth";
 import setupAxiosInterceptors from "../utils/axiosConfig";
@@ -235,6 +236,10 @@ export default function AdminLayout({ children }) {
                             <MenuItem href="/staff" icon={faUserShield} label="Staff Members" collapsed={collapsed} />
                             <MenuItem href="/roles" icon={faClockRotateLeft} label="Role Management" collapsed={collapsed} />
                         </>
+                    )}
+
+                    {canSee("media_manager") && (
+                        <MenuItem href="/media-manager" icon={faCloudUploadAlt} label="Media Manager" collapsed={collapsed} />
                     )}
 
                     {canSee("settings") && (
