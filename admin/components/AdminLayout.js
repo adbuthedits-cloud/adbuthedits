@@ -34,6 +34,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getAuthToken, getAuthUser, canAccessModule } from "../utils/auth";
 import setupAxiosInterceptors from "../utils/axiosConfig";
+import AnalyticsPanel from "./AnalyticsPanel";
 
 // Initialize global axios interceptors once
 setupAxiosInterceptors();
@@ -85,9 +86,51 @@ export default function AdminLayout({ children }) {
     const [userContext, setUserContext] = useState(null);
     const router = useRouter();
     const [newOrdersCount, setNewOrdersCount] = useState(0);
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const pathname = usePathname();
 
+    const playNotificationSound = () => {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            // First chime (higher tone)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(880, ctx.currentTime); // A5
+            gain1.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(ctx.currentTime);
+            osc1.stop(ctx.currentTime + 0.15);
+            
+            // Second chime (slightly lower/warmer tone, delayed)
+            setTimeout(() => {
+                try {
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+                    gain2.gain.setValueAtTime(0.08, ctx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start(ctx.currentTime);
+                    osc2.stop(ctx.currentTime + 0.25);
+                } catch (e) {
+                    // Ignore sound playback block errors
+                }
+            }, 80);
+        } catch (error) {
+            console.log("Audio play blocked or unsupported:", error.message);
+        }
+    };
+
     const fetchCounts = async () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
         try {
             const token = getAuthToken();
             if (!token) return;
@@ -100,10 +143,17 @@ export default function AdminLayout({ children }) {
                 })
             ]);
 
-            setNewOrdersCount(ordersRes.data.count);
+            const newCount = ordersRes.data.count;
+            setNewOrdersCount(prevCount => {
+                if (newCount > prevCount && prevCount !== null && prevCount !== undefined) {
+                    playNotificationSound();
+                }
+                return newCount;
+            });
         } catch (error) {
-            if (error.response?.status !== 403) {
-                console.error("Failed to fetch dashboard counts", error);
+            // Suppress error logging in console when polling, as network blips or Render cold starts shouldn't spam errors
+            if (error.response?.status === 403) {
+                console.warn("[Polling] 403 Forbidden - credentials may have expired.");
             }
         }
     };
@@ -132,8 +182,10 @@ export default function AdminLayout({ children }) {
                         }
                     }
                 } catch (e) {
-                    // Ignore, token might just be expired and handled elsewhere, or network blip
-                    console.error("Silent permission sync failed", e.message);
+                    // Suppress network errors/cold starts from spamming console log
+                    if (e.response?.status === 403 || e.response?.status === 401) {
+                        console.warn("Silent session verification failed: unauthorized.");
+                    }
                 }
             };
             verifyUser();
@@ -143,11 +195,35 @@ export default function AdminLayout({ children }) {
     useEffect(() => {
         if (isAuthorized) {
             fetchCounts();
-            const interval = setInterval(fetchCounts, 10000);
+            
+            let interval;
+            const startPolling = () => {
+                if (interval) clearInterval(interval);
+                interval = setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        fetchCounts();
+                    }
+                }, 10000);
+            };
+
+            const handleVisibilityChange = () => {
+                if (document.visibilityState === 'visible') {
+                    fetchCounts();
+                    startPolling();
+                } else {
+                    if (interval) clearInterval(interval);
+                }
+            };
+
+            startPolling();
+            document.addEventListener("visibilitychange", handleVisibilityChange);
+
             const handleBadgeReset = () => setNewOrdersCount(0);
             window.addEventListener("ordersViewed", handleBadgeReset);
+            
             return () => {
-                clearInterval(interval);
+                if (interval) clearInterval(interval);
+                document.removeEventListener("visibilitychange", handleVisibilityChange);
                 window.removeEventListener("ordersViewed", handleBadgeReset);
             };
         }
@@ -297,7 +373,11 @@ export default function AdminLayout({ children }) {
                             <FontAwesomeIcon icon={faSync} className="text-lg group-active:animate-spin" />
                         </button>
 
-                        <button className="relative text-gray-400 hover:text-[#a78bfa] transition-colors">
+                        <button 
+                            onClick={() => setShowAnalytics(true)}
+                            className="relative text-gray-400 hover:text-[#a78bfa] transition-colors"
+                            title="Analytics Overview"
+                        >
                             <FontAwesomeIcon icon={faChartPie} className="text-lg" />
                             <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#a78bfa] rounded-full border border-[#1a1025]"></span>
                         </button>
@@ -324,6 +404,9 @@ export default function AdminLayout({ children }) {
                     </PageTransition>
                 </main>
             </div>
+
+            {/* Analytics Side Drawer */}
+            <AnalyticsPanel isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
         </div>
     );
 }

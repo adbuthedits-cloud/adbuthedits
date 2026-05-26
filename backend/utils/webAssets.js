@@ -1,16 +1,8 @@
 /**
  * webAssets.js — Auto-generate web-optimized versions on every upload
  *
- * When the admin uploads a new image or video to R2,
- * this middleware automatically creates a web-optimized copy:
- *   - Image (PNG/JPG) → WebP (same folder, .webp extension)
- *   - Video (MP4)     → Compressed MP4 (same folder, _web.mp4 suffix)
- *
- * USAGE in upload routes:
- *   const { generateWebAsset } = require('../utils/webAssets');
- *
- *   // Background generation (safe for large files, avoids request timeouts)
- *   generateWebAsset(r2Key, mimeType);
+ * Prevents server crashes on memory-constrained hosting (e.g. Render Free Tier 512MB RAM)
+ * by queuing conversion tasks and processing them sequentially (single concurrency).
  */
 
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -23,6 +15,10 @@ const os = require('os');
 
 // Configure ffmpeg path explicitly for the environment
 ffmpeg.setFfmpegPath(ffmpegStatic);
+
+// Configure sharp for low-memory environments (disable cache, limit thread concurrency to 1)
+sharp.cache(false);
+sharp.concurrency(1);
 
 const WEBP_QUALITY  = 82;
 const VIDEO_HEIGHT  = 720;
@@ -71,31 +67,38 @@ async function downloadFromR2(key, localPath) {
     });
 }
 
+// ─── Single Concurrency Queue Implementation ──────────────────────────────────
+const optimizationQueue = [];
+let isProcessingQueue = false;
+
+async function processQueue() {
+    if (isProcessingQueue || optimizationQueue.length === 0) return;
+    isProcessingQueue = true;
+
+    const task = optimizationQueue.shift();
+    console.log(`[WebAssets Queue] 🔄 Processing task for key: ${task.r2Key}. Remaining in queue: ${optimizationQueue.length}`);
+    
+    try {
+        await executeOptimization(task.r2Key, task.mimeType, task.fileBuffer);
+    } catch (err) {
+        console.error(`[WebAssets Queue] ❌ Error executing optimization for ${task.r2Key}:`, err.message);
+    } finally {
+        isProcessingQueue = false;
+        // Schedule next queue process tick
+        setTimeout(processQueue, 200);
+    }
+}
+
 /**
- * Generate a web-optimized version of an uploaded file.
- * Downloads original from R2, processes locally, uploads compressed copy, and cleans up.
- *
- * @param {string} r2Key        - The R2 key of the original uploaded file
- * @param {string} mimeType     - MIME type e.g. 'image/png', 'video/mp4'
- * @param {Buffer} [fileBuffer] - Optional buffer if already available in memory (avoids download)
- * @returns {Promise<string|null>} - The R2 key of the web version, or null
+ * Performs the actual resource-intensive media processing.
  */
-async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
+async function executeOptimization(r2Key, mimeType, fileBuffer = null) {
     const inputPath = path.join(TEMP_DIR, `input_${Date.now()}_${path.basename(r2Key)}`);
     let outputPath = '';
     
     try {
-        if (!isImage(mimeType) && !isVideo(mimeType)) {
-            return null; // Skip unsupported types
-        }
-
-        // Determine destination key
         const outKey = isImage(mimeType) ? webpKey(r2Key) : webVideoKey(r2Key);
-        if (outKey === r2Key) {
-            return null; // Already optimized extension
-        }
-
-        console.log(`[WebAssets] ⚡ Starting background optimization for: ${r2Key} (${mimeType})`);
+        console.log(`[WebAssets] ⚡ Starting processing: ${r2Key} (${mimeType})`);
 
         // Ensure temp directory exists
         if (!fs.existsSync(TEMP_DIR)) {
@@ -113,7 +116,8 @@ async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
         // 2. Perform compression
         if (isImage(mimeType)) {
             outputPath = path.join(TEMP_DIR, `output_${Date.now()}_${path.basename(outKey)}`);
-            console.log(`[WebAssets] 🖼  Compressing image to WebP...`);
+            console.log(`[WebAssets] 🖼  Compressing image to WebP (Quality: ${WEBP_QUALITY})...`);
+            
             await sharp(inputPath)
                 .webp({ quality: WEBP_QUALITY })
                 .toFile(outputPath);
@@ -121,7 +125,7 @@ async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
             // Upload using stream to conserve memory
             const outStream = fs.createReadStream(outputPath);
             await uploadToR2(outKey, outStream, 'image/webp');
-            console.log(`[WebAssets] ✅ Created image: ${outKey}`);
+            console.log(`[WebAssets] ✅ Created image asset: ${outKey}`);
             return outKey;
         }
 
@@ -134,7 +138,7 @@ async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
                     .outputOptions([
                         `-vf scale=-2:${VIDEO_HEIGHT}`,
                         `-c:v libx264`,
-                        `-preset fast`,
+                        `-preset superfast`, // Use superfast for lower CPU load
                         `-crf 28`,
                         `-b:v ${VIDEO_BITRATE}`,
                         `-maxrate ${VIDEO_BITRATE}`,
@@ -143,6 +147,7 @@ async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
                         `-b:a ${AUDIO_BITRATE}`,
                         `-movflags +faststart`,
                         `-pix_fmt yuv420p`,
+                        `-threads 1` // Limit FFmpeg to 1 thread to avoid CPU throttling crashes
                     ])
                     .save(outputPath)
                     .on('end', resolve)
@@ -152,11 +157,9 @@ async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
             // Upload using stream to conserve memory
             const outStream = fs.createReadStream(outputPath);
             await uploadToR2(outKey, outStream, 'video/mp4');
-            console.log(`[WebAssets] ✅ Created video: ${outKey}`);
+            console.log(`[WebAssets] ✅ Created video asset: ${outKey}`);
             return outKey;
         }
-    } catch (err) {
-        console.error(`[WebAssets] ⚠️  Failed to generate web asset for ${r2Key}:`, err.message);
     } finally {
         // Cleanup temp files
         try {
@@ -166,7 +169,34 @@ async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
             console.error('[WebAssets] ⚠️  Cleanup error:', cleanupErr.message);
         }
     }
-    return null;
+}
+
+/**
+ * Enqueues a file for background web optimization.
+ *
+ * @param {string} r2Key        - The R2 key of the original uploaded file
+ * @param {string} mimeType     - MIME type e.g. 'image/png', 'video/mp4'
+ * @param {Buffer} [fileBuffer] - Optional buffer if already available in memory (avoids download)
+ * @returns {Promise<string|null>} - The expected R2 key of the web version, or null
+ */
+async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
+    if (!isImage(mimeType) && !isVideo(mimeType)) {
+        return null; // Skip unsupported types
+    }
+
+    const outKey = isImage(mimeType) ? webpKey(r2Key) : webVideoKey(r2Key);
+    if (outKey === r2Key) {
+        return null; // Already optimized
+    }
+
+    // Push task into queue
+    optimizationQueue.push({ r2Key, mimeType, fileBuffer });
+    console.log(`[WebAssets] 📥 Enqueued conversion task for: ${r2Key}. Current queue size: ${optimizationQueue.length}`);
+
+    // Trigger processing (runs asynchronously in background)
+    processQueue();
+
+    return outKey;
 }
 
 module.exports = { generateWebAsset, webpKey, webVideoKey };
