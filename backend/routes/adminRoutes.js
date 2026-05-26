@@ -819,6 +819,64 @@ router.put('/products/:id', checkPermission('products', 'edit'), async (req, res
         res.status(400).json({ error: err.message });
     }
 });
+// --- BULK PRODUCT DELETION ---
+router.delete('/products/bulk', checkPermission('products', 'delete'), async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: 'No product IDs provided' });
+        }
+
+        const products = await Product.findAll({ where: { products_id: ids } });
+
+        for (const product of products) {
+            let prefix = null;
+            const mediaUrl = product.thumbnail || product.resource_file || (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null);
+
+            if (mediaUrl && mediaUrl.includes('/products/')) {
+                try {
+                    const urlObj = new URL(mediaUrl);
+                    const pathParts = decodeURIComponent(urlObj.pathname).split('/');
+                    const sku = product.internal_sku;
+
+                    if (sku) {
+                        const skuIndex = pathParts.indexOf(sku);
+                        if (skuIndex !== -1) {
+                            prefix = pathParts.slice(1, skuIndex + 1).join('/') + '/';
+                        }
+                    }
+                } catch (e) {
+                    console.error('[Bulk Delete Media] Prefix derivation failed:', e);
+                }
+            }
+
+            if (prefix && prefix.startsWith('products/')) {
+                try {
+                    const listCommand = new ListObjectsV2Command({ Bucket: process.env.R2_PUBLIC_BUCKET, Prefix: prefix });
+                    const listedObjects = await publicS3.send(listCommand);
+                    if (listedObjects.Contents && listedObjects.Contents.length > 0) {
+                        const deleteParams = {
+                            Bucket: process.env.R2_PUBLIC_BUCKET,
+                            Delete: { Objects: listedObjects.Contents.map(({ Key }) => ({ Key })), Quiet: true }
+                        };
+                        await publicS3.send(new DeleteObjectsCommand(deleteParams));
+                    }
+                } catch (cloudErr) {
+                    console.error('[Bulk Delete Media] Cloud deletion failed:', cloudErr);
+                }
+            }
+        }
+
+        await Product.destroy({ where: { products_id: ids } });
+        await clearCache(['products', 'product', 'products-meta']);
+
+        res.json({ success: true, message: `${products.length} products deleted successfully` });
+    } catch (err) {
+        require('fs').appendFileSync('debug.log', err.stack + '\n');
+        console.error('[Delete Bulk Products Error]:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 router.delete('/products/:id', checkPermission('products', 'delete'), async (req, res) => {
     try {

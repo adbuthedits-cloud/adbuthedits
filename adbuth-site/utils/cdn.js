@@ -45,27 +45,19 @@ export function cdnUrl(url) {
  */
 export function cdnImage(url) {
   if (!url || typeof url !== 'string') return url
-  const withCdn = replaceOrigins(url)
-  if (/\.webp(\?.*)?$/i.test(withCdn)) return withCdn
-  // Convert image extensions to .webp
-  return withCdn.replace(/\.(png|jpg|jpeg|gif|tiff|bmp)(\?.*)?$/i, '.webp')
+  return replaceOrigins(url)
 }
 
 /**
  * Get the web-optimized VIDEO URL (_web.mp4 compressed preview).
  * Falls back to original CDN URL if no _web version exists.
  *
- * Original:  /folder/video.mp4  &rarr;  /folder/video_web.mp4
- *
  * @param {string|null|undefined} url
  * @returns {string|null|undefined}
  */
 export function cdnVideo(url) {
   if (!url || typeof url !== 'string') return url
-  const withCdn = replaceOrigins(url)
-  if (/(_web|web)\.mp4(\?.*)?$/i.test(withCdn)) return withCdn
-  // Insert _web and change extension to .mp4: video.mov -> video_web.mp4
-  return withCdn.replace(/\.(mp4|mov|avi|mkv|webm)(\?.*)?$/i, '_web.mp4$2')
+  return replaceOrigins(url)
 }
 
 /**

@@ -240,11 +240,11 @@ export default function AdbuthELearning() {
     ];
 
     return (
-        <div className="font-sans bg-[#F4F8F6] text-black overflow-x-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
+        <div className="font-sans bg-[#F4F8F6] text-black overflow-x-hidden">
             <SeoHead page="service-learning-e-learning" title="Adbuth Learning | The Practical Way" />
             <Navbar highlight='services' isdark={false} />
 
-            <main className="pt-24 md:pt-24 pb-0">
+            <main className="pt-24 md:pt-24 pb-0" style={{ fontFamily: 'Outfit, sans-serif' }}>
 
                 {/* HERO SECTION */}
                 <section className="relative bg-[#FBF9F5] py-24 px-6 md:px-12 lg:px-24  overflow-hidden flex flex-col lg:flex-row items-start justify-between min-h-[70vh] lg:min-h-[100vh]">

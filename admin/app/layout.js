@@ -14,14 +14,16 @@ export const metadata = {
     description: "Admin Dashboard for Adbuth Shop",
 };
 
+import AxiosInterceptor from './components/AxiosInterceptor';
+
 export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <body className={inter.className}>
                 <Toaster position="top-right" />
-
-                {children}
-
+                <AxiosInterceptor>
+                    {children}
+                </AxiosInterceptor>
             </body>
         </html>
     );

@@ -424,10 +424,28 @@ export async function getStaticProps(context) {
         const masterData = await masterRes.json();
         const initialProducts = await productsRes.json();
 
+        const trimmedProducts = (initialProducts || []).map(p => ({
+            products_id: p.products_id || null,
+            title: p.title || null,
+            description: p.description ? p.description.replace(/<[^>]*>?/gm, '').substring(0, 80) : null,
+            price: p.price || null,
+            compared_price: p.compared_price || null,
+            slug: p.slug || null,
+            thumbnail: p.thumbnail || null,
+            video: p.video || null,
+            video_url: p.video_url || null,
+            updatedAt: p.updatedAt || p.updated_at || null,
+            averageRating: p.averageRating || null,
+            reviewCount: p.reviewCount || null,
+            parentCategory: p.parentCategory ? { slug: p.parentCategory.slug } : null,
+            assetCategory: p.assetCategory ? { slug: p.assetCategory.slug } : null,
+            assetSubCategory: p.assetSubCategory ? { slug: p.assetSubCategory.slug, name: p.assetSubCategory.name } : null,
+        }));
+
         return {
             props: {
                 masterData: masterData || {},
-                initialProducts: initialProducts || [],
+                initialProducts: trimmedProducts || [],
             },
             revalidate: 60,
         };

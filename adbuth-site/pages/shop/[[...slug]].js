@@ -485,13 +485,13 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     // ─── Product detail mode ─────────────────────────────────────────────────
     if (isProductDetail && productSlug) {
         return (
-            <>
+            <div className="min-h-screen bg-white">
                 <Navbar isdark={false} highlight='shop' />
                 <main className="pt-24">
                     <ProductDetailView slug={productSlug} masterData={masterData} />
                 </main>
                 <Footer />
-            </>
+            </div>
         );
     }
 
@@ -637,7 +637,7 @@ export async function getStaticProps(context) {
         const trimmedProducts = (initialProducts || []).map(p => ({
             products_id: p.products_id || null,
             title: p.title || null,
-            description: p.description || null,
+            description: p.description ? p.description.replace(/<[^>]*>?/gm, '').substring(0, 80) : null,
             price: p.price || null,
             compared_price: p.compared_price || null,
             slug: p.slug || null,

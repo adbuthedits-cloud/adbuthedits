@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown, faShoppingBag, faUser, faHeart, faBoxOpen, faCog, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 import { useAuth } from '../context/AuthContext'
 
-export default function Navbar({ highlight = '', isdark = true, headerClass = "absolute" }) {
+export default function Navbar({ highlight = '', isdark = true, headerClass = "", position = "absolute" }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -148,7 +148,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = "a
   }
 
   return (
-    <header className={`w-full top-0 left-0 z-50 transition-all duration-300 ${headerClass}`}>
+    <header className={`w-full top-0 left-0 z-50 transition-all duration-300 ${position} ${headerClass}`}>
       <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">

@@ -87,7 +87,7 @@ export default function Services() {
         image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/index/service-video-editing.webp"}
         data={seoData}
       />
-      <Navbar highlight="services" isdark={false} />
+      <Navbar highlight="services" isdark={true} />
 
       <main className="w-full md:pt-24 pt-20 ">
         {/* Header Section */}

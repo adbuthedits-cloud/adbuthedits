@@ -35,7 +35,7 @@ export default function Blogs() {
           axios.get(`${apiUrl}/api/blogs`),
           axios.get(`${apiUrl}/api/blogs/categories`)
         ]);
-        
+
         const fetchedCats = catsRes.data.map(c => c.name);
         setCategories(['All', ...fetchedCats]);
 
@@ -112,9 +112,9 @@ export default function Blogs() {
         author={seoData?.author || "Adbuth Verse"}
         data={seoData} // Pass full object for keywords, canonical
       />
-      <Navbar highlight="blogs" />
+      <Navbar highlight="blogs" isdark={false} />
 
-      <main className="pt-24">
+      <main>
 
         {/* Header Section */}
         <section
@@ -234,7 +234,7 @@ export default function Blogs() {
                           {/* Image */}
                           <div className="w-full md:w-1/3 shrink-0">
                             <Link href={`/blogs/${post.slug}`}>
-                              <div className="aspect-video bg-gray-800 rounded-lg overflow-hidden cursor-pointer">
+                              <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden cursor-pointer">
                                 <Image src={post.image} alt={post.title} fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover hover:scale-105 transition-transform duration-500" />
                               </div>
                             </Link>

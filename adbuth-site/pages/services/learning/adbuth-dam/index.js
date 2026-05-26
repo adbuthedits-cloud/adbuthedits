@@ -287,11 +287,11 @@ export default function AdbuthDAM() {
     ];
 
     return (
-        <div className="font-sans bg-white text-black" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+        <div className="font-sans bg-white text-black">
             <SeoHead page="service-learning-dam" title="Adbuth DAM | Digital Asset Management" />
             <Navbar highlight='services' isdark={false} />
 
-            <main className='pt-24'>
+            <main className='pt-24' style={{ fontFamily: 'DM Sans, sans-serif' }}>
                 {/* Hero Section */}
                 <section className="bg-[#7D287E] text-white pt-32 pb-24 md:py-24 px-6 md:px-12 lg:px-24 relative overflow-hidden">
                     <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-2 items-center">

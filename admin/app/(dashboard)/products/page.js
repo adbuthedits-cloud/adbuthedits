@@ -43,7 +43,7 @@ function Products() {
     const importFileRef = useRef(null);
 
     // Multi-delete state
-    const [selectedIds, setSelectedIds] = useState([]);
+
 
     useEffect(() => {
         fetchProducts();
@@ -248,33 +248,6 @@ function Products() {
         }
     };
 
-    const toggleSelect = (id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-    
-    const toggleSelectAll = () => {
-        if (selectedIds.length === visibleProducts.length && visibleProducts.length > 0) {
-            setSelectedIds([]);
-        } else {
-            setSelectedIds(visibleProducts.map(p => p.products_id));
-        }
-    };
-
-    const handleBulkDelete = async () => {
-        if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} products?`)) return;
-        const token = getAuthToken();
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        try {
-            await axios.delete(`${apiUrl}/api/admin/products/bulk`, {
-                headers: { Authorization: `Bearer ${token}` },
-                data: { ids: selectedIds }
-            });
-            setSelectedIds([]);
-            await fetchProducts();
-        } catch (error) {
-            alert('Failed to delete products');
-            console.error(error);
-        }
-    };
-
     return (
         <>
             {/* Page Header */}
@@ -371,17 +344,6 @@ function Products() {
                         </AnimatePresence>
                     </div>
 
-                    {canDelete && selectedIds.length > 0 && (
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            onClick={handleBulkDelete}
-                            className="bg-red-500/20 text-red-400 px-6 py-2.5 rounded-lg font-semibold hover:bg-red-500 hover:text-white transition-colors shadow-lg border border-red-500/50 flex items-center gap-2 text-sm"
-                        >
-                            <FontAwesomeIcon icon={faTrash} />
-                            Delete Selected ({selectedIds.length})
-                        </motion.button>
-                    )}
 
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         {canEdit ? (
@@ -423,13 +385,6 @@ function Products() {
                         <div className="w-px h-6 bg-[#2d1b4e] hidden md:block"></div>
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider hidden md:block">Sort:</span>
 
-                        {/* Select All Checkbox */}
-                        {visibleProducts.length > 0 && (
-                            <button onClick={toggleSelectAll} className="flex items-center gap-2 px-3 py-2 bg-[#2d1b4e] hover:bg-[#3b2a5f] border border-[#3b2a5f] rounded-lg text-xs font-semibold text-gray-300 transition-colors shadow-sm">
-                                <input type="checkbox" checked={selectedIds.length === visibleProducts.length && visibleProducts.length > 0} onChange={() => {}} className="cursor-pointer" />
-                                <span>Select All</span>
-                            </button>
-                        )}
 
                         {/* Custom Sort Dropdown */}
                         <div className="relative">
@@ -590,21 +545,9 @@ function Products() {
                                             delay: index * 0.03
                                         }}
                                         whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                                        className={`bg-[#1E1628] rounded-[18px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-xl transition-all group relative border ${selectedIds.includes(product.products_id) ? 'border-[#a78bfa] shadow-purple-900/40' : 'border-[#2d1b4e] hover:shadow-purple-900/10'}`}
-                                        onClick={(e) => {
-                                            // Make the whole card clickable for selection if they click the background
-                                            if (e.target === e.currentTarget) toggleSelect(product.products_id);
-                                        }}
+                                        className={`bg-[#1E1628] rounded-[18px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-xl transition-all group relative border border-[#2d1b4e] hover:shadow-purple-900/10`}
                                     >
                                         {/* Checkbox for multi-select */}
-                                        <div className="absolute top-4 left-4 z-30" onClick={(e) => e.stopPropagation()}>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={selectedIds.includes(product.products_id)}
-                                                onChange={() => toggleSelect(product.products_id)}
-                                                className="w-5 h-5 rounded border-gray-600 text-[#a78bfa] focus:ring-[#a78bfa]/50 cursor-pointer"
-                                            />
-                                        </div>
 
                                         {/* Vertical Ribbon */}
                                         {product.is_draft ? (

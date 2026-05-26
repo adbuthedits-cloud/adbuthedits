@@ -51,23 +51,17 @@ export default function About() {
         image={seoData?.og_image || "/images/about-bg.jpg"}
         data={seoData}
       />
-      <Navbar highlight="about" isdark={false} />
+
 
       <main className="pt-24">
         {/* Slider Section - Infinite scroll with no gaps */}
+        <Navbar highlight="about" isdark={true} />
         <div className="w-full overflow-hidden bg-gray-950 relative h-[30vh] md:h-[60vh] flex items-center">
-          <motion.div
-            className="flex w-max h-full"
-            animate={{
-              x: ["0%", "-50%"],
-            }}
-            transition={{
-              x: {
-                repeat: Infinity,
-                repeatType: "loop",
-                duration: duration,
-                ease: "linear",
-              },
+          <div
+            className="flex w-max h-full animate-marquee"
+            style={{
+              willChange: "transform",
+              animationDuration: `${duration}s`
             }}
           >
             {[...officeImages, ...officeImages].map((src, index) => (
@@ -82,7 +76,7 @@ export default function About() {
                 />
               </div>
             ))}
-          </motion.div>
+          </div>
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent pointer-events-none" />
         </div>
 
@@ -252,19 +246,11 @@ export default function About() {
             {/* Mobile: Infinite Scrolling Rows */}
             <div className="md:hidden overflow-hidden space-y-6">
               {/* First Row - Scroll Right */}
-              <motion.div
-                className="flex gap-4 w-max"
-                style={{ willChange: "transform" }}
-                animate={{
-                  x: ["0%", "-50%"],
-                }}
-                transition={{
-                  x: {
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    duration: 30,
-                    ease: "linear",
-                  },
+              <div
+                className="flex gap-4 w-max animate-marquee"
+                style={{
+                  willChange: "transform",
+                  animationDuration: "30s"
                 }}
               >
                 {[...Array(2)].map((_, repeatIndex) => (
@@ -291,22 +277,14 @@ export default function About() {
                     ))}
                   </div>
                 ))}
-              </motion.div>
+              </div>
 
               {/* Second Row - Scroll Left */}
-              <motion.div
-                className="flex gap-4 w-max"
-                style={{ willChange: "transform" }}
-                animate={{
-                  x: ["-50%", "0%"],
-                }}
-                transition={{
-                  x: {
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    duration: 30,
-                    ease: "linear",
-                  },
+              <div
+                className="flex gap-4 w-max animate-marquee-reverse"
+                style={{
+                  willChange: "transform",
+                  animationDuration: "30s"
                 }}
               >
                 {[...Array(2)].map((_, repeatIndex) => (
@@ -333,7 +311,7 @@ export default function About() {
                     ))}
                   </div>
                 ))}
-              </motion.div>
+              </div>
             </div>
 
             {/* Desktop: Static Grid */}
