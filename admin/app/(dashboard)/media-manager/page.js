@@ -10,8 +10,10 @@ import {
     faTrash, faLink, faCopy, faCheck, faSpinner, faHome,
     faChevronRight, faRefresh, faTimes, faSearch, faEye,
     faDownload, faUpload, faExclamationTriangle, faShieldAlt,
-    faGlobe, faLock, faMagnifyingGlass
+    faGlobe, faLock, faMagnifyingGlass, faCompress
 } from "@fortawesome/free-solid-svg-icons";
+import { useVideoCompressor } from "../../../hooks/useVideoCompressor";
+import { compressImage } from "../../../utils/imageCompressor";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatBytes = (bytes) => {
@@ -238,7 +240,7 @@ export default function MediaManagerPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [uploading, setUploading] = useState(false);
-    const [uploadQueue, setUploadQueue] = useState([]); // [{name, status, url}]
+    const [uploadQueue, setUploadQueue] = useState([]); // [{name, status, label, url}]
     const [previewFile, setPreviewFile] = useState(null);
     const [copiedKey, setCopiedKey] = useState(null);
 
@@ -250,6 +252,9 @@ export default function MediaManagerPage() {
     // Delete confirmation
     const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'file'|'folder', item }
     const [deleting, setDeleting] = useState(false);
+
+    // Client-side video compression
+    const { compressVideo, compressStatus, isCompressing } = useVideoCompressor();
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -315,17 +320,48 @@ export default function MediaManagerPage() {
         }
     };
 
-    // ─── Upload files ─────────────────────────────────────────────────────
+    // ─── Upload files (with client-side video compression) ────────────────
     const handleUpload = async (fileList) => {
         setUploading(true);
         setError("");
-        const queue = fileList.map(f => ({ name: f.name, status: "pending", url: null }));
+        const queue = fileList.map(f => ({ name: f.name, status: "pending", label: "Pending", url: null }));
         setUploadQueue(queue);
         const authHeaders = getHeaders();
 
         for (let i = 0; i < fileList.length; i++) {
-            const file = fileList[i];
-            setUploadQueue(q => q.map((item, idx) => idx === i ? { ...item, status: "uploading" } : item));
+            let file = fileList[i];
+            const isVideo = file.type.startsWith("video/");
+            const isImage = file.type.startsWith("image/");
+
+            // ── Step 1: Client-side compression ─────────────────────────────
+            if (isVideo) {
+                setUploadQueue(q => q.map((item, idx) =>
+                    idx === i ? { ...item, status: "compressing", label: "Compressing video…" } : item
+                ));
+                try {
+                    file = await compressVideo(file, (pct) => {
+                        setUploadQueue(q => q.map((item, idx) =>
+                            idx === i ? { ...item, label: `Compressing video ${pct}%` } : item
+                        ));
+                    });
+                } catch {
+                    // compression failed — fall back to original
+                }
+            } else if (isImage) {
+                setUploadQueue(q => q.map((item, idx) =>
+                    idx === i ? { ...item, status: "compressing", label: "Compressing image…" } : item
+                ));
+                try {
+                    file = await compressImage(file);
+                } catch {
+                    // compression failed — fall back to original
+                }
+            }
+
+            // ── Step 2: Upload (original or compressed) ─────────────────────
+            setUploadQueue(q => q.map((item, idx) =>
+                idx === i ? { ...item, status: "uploading", label: "Uploading…" } : item
+            ));
 
             try {
                 const formData = new FormData();
@@ -337,11 +373,11 @@ export default function MediaManagerPage() {
                 });
 
                 setUploadQueue(q => q.map((item, idx) =>
-                    idx === i ? { ...item, status: "done", url: res.data.file.url } : item
+                    idx === i ? { ...item, status: "done", label: "Done ✓", url: res.data.file.url } : item
                 ));
             } catch (err) {
                 setUploadQueue(q => q.map((item, idx) =>
-                    idx === i ? { ...item, status: "error", error: err.response?.data?.error || "Upload failed" } : item
+                    idx === i ? { ...item, status: "error", label: err.response?.data?.error || "Upload failed" } : item
                 ));
             }
         }
@@ -477,24 +513,25 @@ export default function MediaManagerPage() {
                                 <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
                                     item.status === "done" ? "bg-green-500/20" :
                                     item.status === "error" ? "bg-red-500/20" :
+                                    item.status === "compressing" ? "bg-orange-500/20" :
                                     item.status === "uploading" ? "bg-[#a78bfa]/20" :
                                     "bg-gray-700"
                                 }`}>
                                     {item.status === "done" && <FontAwesomeIcon icon={faCheck} className="text-green-400 text-[10px]" />}
                                     {item.status === "error" && <FontAwesomeIcon icon={faTimes} className="text-red-400 text-[10px]" />}
+                                    {item.status === "compressing" && <FontAwesomeIcon icon={faCompress} className="text-orange-400 text-[10px]" />}
                                     {item.status === "uploading" && <FontAwesomeIcon icon={faSpinner} spin className="text-[#a78bfa] text-[10px]" />}
                                     {item.status === "pending" && <div className="w-2 h-2 rounded-full bg-gray-600" />}
                                 </div>
                                 <span className="text-gray-400 truncate flex-1">{item.name}</span>
-                                <span className={`text-xs ${
+                                <span className={`text-xs font-medium ${
                                     item.status === "done" ? "text-green-400" :
                                     item.status === "error" ? "text-red-400" :
+                                    item.status === "compressing" ? "text-orange-400" :
                                     item.status === "uploading" ? "text-[#a78bfa]" :
                                     "text-gray-600"
                                 }`}>
-                                    {item.status === "done" ? "Done ✓" :
-                                     item.status === "error" ? item.error || "Failed" :
-                                     item.status === "uploading" ? "Uploading…" : "Pending"}
+                                    {item.label || "Pending"}
                                 </span>
                             </div>
                         ))}

@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSave, faArrowLeft, faPlus, faTimes, faTrash, faVideo, faPlay, faPencilAlt, faEdit, faCloudUploadAlt, faSpinner, faFileUpload, faCheckCircle, faExpand, faSync } from "@fortawesome/free-solid-svg-icons";
+import { faSave, faArrowLeft, faPlus, faTimes, faTrash, faVideo, faPlay, faPencilAlt, faEdit, faCloudUploadAlt, faSpinner, faFileUpload, faCheckCircle, faExpand, faSync, faCompress } from "@fortawesome/free-solid-svg-icons";
 import { getAuthToken, getAuthUser, hasPermission } from "../../../../utils/auth";
 import Image from "next/image";
 import Link from "next/link";
 import VideoThumbnailGenerator from "../../../../components/VideoThumbnailGenerator";
+import { useVideoCompressor } from "../../../../hooks/useVideoCompressor";
+import { compressImage } from "../../../../utils/imageCompressor";
 
 import withPermission from "../../../../components/withPermission";
 
@@ -80,6 +82,26 @@ function CreateProduct() {
     const [templateName, setTemplateName] = useState("");
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [internalSku, setInternalSku] = useState("");
+
+    // Client-side video compression
+    const { compressVideo, isCompressing } = useVideoCompressor();
+    // Per-video compression status: { [index]: { status: 'compressing'|'done'|'skipped', pct: number } }
+    const [videoCompressStatus, setVideoCompressStatus] = useState({});
+
+    // Stable preview URL for the first video to prevent reloading/juddering on every render
+    const [videoObjectUrl, setVideoObjectUrl] = useState("");
+    useEffect(() => {
+        const firstVideo = videos[0];
+        if (firstVideo instanceof File) {
+            const url = URL.createObjectURL(firstVideo);
+            setVideoObjectUrl(url);
+            return () => {
+                URL.revokeObjectURL(url);
+            };
+        } else {
+            setVideoObjectUrl(firstVideo || "");
+        }
+    }, [videos]);
 
     useEffect(() => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -463,7 +485,7 @@ function CreateProduct() {
         }
     };
 
-    const handleThumbnailUpload = (e) => {
+    const handleThumbnailUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
         // Only accept image files
@@ -476,25 +498,74 @@ function CreateProduct() {
         if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
             URL.revokeObjectURL(thumbnailPreview);
         }
-        setFormData(prev => ({ ...prev, thumbnail: file }));
-        setThumbnailPreview(URL.createObjectURL(file));
-        e.target.value = "";
+        setUploadingThumbnail(true);
+        try {
+            const compressed = await compressImage(file);
+            setFormData(prev => ({ ...prev, thumbnail: compressed }));
+            setThumbnailPreview(URL.createObjectURL(compressed));
+        } catch (err) {
+            console.error("Image compression failed, using original:", err);
+            setFormData(prev => ({ ...prev, thumbnail: file }));
+            setThumbnailPreview(URL.createObjectURL(file));
+        } finally {
+            setUploadingThumbnail(false);
+            e.target.value = "";
+        }
     };
 
-    const handleGalleryUpload = (e) => {
+    const handleGalleryUpload = async (e) => {
         const files = Array.from(e.target.files);
-        if (files.length > 0) {
+        if (files.length === 0) return;
+        e.target.value = "";
+
+        setUploadingGallery(true);
+        try {
+            const compressedFiles = await Promise.all(
+                files.map(f => f.type.startsWith("image/") ? compressImage(f) : Promise.resolve(f))
+            );
+            setImages(prev => [...prev, ...compressedFiles]);
+        } catch (err) {
+            console.error("Gallery compression failed, using original:", err);
             setImages(prev => [...prev, ...files]);
+        } finally {
+            setUploadingGallery(false);
         }
-        e.target.value = "";
     };
 
-    const handleVideoUpload = (e) => {
+    const handleVideoUpload = async (e) => {
         const files = Array.from(e.target.files);
-        if (files.length > 0) {
-            setVideos(prev => [...prev, ...files]);
-        }
+        if (files.length === 0) return;
         e.target.value = "";
+
+        // Add placeholders immediately so user sees them in the list
+        setVideos(prev => [...prev, ...files]);
+        const startIdx = videos.length; // index of first new video
+
+        // Compress each video in the browser
+        for (let i = 0; i < files.length; i++) {
+            const vidIdx = startIdx + i;
+            const file = files[i];
+            if (!file.type.startsWith("video/")) continue;
+
+            setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: "compressing", pct: 0 } }));
+
+            try {
+                const compressed = await compressVideo(file, (pct) => {
+                    setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: "compressing", pct } }));
+                });
+
+                // Replace placeholder with the compressed file
+                setVideos(prev => prev.map((v, idx) => idx === vidIdx ? compressed : v));
+                setVideoCompressStatus(s => ({
+                    ...s,
+                    [vidIdx]: compressed.size < file.size
+                        ? { status: "done", pct: 100 }
+                        : { status: "skipped", pct: 100 }
+                }));
+            } catch {
+                setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: "skipped", pct: 0 } }));
+            }
+        }
     };
 
     const handleResourceFileUpload = (e) => {
@@ -792,7 +863,7 @@ function CreateProduct() {
                                         <strong>No thumbnail set.</strong> Play the video below, pause at the perfect frame, and click <strong>Capture Frame</strong>.
                                     </div>
                                     <VideoThumbnailGenerator
-                                        videoUrl={videos[0] instanceof File ? URL.createObjectURL(videos[0]) : videos[0]}
+                                        videoUrl={videoObjectUrl}
                                         isFile={videos[0] instanceof File}
                                         onCapture={(file, previewUrl) => {
                                             setFormData(prev => ({ ...prev, thumbnail: file }));
@@ -849,24 +920,56 @@ function CreateProduct() {
                             <button type="button" onClick={() => addItem(tempVideo, setTempVideo, videos, setVideos)} className="bg-[#7C3AED] text-white px-6 rounded-xl hover:bg-[#6D28D9] transition-colors shadow-lg shadow-purple-900/20">
                                 <FontAwesomeIcon icon={faPlus} />
                             </button>
-                            <label className="bg-[#7C3AED] cursor-pointer text-white px-4 rounded-xl hover:bg-[#6D28D9] transition-colors flex items-center justify-center shadow-lg shadow-purple-900/20">
-                                <FontAwesomeIcon icon={faCloudUploadAlt} />
-                                <input type="file" className="hidden" accept="video/*" multiple onChange={handleVideoUpload} />
+                            <label className={`cursor-pointer text-white px-4 rounded-xl flex items-center justify-center shadow-lg shadow-purple-900/20 transition-colors gap-2 ${isCompressing ? "bg-orange-600 hover:bg-orange-700" : "bg-[#7C3AED] hover:bg-[#6D28D9]"}`}>
+                                <FontAwesomeIcon icon={isCompressing ? faCompress : faCloudUploadAlt} className={isCompressing ? "animate-pulse" : ""} />
+                                {isCompressing && <span className="text-xs font-bold">Compressing…</span>}
+                                <input type="file" className="hidden" accept="video/*" multiple onChange={handleVideoUpload} disabled={isCompressing} />
                             </label>
                         </div>
+
+                        {/* Compression status banner */}
+                        {isCompressing && (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400 text-xs">
+                                <FontAwesomeIcon icon={faCompress} className="animate-pulse" />
+                                <span>Browser is compressing your video — this may take a minute. Upload will start automatically when done.</span>
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 p-4 bg-[#130C1C]/50 rounded-2xl border border-[#2d1b4e] min-h-[100px]">
                             {videos.map((vid, idx) => {
                                 const isLocal = vid instanceof File;
+                                const cs = videoCompressStatus[idx];
+                                const isVidCompressing = cs?.status === "compressing";
                                 return (
-                                    <div key={idx} className="relative group aspect-video bg-black rounded-xl overflow-hidden shadow-sm border border-[#2d1b4e] cursor-pointer" onClick={() => setSelectedVideo(vid)}>
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all">
-                                            <FontAwesomeIcon icon={faPlay} className="text-white text-2xl group-hover:scale-110 transition-transform" />
-                                        </div>
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); removeItem(idx, videos, setVideos); }} className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                                    <div key={idx} className="relative group aspect-video bg-black rounded-xl overflow-hidden shadow-sm border border-[#2d1b4e] cursor-pointer" onClick={() => !isVidCompressing && setSelectedVideo(vid)}>
+                                        {/* Compression overlay */}
+                                        {isVidCompressing ? (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 gap-2">
+                                                <FontAwesomeIcon icon={faCompress} className="text-orange-400 text-xl animate-pulse" />
+                                                <span className="text-orange-300 text-[10px] font-bold">
+                                                    {cs.pct > 0 ? `${cs.pct}%` : "Starting…"}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all">
+                                                <FontAwesomeIcon icon={faPlay} className="text-white text-2xl group-hover:scale-110 transition-transform" />
+                                            </div>
+                                        )}
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); removeItem(idx, videos, setVideos); setVideoCompressStatus(s => { const n = {...s}; delete n[idx]; return n; }); }} className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                                             <FontAwesomeIcon icon={faTimes} />
                                         </button>
-                                        {isLocal && <span className="absolute bottom-2 left-2 bg-purple-600 text-[8px] text-white px-1.5 py-0.5 rounded font-bold uppercase">Local</span>}
+                                        {/* Status badge */}
+                                        {isLocal && (
+                                            <span className={`absolute bottom-2 left-2 text-[8px] text-white px-1.5 py-0.5 rounded font-bold uppercase ${
+                                                isVidCompressing ? "bg-orange-600" :
+                                                cs?.status === "done" ? "bg-green-600" :
+                                                "bg-purple-600"
+                                            }`}>
+                                                {isVidCompressing ? `Compressing ${cs.pct}%` :
+                                                 cs?.status === "done" ? "Compressed ✓" :
+                                                 "Local"}
+                                            </span>
+                                        )}
                                     </div>
                                 );
                             })}

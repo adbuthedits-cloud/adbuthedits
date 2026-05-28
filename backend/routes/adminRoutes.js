@@ -344,15 +344,17 @@ router.post('/upload-media', checkPermission('products', 'edit'), productUpload.
             }
         }
 
-        // Trigger background web asset generation (except for raw resources)
+        // Trigger background web asset generation (images only - videos are browser-compressed)
+        // Videos already compressed via WASM in browser before upload. Server FFmpeg skipped.
+        // Resource files (subfolder='file'): no optimization needed.
         let returnKey = req.file.key;
         if (subfolder !== 'file') {
             if (req.file.mimetype.startsWith('image/')) {
+                // Safe: sharp uses sequential queue, low memory, no crash risk
                 returnKey = webpKey(req.file.key);
-            } else if (req.file.mimetype.startsWith('video/')) {
-                returnKey = webVideoKey(req.file.key);
+                generateWebAsset(req.file.key, req.file.mimetype);
             }
-            generateWebAsset(req.file.key, req.file.mimetype);
+            // Videos: return original key - browser already compressed, server FFmpeg disabled
         }
 
         res.json({ url: publicFileUrl(returnKey) });
@@ -3168,3 +3170,4 @@ router.delete('/master-data/customization-templates/:id', checkPermission('setti
 });
 
 module.exports = router;
+

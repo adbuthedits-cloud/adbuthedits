@@ -16,8 +16,6 @@ export default function VideoThumbnailGenerator({ videoUrl, onCapture, isFile = 
     const [status, setStatus] = useState("idle"); // idle | loading | ready | capturing | success | error
     const [errorMsg, setErrorMsg] = useState("");
 
-    if (!videoUrl) return null;
-
     // Build the effective video source:
     // - Local File blobs: use as-is (no CORS issue)
     // - R2 remote URLs: route through our backend proxy which adds CORS headers
@@ -126,6 +124,8 @@ export default function VideoThumbnailGenerator({ videoUrl, onCapture, isFile = 
     }, [onCapture]);
 
     const isButtonDisabled = status === "capturing" || status === "idle" || status === "loading";
+
+    if (!videoUrl) return null;
 
     return (
         <div className="bg-[#130C1C] border border-[#2d1b4e] rounded-xl p-4 mt-4 space-y-3">

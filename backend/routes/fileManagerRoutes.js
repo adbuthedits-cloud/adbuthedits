@@ -4,17 +4,22 @@
  * Provides secure, role-gated access to Cloudflare R2 for:
  *   - Browsing folders and files (list)
  *   - Creating folders (virtual prefix in R2)
- *   - Uploading files (any type) with auto-compression for images/videos
+ *   - Uploading files (any type) with server-side WebP for images
  *   - Deleting files and folders
  *   - Generating public/presigned URLs
  *
  * All routes require: auth + admin + media_manager permission
- * Upload auto-triggers webAssets.js compression in background
+ *
+ * Upload strategy (crash-safe for Render 512MB RAM):
+ *   - Files stream directly to R2 via multerS3 — zero server RAM buffering
+ *   - Videos: NO server-side FFmpeg (already compressed in browser via WASM)
+ *   - Images: background WebP conversion via sharp (safe, sequential, low memory)
  */
 
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const multerS3 = require('multer-s3');
 const path = require('path');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
@@ -23,10 +28,10 @@ const { publicS3 } = require('../config/s3Client');
 const { generateWebAsset } = require('../utils/webAssets');
 const {
     ListObjectsV2Command,
-    PutObjectCommand,
     DeleteObjectCommand,
     DeleteObjectsCommand,
     HeadObjectCommand,
+    PutObjectCommand,
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -39,9 +44,32 @@ const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
 router.use(authMiddleware);
 router.use(adminMiddleware);
 
-// ─── Multer: memory storage (no disk, goes straight to R2) ────────────────────
+// ─── Multer: stream directly to R2 via multerS3 (ZERO server RAM for file data) ─
+// This replaces the old memoryStorage which caused OOM crashes on Render 512MB.
+// Files go: Browser → Render (as a stream, not buffered) → R2.
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: multerS3({
+        s3: publicS3,
+        bucket: BUCKET,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        cacheControl: 'public, max-age=31536000, immutable',
+        metadata: (req, file, cb) => {
+            cb(null, {
+                'uploaded-by': String(req.user?.admin_id || 'admin'),
+                'original-name': file.originalname,
+            });
+        },
+        key: (req, file, cb) => {
+            // Use prefix from body + sanitized filename + timestamp
+            const rawPrefix = (req.body.prefix || '').trim().replace(/^\/+/, '');
+            const prefix = rawPrefix && !rawPrefix.endsWith('/') ? rawPrefix + '/' : rawPrefix;
+            const originalName = file.originalname.replace(/[^a-zA-Z0-9\-_. ()]/g, '_');
+            const ext = path.extname(originalName);
+            const baseName = path.basename(originalName, ext);
+            const key = `${prefix}${baseName}_${Date.now()}${ext}`;
+            cb(null, key);
+        },
+    }),
     limits: { fileSize: MAX_FILE_SIZE },
 });
 
@@ -162,11 +190,12 @@ router.post('/create-folder', checkPermission('media_manager', 'edit'), async (r
  * POST /api/file-manager/upload
  * Form-data: file (file), prefix (string)
  *
- * Uploads the original file to R2, then triggers background compression:
- *   - Images → WebP copy in same folder
- *   - Videos → _web.mp4 copy in same folder
+ * Streams file directly to R2 via multerS3 (no server RAM buffer).
+ * After upload:
+ *   - Images → background WebP conversion via sharp (safe, low memory)
+ *   - Videos → SKIPPED — already compressed by browser WASM before upload
  *
- * Returns immediately with original file info; compression runs in background.
+ * Returns immediately with file info; image WebP conversion runs in background.
  */
 router.post('/upload', checkPermission('media_manager', 'edit'), upload.single('file'), async (req, res) => {
     try {
@@ -174,46 +203,32 @@ router.post('/upload', checkPermission('media_manager', 'edit'), upload.single('
             return res.status(400).json({ error: 'No file provided.' });
         }
 
-        const prefix = normalizePrefix(req.body.prefix || '');
-        const originalName = req.file.originalname.replace(/[^a-zA-Z0-9\-_. ()]/g, '_');
-        const ext = path.extname(originalName);
-        const baseName = path.basename(originalName, ext);
-        const uniqueKey = buildKey(prefix, `${baseName}_${Date.now()}${ext}`);
-
-        // Upload original to R2
-        await publicS3.send(new PutObjectCommand({
-            Bucket: BUCKET,
-            Key: uniqueKey,
-            Body: req.file.buffer,
-            ContentType: req.file.mimetype,
-            CacheControl: 'public, max-age=31536000, immutable',
-            Metadata: {
-                'uploaded-by': String(req.user?.admin_id || 'admin'),
-                'original-name': originalName,
-            },
-        }));
-
+        // multerS3 already uploaded the file to R2 — req.file.key is the R2 key
+        const uniqueKey = req.file.key;
+        const mimeType = req.file.mimetype;
         const fileUrl = publicUrl(uniqueKey);
 
-        // Trigger background web-asset compression (non-blocking)
-        const mimeType = req.file.mimetype;
-        const isCompressible = mimeType.startsWith('image/') || mimeType.startsWith('video/');
-
+        // Trigger background image optimization (images only — videos skip server compression)
+        // Videos are already compressed in the browser via WASM before upload.
         let webAssetKey = null;
-        if (isCompressible) {
-            // Pass the buffer directly to avoid a redundant R2 download
-            generateWebAsset(uniqueKey, mimeType, req.file.buffer)
+        const isImage = mimeType.startsWith('image/');
+        const isVideo = mimeType.startsWith('video/');
+
+        if (isImage) {
+            // Safe: sharp uses sequential queue, low memory, no crash risk
+            generateWebAsset(uniqueKey, mimeType)
                 .then(key => {
-                    if (key) console.log(`[FileManager] ✅ Web asset ready: ${key}`);
+                    if (key) console.log(`[FileManager] ✅ WebP asset ready: ${key}`);
                 })
                 .catch(err => {
-                    console.error(`[FileManager] ⚠️ Web asset generation failed:`, err.message);
+                    console.error(`[FileManager] ⚠️ WebP generation failed:`, err.message);
                 });
 
-            // Predict the web-asset key so the frontend knows what it will be
-            const { webpKey, webVideoKey } = require('../utils/webAssets');
-            if (mimeType.startsWith('image/')) webAssetKey = publicUrl(webpKey(uniqueKey));
-            if (mimeType.startsWith('video/')) webAssetKey = publicUrl(webVideoKey(uniqueKey));
+            const { webpKey } = require('../utils/webAssets');
+            webAssetKey = publicUrl(webpKey(uniqueKey));
+        } else if (isVideo) {
+            // Videos: no server-side FFmpeg — browser already compressed before upload
+            console.log(`[FileManager] 🎬 Video uploaded (browser-compressed): ${uniqueKey}`);
         }
 
         res.json({
@@ -225,10 +240,10 @@ router.post('/upload', checkPermission('media_manager', 'edit'), upload.single('
                 size: req.file.size,
                 mimeType,
                 webAssetUrl: webAssetKey,
-                compressionStatus: isCompressible ? 'processing' : 'not_applicable',
+                compressionStatus: isImage ? 'processing' : 'not_applicable',
             },
-            message: isCompressible
-                ? 'File uploaded. Compressed web version is being generated in the background.'
+            message: isImage
+                ? 'File uploaded. WebP version is being generated in the background.'
                 : 'File uploaded successfully.',
         });
     } catch (err) {

@@ -20,11 +20,11 @@ ffmpeg.setFfmpegPath(ffmpegStatic);
 sharp.cache(false);
 sharp.concurrency(1);
 
-const WEBP_QUALITY  = 82;
-const VIDEO_HEIGHT  = 720;
+const WEBP_QUALITY = 82;
+const VIDEO_HEIGHT = 720;
 const VIDEO_BITRATE = '1500k';
 const AUDIO_BITRATE = '128k';
-const TEMP_DIR      = path.join(os.tmpdir(), 'adbuth-web-assets');
+const TEMP_DIR = path.join(os.tmpdir(), 'adbuth-web-assets');
 
 const r2 = new S3Client({
     region: 'auto',
@@ -37,10 +37,10 @@ const r2 = new S3Client({
 
 const BUCKET = process.env.R2_PUBLIC_BUCKET || 'adbuth-public';
 
-function webpKey(key)     { return key.replace(/\.(png|jpg|jpeg|gif|tiff|bmp)$/i, '.webp'); }
-function webVideoKey(key) { return key; }
-function isImage(mime)    { return mime && mime.startsWith('image/'); }
-function isVideo(mime)    { return mime && mime.startsWith('video/'); }
+function webpKey(key) { return key.replace(/\.(png|jpg|jpeg|gif|tiff|bmp)$/i, '.webp'); }
+function webVideoKey(key) { return key.replace(/\.(mp4|mov|avi|mkv|webm)$/i, '_web.mp4'); }
+function isImage(mime) { return mime && mime.startsWith('image/'); }
+function isVideo(mime) { return mime && mime.startsWith('video/'); }
 
 async function uploadToR2(key, bodyStream, contentType) {
     await r2.send(new PutObjectCommand({
@@ -77,7 +77,7 @@ async function processQueue() {
 
     const task = optimizationQueue.shift();
     console.log(`[WebAssets Queue] 🔄 Processing task for key: ${task.r2Key}. Remaining in queue: ${optimizationQueue.length}`);
-    
+
     try {
         await executeOptimization(task.r2Key, task.mimeType, task.fileBuffer);
     } catch (err) {
@@ -95,7 +95,7 @@ async function processQueue() {
 async function executeOptimization(r2Key, mimeType, fileBuffer = null) {
     const inputPath = path.join(TEMP_DIR, `input_${Date.now()}_${path.basename(r2Key)}`);
     let outputPath = '';
-    
+
     try {
         const outKey = isImage(mimeType) ? webpKey(r2Key) : webVideoKey(r2Key);
         console.log(`[WebAssets] ⚡ Starting processing: ${r2Key} (${mimeType})`);
@@ -117,7 +117,7 @@ async function executeOptimization(r2Key, mimeType, fileBuffer = null) {
         if (isImage(mimeType)) {
             outputPath = path.join(TEMP_DIR, `output_${Date.now()}_${path.basename(outKey)}`);
             console.log(`[WebAssets] 🖼  Compressing image to WebP (Quality: ${WEBP_QUALITY})...`);
-            
+
             await sharp(inputPath)
                 .webp({ quality: WEBP_QUALITY })
                 .toFile(outputPath);
@@ -132,7 +132,7 @@ async function executeOptimization(r2Key, mimeType, fileBuffer = null) {
         if (isVideo(mimeType)) {
             outputPath = path.join(TEMP_DIR, `output_${Date.now()}_web.mp4`);
             console.log(`[WebAssets] 🎬 Compressing video with FFmpeg...`);
-            
+
             await new Promise((resolve, reject) => {
                 ffmpeg(inputPath)
                     .outputOptions([
@@ -180,18 +180,28 @@ async function executeOptimization(r2Key, mimeType, fileBuffer = null) {
  * @returns {Promise<string|null>} - The expected R2 key of the web version, or null
  */
 async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
-    if (!isImage(mimeType) && !isVideo(mimeType)) {
+    // ─── PERMANENT GUARD: No server-side video compression ────────────────────
+    // Videos are compressed in the browser (WASM ffmpeg) before upload.
+    // Running server-side FFmpeg on Render 512MB RAM causes OOM crashes.
+    // This guard prevents any code path from triggering server video compression.
+    if (isVideo(mimeType)) {
+        console.log(`[WebAssets] ⏭️  Skipping video compression (browser-handled): ${r2Key}`);
+        return null;
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
+    if (!isImage(mimeType)) {
         return null; // Skip unsupported types
     }
 
-    const outKey = isImage(mimeType) ? webpKey(r2Key) : webVideoKey(r2Key);
+    const outKey = webpKey(r2Key);
     if (outKey === r2Key) {
-        return null; // Already optimized
+        return null; // Already a WebP
     }
 
-    // Push task into queue
+    // Push image task into queue (sharp is safe: sequential, low memory)
     optimizationQueue.push({ r2Key, mimeType, fileBuffer });
-    console.log(`[WebAssets] 📥 Enqueued conversion task for: ${r2Key}. Current queue size: ${optimizationQueue.length}`);
+    console.log(`[WebAssets] 📥 Enqueued WebP task for: ${r2Key}. Current queue size: ${optimizationQueue.length}`);
 
     // Trigger processing (runs asynchronously in background)
     processQueue();
