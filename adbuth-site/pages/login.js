@@ -680,11 +680,6 @@ export default function Login() {
                                         initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
                                         transition={{ duration: 0.2 }}>
 
-                                        {/* Firebase badge */}
-                                        <div className="flex items-center justify-center gap-2 mb-4 bg-orange-900/20 border border-orange-500/20 rounded-xl px-3 py-1.5">
-                                            <span className="text-xs text-orange-300 font-semibold">🔥 Powered by Firebase · Real SMS</span>
-                                        </div>
-
                                         {forgotMode && (
                                             <div className="flex items-center justify-between mb-4 bg-purple-900/20 border border-purple-500/20 rounded-xl px-3 py-2">
                                                 <span className="text-xs text-purple-300 font-semibold">🔑 Forgot Password Mode</span>
@@ -743,12 +738,7 @@ export default function Login() {
                                                 <div className="flex items-center justify-between text-xs text-white/40 px-1">
                                                     <span>Expires in: <Countdown seconds={phoneTimer} onExpire={() => setError('OTP expired. Please resend.')} /></span>
                                                     <button id="resend-phone-otp-btn" type="button" disabled={isSubmitting}
-                                                        onClick={() => {
-                                                            setPhoneStep('input');
-                                                            setConfirmationResult(null);
-                                                            cleanupRecaptcha();
-                                                            setError(''); setSuccess('');
-                                                        }}
+                                                        onClick={handleSendPhoneOtp}
                                                         className="text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50">
                                                         <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> Resend
                                                     </button>
