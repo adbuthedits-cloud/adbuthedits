@@ -1,21 +1,4 @@
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
-// Verify connection on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('[Mailer] SMTP Connection Error:', error.message);
-    } else {
-        console.log('[Mailer] System Mailer Ready — Professional Emails Enabled');
-    }
-});
+const { transporter, senders } = require('./emailService');
 
 /**
  * Sends a professional onboarding welcome email to a new staff member.
@@ -134,11 +117,11 @@ async function sendStaffWelcomeEmail({ to, firstName, lastName, staffId, usernam
       </td>
     </tr>
   </table>
-</body>
+ </body>
 </html>`;
 
     await transporter.sendMail({
-        from: `"Adbuth Edits" <${process.env.EMAIL_USER}>`,
+        from: `"Adbuth Edits" <${senders.system}>`,
         to,
         subject: `[Adbuth Edits] Welcome! Your Admin Account is Ready — ${staffId}`,
         html

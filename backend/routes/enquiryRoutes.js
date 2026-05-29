@@ -90,6 +90,75 @@ router.post('/contact', async (req, res) => {
     }
 });
 
+// POST /api/enquiry/incoming-webhook — Zoho Mail Incoming Webhook
+router.post('/incoming-webhook', async (req, res) => {
+    // Optional: verify webhook security token if configured
+    const webhookToken = req.headers['x-webhook-token'];
+    if (process.env.ZOHO_WEBHOOK_SECRET && webhookToken !== process.env.ZOHO_WEBHOOK_SECRET) {
+        console.warn('[Webhook] Unauthorized access attempt');
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const body = req.body || {};
+        
+        // Extract fields dynamically supporting common email webhook payload structures
+        const subject = body.subject || '';
+        const sender = body.from || body.sender || '';
+        const rawContent = body.text || body.plainText || body.content || body.html || body.summary || '';
+        
+        if (!subject) {
+            console.log('[Webhook] Received webhook with empty subject, ignoring.');
+            return res.json({ success: true, message: 'Ignored: No subject' });
+        }
+
+        // Parse subject to extract Enquiry ID (which is a UUID)
+        // Format example: "Re: [Ticket #50db6f93-8163-459d-9bba-6f1fee1f6d81] enquiry title"
+        const ticketRegex = /\[Ticket #([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\]/;
+        const match = subject.match(ticketRegex);
+
+        if (!match) {
+            console.log(`[Webhook] No ticket ID matched in subject: "${subject}"`);
+            return res.json({ success: true, message: 'Ignored: No ticket UUID match' });
+        }
+
+        const enquiryId = match[1];
+
+        // Find matching enquiry
+        const enquiry = await Enquiry.findByPk(enquiryId);
+        if (!enquiry) {
+            console.log(`[Webhook] No enquiry found for ID: ${enquiryId}`);
+            return res.status(404).json({ error: 'Enquiry not found' });
+        }
+
+        // Strip HTML tags from the body if HTML is sent
+        let cleanMessage = rawContent;
+        if (cleanMessage.includes('<') && cleanMessage.includes('>')) {
+            cleanMessage = cleanMessage.replace(/<[^>]*>?/gm, '').trim();
+        }
+
+        // Save incoming customer reply
+        const reply = await EnquiryReply.create({
+            enquiry_id: enquiryId,
+            admin_id: null, // null means user/system
+            admin_name: enquiry.full_name || sender || 'Customer',
+            admin_role: 'Customer',
+            subject: subject,
+            message: cleanMessage || 'Empty message body',
+            channel: 'email'
+        });
+
+        // Set enquiry status back to in-review so admins notice it
+        await enquiry.update({ status: 'in-review' });
+
+        console.log(`[Webhook] ✅ Saved customer reply for Enquiry ID: ${enquiryId}`);
+        res.json({ success: true, reply_id: reply.reply_id });
+    } catch (err) {
+        console.error('[Webhook] Inbound Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ============================================================
 // ADMIN ENDPOINTS — All require auth + admin middleware
 // ============================================================
@@ -181,13 +250,16 @@ router.post('/:id/reply', authMiddleware, adminMiddleware, async (req, res) => {
         const adminName = admin ? `${admin.first_name || ''} ${admin.last_name || ''}`.trim() : 'Admin';
         const adminRole = admin?.roleDetails?.name || req.user?.role || 'Staff';
 
+        const ticketTag = `[Ticket #${enquiry.enquiry_id}]`;
+        const finalSubject = subject ? `${subject} ${ticketTag}` : `Re: ${ticketTag} Enquiry about ${enquiry.service || 'your inquiry'}`;
+
         // Save reply to history
         const reply = await EnquiryReply.create({
             enquiry_id: req.params.id,
             admin_id: req.user.id,
             admin_name: adminName,
             admin_role: adminRole,
-            subject: subject || `Re: Enquiry about ${enquiry.service || 'your inquiry'}`,
+            subject: finalSubject,
             message,
             channel
         });
@@ -211,14 +283,14 @@ router.post('/:id/reply', authMiddleware, adminMiddleware, async (req, res) => {
                         </p>
                         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
                         <p style="color: #bbb; font-size: 11px; text-align: center; margin: 0;">
-                            adbuthedits@gmail.com · +91 91826 83055
+                            support@adbuthverse.com · +91 91826 83055
                         </p>
                     </div>
                 </div>`;
 
             await sendReply({
                 to: enquiry.email,
-                subject: subject || `Re: Enquiry about ${enquiry.service || 'your inquiry'}`,
+                subject: finalSubject,
                 html: htmlBody
             });
         }

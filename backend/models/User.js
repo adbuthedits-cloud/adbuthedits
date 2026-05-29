@@ -66,6 +66,27 @@ const User = sequelize.define('User', {
     user_token: {
         type: DataTypes.STRING,
         allowNull: true,
+    },
+    email_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    phone_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    otp_code: {
+        type: DataTypes.STRING(6),
+        allowNull: true,
+    },
+    otp_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    otp_type: {
+        type: DataTypes.STRING(30),
+        allowNull: true,
+        // Values: 'email_login', 'phone_login', 'email_verify', 'forgot_password'
     }
 }, {
     hooks: {

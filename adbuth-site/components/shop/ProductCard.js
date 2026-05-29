@@ -28,20 +28,38 @@ function isNewProduct(updatedAt) {
 
 export default function ProductCard({ product, index = 0 }) {
     const [wishlisted, setWishlisted] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
     const containerRef = useRef(null);
     const videoRef = useRef(null);
 
-    // Ensure video is only rendered client-side to avoid SSR hydration mismatch
+    // Ensure client-side render and detect viewport visibility
     useEffect(() => {
         setIsMounted(true);
+
+        if (!containerRef.current) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setIsVisible(entry.isIntersecting);
+            },
+            { rootMargin: '150px' } // Load video elements slightly before they enter the viewport
+        );
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
     }, []);
 
-    // Programmatically control video play/pause on hover
+    // Auto-pause/unload video when the card is scrolled offscreen
+    useEffect(() => {
+        if (!isVisible && isPlaying) {
+            setIsPlaying(false);
+        }
+    }, [isVisible, isPlaying]);
+
+    // Programmatically play/pause preview video based on isPlaying state
     useEffect(() => {
         if (!videoRef.current) return;
-        if (isHovered) {
+        if (isPlaying) {
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
                 playPromise.catch(() => {
@@ -52,7 +70,7 @@ export default function ProductCard({ product, index = 0 }) {
             videoRef.current.pause();
             videoRef.current.currentTime = 0;
         }
-    }, [isHovered]);
+    }, [isPlaying]);
 
     if (!product) return null;
 
@@ -95,12 +113,6 @@ export default function ProductCard({ product, index = 0 }) {
                 className="block relative overflow-hidden bg-gray-50"
                 style={{ aspectRatio: '3/4' }}
                 ref={containerRef}
-                onMouseEnter={() => {
-                    setIsHovered(true);
-                }}
-                onMouseLeave={() => {
-                    setIsHovered(false);
-                }}
             >
                 {/* Default Thumbnail - Always present for performance */}
                 {thumbnail ? (
@@ -108,7 +120,7 @@ export default function ProductCard({ product, index = 0 }) {
                         src={thumbnail}
                         alt={product.title || 'Product Image'}
                         fill
-                        className={`object-cover transition-opacity duration-300 ${isHovered && videoSrc ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                        className={`object-cover transition-opacity duration-300 ${isPlaying && videoSrc ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                         priority={index < 8}
                     />
@@ -118,17 +130,40 @@ export default function ProductCard({ product, index = 0 }) {
                     </div>
                 )}
 
-                {/* Client-only video element — preload only metadata to avoid heavy network use */}
-                {isMounted && videoSrc && (
+                {/* Client-only video element — preload none to optimize network and only load on play */}
+                {isMounted && isVisible && videoSrc && (
                     <video
                         ref={videoRef}
                         src={videoSrc}
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         muted
                         loop
                         playsInline
-                        preload="metadata"
+                        preload="none"
                     />
+                )}
+
+                {/* Play/Pause Button Overlay */}
+                {videoSrc && (
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsPlaying(prev => !prev);
+                        }}
+                        className="absolute inset-0 m-auto w-12 h-12 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all duration-200 z-20 shadow-lg border border-white/20 group/play"
+                        aria-label={isPlaying ? "Pause preview" : "Play preview"}
+                    >
+                        {isPlaying ? (
+                            <svg className="w-5 h-5 fill-white transition-transform group-hover/play:scale-110" viewBox="0 0 24 24">
+                                <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clipRule="evenodd" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 fill-white ml-0.5 transition-transform group-hover/play:scale-110" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                        )}
+                    </button>
                 )}
 
                 {/* NEW Badge */}

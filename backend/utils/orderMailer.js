@@ -1,12 +1,4 @@
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const { transporter, senders } = require('./emailService');
 
 const SHOP_URL = process.env.SHOP_URL || 'http://localhost:3000';
 const BRAND_NAME = 'Adbuth Edits';
@@ -123,7 +115,7 @@ async function sendOrderProcessingEmail({ to, name, orderId, orderRef }) {
 </html>`;
 
     await transporter.sendMail({
-        from: `"${BRAND_NAME}" <${process.env.EMAIL_USER}>`,
+        from: `"${BRAND_NAME}" <${senders.orders}>`,
         to,
         subject: `[${BRAND_NAME}] Your Order #${orderRef} is Now In Progress! 🎨`,
         html
@@ -264,7 +256,7 @@ async function sendDeliveryEmail({ to, name, orderId, orderRef, orderUrl, expire
 </html>`;
 
     await transporter.sendMail({
-        from: `"${BRAND_NAME}" <${process.env.EMAIL_USER}>`,
+        from: `"${BRAND_NAME}" <${senders.orders}>`,
         to,
         subject: `[${BRAND_NAME}] Your Order #${orderRef} Files are Ready! ✅`,
         html
@@ -322,7 +314,7 @@ async function sendReassignmentNotificationEmail({ to, name, orderId, newAssigne
 </html>`;
 
     await transporter.sendMail({
-        from: `"${BRAND_NAME}" <${process.env.EMAIL_USER}>`,
+        from: `"${BRAND_NAME}" <${senders.orders}>`,
         to,
         subject: `[${BRAND_NAME}] Order #${orderRef} has been reassigned`,
         html

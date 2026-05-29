@@ -42,3 +42,8 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #7E22CE rgba(255, 255, 255, 0.05);
 }
+
+/* Disable hover and pointer interactions during scroll for maximum performance */
+body.is-scrolling {
+  pointer-events: none !important;
+}

@@ -27,10 +27,10 @@ function generateCodeChallenge(verifier) {
 // PUT /api/auth/change-password
 router.put('/change-password', authMiddleware, async (req, res) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword, otp, idToken } = req.body;
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ msg: 'Please provide both current and new passwords' });
+        if (!newPassword) {
+            return res.status(400).json({ msg: 'Please provide a new password' });
         }
         if (newPassword.length < 6) {
             return res.status(400).json({ msg: 'Password must be at least 6 characters' });
@@ -57,9 +57,62 @@ router.put('/change-password', authMiddleware, async (req, res) => {
             return res.status(404).json({ msg: 'Account not found' });
         }
 
-        const isMatch = await targetAccount.checkPassword(currentPassword);
-        if (!isMatch) {
-            return res.status(400).json({ msg: 'Incorrect current password' });
+        // Verify method
+        if (currentPassword) {
+            // Traditional verify
+            const isMatch = await targetAccount.checkPassword(currentPassword);
+            if (!isMatch) {
+                return res.status(400).json({ msg: 'Incorrect current password' });
+            }
+        } else if (otp) {
+            // Verify via Email OTP
+            if (targetAccount.otp_type !== 'change_password_settings') {
+                return res.status(400).json({ msg: 'Invalid OTP request. Please request a new OTP.' });
+            }
+            if (!targetAccount.otp_expires_at || new Date() > new Date(targetAccount.otp_expires_at)) {
+                return res.status(400).json({ msg: 'OTP has expired. Please request a new one.' });
+            }
+            if (targetAccount.otp_code !== String(otp).trim()) {
+                return res.status(400).json({ msg: 'Incorrect OTP. Please try again.' });
+            }
+
+            // Clear OTP
+            await targetAccount.update({
+                otp_code: null,
+                otp_expires_at: null,
+                otp_type: null
+            });
+        } else if (idToken) {
+            // Verify via Firebase Phone ID Token
+            const { getFirebaseAdmin } = require('../config/firebaseAdmin');
+            const admin = getFirebaseAdmin();
+            let decodedToken;
+            try {
+                decodedToken = await admin.auth().verifyIdToken(idToken);
+            } catch (firebaseErr) {
+                console.error('[Firebase Change Password] Token verification failed:', firebaseErr.message);
+                return res.status(401).json({ msg: 'Invalid or expired Firebase token. Please try again.' });
+            }
+
+            const firebasePhone = decodedToken.phone_number;
+            if (!firebasePhone) {
+                return res.status(400).json({ msg: 'No phone number found in Firebase token.' });
+            }
+
+            // Verify the phone number matches the user's phone number
+            const phone = targetAccount.phone_number;
+            if (!phone) {
+                return res.status(400).json({ msg: 'No registered phone number found on your account to verify against.' });
+            }
+
+            const parsedPhone = typeof phone === 'string' ? JSON.parse(phone) : phone;
+            const storedE164 = `${parsedPhone.code}${parsedPhone.number.replace(/[\s\-()]/g, '')}`;
+
+            if (storedE164 !== firebasePhone) {
+                return res.status(400).json({ msg: 'The verified phone number does not match your registered phone number.' });
+            }
+        } else {
+            return res.status(400).json({ msg: 'Verification required. Provide current password or verify via OTP.' });
         }
 
         targetAccount.password_hash = newPassword;

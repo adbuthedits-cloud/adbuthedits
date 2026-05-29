@@ -68,6 +68,7 @@ const enquiryRoutes = require('./routes/enquiryRoutes');
 const settingRoutes = require('./routes/settingRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
 const fileManagerRoutes = require('./routes/fileManagerRoutes');
+const otpRoutes = require('./routes/otpRoutes');
 const { runSafeMigrations } = require('./utils/safeSync');
 
 // Use Routes
@@ -86,6 +87,7 @@ app.use('/api/enquiry', enquiryRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/file-manager', fileManagerRoutes);
+app.use('/api/otp', otpRoutes);
 
 // Database connection and server start
 const startServer = async () => {

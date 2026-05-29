@@ -13,7 +13,9 @@ const nextConfig = {
             { protocol: 'https', hostname: 'fastly.picsum.photos' },
             { protocol: 'https', hostname: 'picsum.photos' },
             { protocol: 'https', hostname: 'img.youtube.com' },
-            { protocol: 'https', hostname: 'ui-avatars.com' }
+            { protocol: 'https', hostname: 'ui-avatars.com' },
+            { protocol: 'https', hostname: 'assets.adbuthverse.com' },
+            { protocol: 'https', hostname: 'cdn.adbuthverse.com' }
         ],
     },
     // Limit concurrency to reduce memory usage during build

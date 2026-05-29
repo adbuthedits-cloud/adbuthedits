@@ -326,6 +326,27 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     // Stable memoized query string — only changes when the actual query params change
     const queryStr = useMemo(() => JSON.stringify(queryParams), [queryParams]);
 
+    // Disable hover effects during scrolling to optimize performance
+    useEffect(() => {
+        let scrollTimeout;
+        const handleScroll = () => {
+            if (!document.body.classList.contains('is-scrolling')) {
+                document.body.classList.add('is-scrolling');
+            }
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                document.body.classList.remove('is-scrolling');
+            }, 150);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(scrollTimeout);
+            document.body.classList.remove('is-scrolling');
+        };
+    }, []);
+
     // Sync filters from URL when router query changes
     useEffect(() => {
         if (!router.isReady) return;

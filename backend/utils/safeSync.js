@@ -39,6 +39,13 @@ const migrations = [
     // Add 'path' column to SeoPages table
     `ALTER TABLE "SeoPages" ADD COLUMN IF NOT EXISTS path VARCHAR(255)`,
 
+    // --- OTP / Email Verification columns on Users table ---
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false`,
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT false`,
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS otp_code VARCHAR(6)`,
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS otp_expires_at TIMESTAMP WITH TIME ZONE`,
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS otp_type VARCHAR(30)`,
+
     // Create CustomizationTemplates table
     `CREATE TABLE IF NOT EXISTS "CustomizationTemplates" (
         template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

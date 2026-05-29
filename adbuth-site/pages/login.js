@@ -1,148 +1,455 @@
 import { useState, useEffect, useRef } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faEnvelope, faLock, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import {
+    faEnvelope, faLock, faEye, faEyeSlash, faPhone,
+    faShieldHalved, faArrowRight, faRotateLeft, faCheckCircle
+} from '@fortawesome/free-solid-svg-icons';
 import { faFacebookF, faGoogle, faXTwitter } from '@fortawesome/free-brands-svg-icons';
-import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import Beams from '../components/ui/Beams';
+import dynamic from 'next/dynamic';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
 
+const Beams = dynamic(() => import('../components/ui/Beams'), { ssr: false });
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+const countryOptions = [
+    { code: '+91', country: 'India' },
+    { code: '+1', country: 'USA/Canada' },
+    { code: '+44', country: 'UK' },
+    { code: '+61', country: 'Australia' },
+    { code: '+971', country: 'UAE' },
+    { code: '+65', country: 'Singapore' },
+    { code: '+49', country: 'Germany' },
+    { code: '+33', country: 'France' },
+    { code: '+81', country: 'Japan' },
+    { code: '+86', country: 'China' },
+    { code: '+7', country: 'Russia' },
+    { code: '+55', country: 'Brazil' },
+    { code: '+27', country: 'South Africa' },
+    { code: '+92', country: 'Pakistan' },
+    { code: '+880', country: 'Bangladesh' },
+    { code: '+60', country: 'Malaysia' },
+    { code: '+62', country: 'Indonesia' },
+    { code: '+63', country: 'Philippines' },
+    { code: '+66', country: 'Thailand' },
+    { code: '+84', country: 'Vietnam' },
+    { code: '+90', country: 'Turkey' },
+    { code: '+966', country: 'Saudi Arabia' },
+    { code: '+52', country: 'Mexico' },
+    { code: '+94', country: 'Sri Lanka' },
+    { code: '+977', country: 'Nepal' },
+];
+
+// ─── OTP Input Component ───────────────────────────────────────────────────────
+function OtpInput({ length = 6, value, onChange }) {
+    const inputs = useRef([]);
+
+    const handleKey = (e, idx) => {
+        if (e.key === 'Backspace' && !value[idx] && idx > 0) {
+            inputs.current[idx - 1]?.focus();
+        }
+    };
+
+    const handleChange = (e, idx) => {
+        const v = e.target.value.replace(/\D/, '');
+        if (!v) {
+            const arr = value.split('');
+            arr[idx] = '';
+            onChange(arr.join(''));
+            return;
+        }
+        const arr = value.split('');
+        arr[idx] = v[v.length - 1];
+        onChange(arr.join(''));
+        if (idx < length - 1) inputs.current[idx + 1]?.focus();
+    };
+
+    const handlePaste = (e) => {
+        const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length);
+        onChange(paste.padEnd(length, '').slice(0, length));
+        inputs.current[Math.min(paste.length, length - 1)]?.focus();
+        e.preventDefault();
+    };
+
+    return (
+        <div className="flex gap-2 justify-center my-4">
+            {Array.from({ length }).map((_, idx) => (
+                <input
+                    key={idx}
+                    id={`otp-digit-${idx}`}
+                    ref={el => inputs.current[idx] = el}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={value[idx] || ''}
+                    onChange={e => handleChange(e, idx)}
+                    onKeyDown={e => handleKey(e, idx)}
+                    onPaste={handlePaste}
+                    className="w-11 h-12 text-center text-xl font-bold text-white bg-white/5 border border-white/20 rounded-xl focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-all caret-purple-400"
+                    style={{ fontFamily: 'monospace' }}
+                />
+            ))}
+        </div>
+    );
+}
+
+// ─── Countdown Timer ───────────────────────────────────────────────────────────
+function Countdown({ seconds, onExpire }) {
+    const [remaining, setRemaining] = useState(seconds);
+
+    useEffect(() => {
+        setRemaining(seconds);
+        const interval = setInterval(() => {
+            setRemaining(prev => {
+                if (prev <= 1) { clearInterval(interval); onExpire?.(); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [seconds]);
+
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    return (
+        <span className={`text-xs font-mono tabular-nums ${remaining < 30 ? 'text-red-400' : 'text-white/50'}`}>
+            {m}:{s.toString().padStart(2, '0')}
+        </span>
+    );
+}
+
+// ─── Main Login Page ───────────────────────────────────────────────────────────
 export default function Login() {
     const { seoData } = useSeo('login');
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-
-    // Responsive Beams Config
-    const [beamConfig, setBeamConfig] = useState({
-        beamWidth: 3,
-        beamHeight: 30,
-        beamNumber: 20,
-        scale: 0.2
-    });
-
-    const [isEmailValid, setIsEmailValid] = useState(true);
-    const [touched, setTouched] = useState(false);
+    const { login, user, loading: authLoading } = useAuth();
     const isLoginAction = useRef(false);
 
-    const { login, user, loading: authLoading } = useAuth();
+    // Tabs: 'password' | 'email_otp' | 'phone_otp'
+    const [activeTab, setActiveTab] = useState('password');
+
+    // ── Password login state
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
+    // ── Email OTP state
+    const [otpEmail, setOtpEmail] = useState('');
+    const [otpStep, setOtpStep] = useState('input'); // 'input' | 'verify' | 'reset'
+    const [emailOtpValue, setEmailOtpValue] = useState('');
+    const [forgotMode, setForgotMode] = useState(false);
+    const [resetToken, setResetToken] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [showNewPwd, setShowNewPwd] = useState(false);
+    const [otpTimer, setOtpTimer] = useState(0);
+
+    // ── Firebase Phone OTP state
+    const [countryCode, setCountryCode] = useState('+91');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [phoneOtpValue, setPhoneOtpValue] = useState('');
+    const [phoneStep, setPhoneStep] = useState('input'); // 'input' | 'verify'
+    const [phoneTimer, setPhoneTimer] = useState(0);
+    const [confirmationResult, setConfirmationResult] = useState(null); // Firebase confirmation object
+    const recaptchaContainerRef = useRef(null);
+    const recaptchaVerifierRef = useRef(null);
+
+    // ── Shared state
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Beams config
+    const [beamConfig, setBeamConfig] = useState({ beamWidth: 3, beamHeight: 30, beamNumber: 20, scale: 0.2 });
 
     useEffect(() => {
-        if (!authLoading && user && !isLoginAction.current) {
-            router.replace('/');
-        }
+        if (!authLoading && user && !isLoginAction.current) router.replace('/');
     }, [user, authLoading]);
 
     useEffect(() => {
-        const { token, error } = router.query;
-        if (token) {
-            localStorage.setItem('token', token);
-            window.location.href = '/'; // Full reload to refresh auth state
-        }
-        if (error) {
-            setError(error === 'google_failed' ? 'Google authentication failed' : 'Social login error');
-        }
+        const { token, error: qErr } = router.query;
+        if (token) { localStorage.setItem('token', token); window.location.href = '/'; }
+        if (qErr) setError(qErr === 'google_failed' ? 'Google authentication failed' : 'Social login error');
     }, [router.query]);
-
-    const handleGoogleLogin = () => {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        window.location.href = `${backendUrl}/api/auth/google`;
-    };
-
-    const handleFacebookLogin = () => {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        window.location.href = `${backendUrl}/api/auth/facebook`;
-    };
-
-    const handleTwitterLogin = () => {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        window.location.href = `${backendUrl}/api/auth/twitter`;
-    };
 
     useEffect(() => {
         const handleResize = () => {
-            const width = window.innerWidth;
-            if (width < 640) { // Mobile
-                setBeamConfig({
-                    beamWidth: 2,
-                    beamHeight: 20, // Smaller height for mobile
-                    beamNumber: 15, // Fewer beams
-                    scale: 0.15 // Smaller scale
-                });
-            } else if (width < 1024) { // Tablet
-                setBeamConfig({
-                    beamWidth: 2.5,
-                    beamHeight: 25,
-                    beamNumber: 18,
-                    scale: 0.18
-                });
-            } else { // Desktop
-                setBeamConfig({
-                    beamWidth: 3,
-                    beamHeight: 30,
-                    beamNumber: 20,
-                    scale: 0.2
-                });
-            }
+            const w = window.innerWidth;
+            if (w < 640) setBeamConfig({ beamWidth: 2, beamHeight: 20, beamNumber: 15, scale: 0.15 });
+            else if (w < 1024) setBeamConfig({ beamWidth: 2.5, beamHeight: 25, beamNumber: 18, scale: 0.18 });
+            else setBeamConfig({ beamWidth: 3, beamHeight: 30, beamNumber: 20, scale: 0.2 });
         };
-
-        handleResize(); // Initial call
+        handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const validateEmail = (email) => {
-        return String(email)
-            .toLowerCase()
-            .match(
-                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-            );
+    // Reset state when tab changes
+    useEffect(() => {
+        setError(''); setSuccess('');
+        setOtpStep('input'); setEmailOtpValue(''); setForgotMode(false);
+        setPhoneStep('input'); setPhoneOtpValue('');
+        setOtpTimer(0); setPhoneTimer(0);
+        // Cleanup reCAPTCHA when leaving phone tab
+        if (activeTab !== 'phone_otp') {
+            cleanupRecaptcha();
+        }
+    }, [activeTab]);
+
+    // Cleanup reCAPTCHA verifier
+    const cleanupRecaptcha = () => {
+        try {
+            if (recaptchaVerifierRef.current) {
+                recaptchaVerifierRef.current.clear();
+                recaptchaVerifierRef.current = null;
+            }
+        } catch (e) { /* ignore */ }
     };
 
-    const handleBlur = () => {
-        setTouched(true);
-        setIsEmailValid(!!validateEmail(email));
-    };
+    // Setup invisible reCAPTCHA when phone tab is active
+    const setupRecaptcha = async () => {
+        try {
+            if (recaptchaVerifierRef.current) return recaptchaVerifierRef.current;
 
-    const handleChange = (e) => {
-        const val = e.target.value;
-        setEmail(val);
-        if (touched) {
-            setIsEmailValid(!!validateEmail(val));
+            const { RecaptchaVerifier } = await import('firebase/auth');
+            const { auth } = await import('../lib/firebase');
+
+            const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                size: 'invisible',
+                callback: () => { /* reCAPTCHA solved */ },
+                'expired-callback': () => {
+                    setError('reCAPTCHA expired. Please try again.');
+                    cleanupRecaptcha();
+                }
+            });
+
+            await verifier.render();
+            recaptchaVerifierRef.current = verifier;
+            return verifier;
+        } catch (err) {
+            console.error('[reCAPTCHA] Setup error:', err);
+            throw new Error('reCAPTCHA setup failed. Please refresh the page.');
         }
     };
 
-    const handleSubmit = async (e) => {
+    // ── Social login handlers
+    const handleGoogleLogin = () => { window.location.href = `${API_URL}/api/auth/google`; };
+    const handleFacebookLogin = () => { window.location.href = `${API_URL}/api/auth/facebook`; };
+    const handleTwitterLogin = () => { window.location.href = `${API_URL}/api/auth/twitter`; };
+
+    // ── Password login
+    const handlePasswordSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setIsSubmitting(true);
-
-        const isValid = !!validateEmail(email);
-        setIsEmailValid(isValid);
-        setTouched(true);
-
-        if (!isValid) {
-            setIsSubmitting(false);
-            return;
-        }
-
+        setError(''); setIsSubmitting(true);
         isLoginAction.current = true;
         const result = await login(email, password);
-        if (!result.success) {
-            setError(result.error);
-            isLoginAction.current = false;
+        if (!result.success) { setError(result.error); isLoginAction.current = false; }
+        setIsSubmitting(false);
+    };
+
+    // ── Email OTP: send
+    const handleSendEmailOtp = async (e) => {
+        e?.preventDefault();
+        if (!otpEmail) return setError('Please enter your email address.');
+        setError(''); setIsSubmitting(true);
+        try {
+            const purpose = forgotMode ? 'forgot_password' : 'email_login';
+            const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: otpEmail, purpose }),
+            });
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Server returned invalid response (Status ${res.status}).`);
+            }
+            if (!res.ok) throw new Error(data.msg || 'Failed to send OTP');
+            setOtpStep('verify'); setEmailOtpValue(''); setOtpTimer(600);
+            setSuccess('OTP sent! Check your email.');
+        } catch (err) { setError(err.message); }
+        setIsSubmitting(false);
+    };
+
+    // ── Email OTP: verify
+    const handleVerifyEmailOtp = async (e) => {
+        e?.preventDefault();
+        if (emailOtpValue.length < 6) return setError('Please enter the complete 6-digit OTP.');
+        setError(''); setIsSubmitting(true);
+        try {
+            const purpose = forgotMode ? 'forgot_password' : 'email_login';
+            const res = await fetch(`${API_URL}/api/otp/verify-email-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: otpEmail, otp: emailOtpValue, purpose }),
+            });
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Server returned invalid response (Status ${res.status}).`);
+            }
+            if (!res.ok) throw new Error(data.msg || 'Verification failed');
+            if (forgotMode) {
+                setResetToken(data.resetToken);
+                setOtpStep('reset');
+                setSuccess('OTP verified! Set your new password.');
+            } else {
+                localStorage.setItem('token', data.token);
+                setSuccess('Logged in successfully!');
+                setTimeout(() => { window.location.href = '/'; }, 800);
+            }
+        } catch (err) { setError(err.message); }
+        setIsSubmitting(false);
+    };
+
+    // ── Reset password after OTP
+    const handleResetPassword = async (e) => {
+        e?.preventDefault();
+        if (!newPassword) return setError('Please enter a new password.');
+        setError(''); setIsSubmitting(true);
+        try {
+            const res = await fetch(`${API_URL}/api/otp/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resetToken, newPassword }),
+            });
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Server returned invalid response (Status ${res.status}).`);
+            }
+            if (!res.ok) throw new Error(data.msg || 'Reset failed');
+            setSuccess('Password reset! Redirecting to login...');
+            setTimeout(() => {
+                setActiveTab('password'); setOtpStep('input'); setForgotMode(false);
+            }, 1500);
+        } catch (err) { setError(err.message); }
+        setIsSubmitting(false);
+    };
+
+    // ── Firebase Phone OTP: Send SMS
+    const handleSendPhoneOtp = async (e) => {
+        e?.preventDefault();
+        if (!phoneNumber) return setError('Please enter your phone number.');
+        setError(''); setSuccess(''); setIsSubmitting(true);
+
+        try {
+            const { signInWithPhoneNumber } = await import('firebase/auth');
+            const { auth } = await import('../lib/firebase');
+
+            // Setup reCAPTCHA (invisible)
+            const appVerifier = await setupRecaptcha();
+
+            // Full E.164 phone number
+            const fullPhone = `${countryCode}${phoneNumber.replace(/[\s\-()]/g, '')}`;
+
+            // Send SMS via Firebase
+            const result = await signInWithPhoneNumber(auth, fullPhone, appVerifier);
+            setConfirmationResult(result);
+            setPhoneStep('verify');
+            setPhoneOtpValue('');
+            setPhoneTimer(120); // 2 minutes
+            setSuccess(`SMS sent to ${fullPhone}`);
+
+        } catch (err) {
+            console.error('[Firebase Phone] Send error:', err);
+            cleanupRecaptcha();
+
+            // User-friendly error messages
+            const fbErrors = {
+                'auth/invalid-phone-number': 'Invalid phone number format. Please check and try again.',
+                'auth/too-many-requests': 'Too many attempts. Please wait a few minutes.',
+                'auth/captcha-check-failed': 'reCAPTCHA failed. Please refresh and try again.',
+                'auth/quota-exceeded': 'SMS quota exceeded. Try again later.',
+                'auth/network-request-failed': 'Network error. Check your connection.',
+                'auth/internal-error': 'Phone authentication is not configured yet. Please add Firebase web config keys.',
+            };
+            setError(fbErrors[err.code] || err.message || 'Failed to send SMS. Try again.');
         }
         setIsSubmitting(false);
     };
+
+    // ── Firebase Phone OTP: Verify SMS code
+    const handleVerifyPhoneOtp = async (e) => {
+        e?.preventDefault();
+        if (phoneOtpValue.length < 6) return setError('Please enter the complete 6-digit OTP.');
+        if (!confirmationResult) return setError('Session expired. Please resend the OTP.');
+        setError(''); setIsSubmitting(true);
+
+        try {
+            // Verify the SMS code with Firebase
+            const firebaseResult = await confirmationResult.confirm(phoneOtpValue);
+            const idToken = await firebaseResult.user.getIdToken();
+
+            if (forgotMode) {
+                // If in forgot mode, exchange Firebase idToken for resetToken
+                const res = await fetch(`${API_URL}/api/otp/firebase-phone-forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken }),
+                });
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    throw new Error(`Server returned invalid response (Status ${res.status}).`);
+                }
+                if (!res.ok) throw new Error(data.msg || 'Phone verification failed.');
+
+                setResetToken(data.resetToken);
+                setOtpEmail(`${countryCode} ${phoneNumber}`);
+                setActiveTab('email_otp');
+                setOtpStep('reset');
+                setSuccess('Phone verified! Set your new password.');
+            } else {
+                // Send idToken to our backend for user lookup/creation + our JWT
+                const res = await fetch(`${API_URL}/api/otp/firebase-phone-verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken }),
+                });
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    throw new Error(`Server returned invalid response (Status ${res.status}).`);
+                }
+                if (!res.ok) throw new Error(data.msg || 'Backend verification failed');
+
+                localStorage.setItem('token', data.token);
+                setSuccess('Phone verified! Logging you in...');
+                setTimeout(() => { window.location.href = '/'; }, 800);
+            }
+
+        } catch (err) {
+            console.error('[Firebase Phone] Verify error:', err);
+            const fbErrors = {
+                'auth/invalid-verification-code': 'Incorrect OTP. Please try again.',
+                'auth/code-expired': 'OTP has expired. Please resend.',
+                'auth/session-expired': 'Session expired. Please resend the OTP.',
+            };
+            setError(fbErrors[err.code] || err.message || 'Verification failed. Please try again.');
+        }
+        setIsSubmitting(false);
+    };
+
+    const tabs = [
+        { id: 'password', label: 'Password', icon: faLock },
+        { id: 'email_otp', label: 'Email OTP', icon: faEnvelope },
+        { id: 'phone_otp', label: 'Phone OTP', icon: faPhone },
+    ];
 
     return (
         <div className="relative min-h-screen w-full bg-neutral-950 flex flex-col overflow-y-auto overflow-x-hidden">
@@ -154,165 +461,337 @@ export default function Login() {
 
             {/* Beams Background */}
             <div className="absolute inset-0 w-full h-full">
-                <Beams
-                    beamWidth={beamConfig.beamWidth}
-                    beamHeight={beamConfig.beamHeight}
-                    beamNumber={beamConfig.beamNumber}
-                    lightColor="#f53ff8"
-                    speed={2}
-                    noiseIntensity={1.75}
-                    scale={beamConfig.scale}
-                    rotation={30}
-                    className="w-full h-full"
-                />
+                <Beams beamWidth={beamConfig.beamWidth} beamHeight={beamConfig.beamHeight}
+                    beamNumber={beamConfig.beamNumber} lightColor="#f53ff8"
+                    speed={2} noiseIntensity={1.75} scale={beamConfig.scale} rotation={30}
+                    className="w-full h-full" />
             </div>
 
-            <header className="w-full top-0 left-0 z-50 transition-all duration-300 ">
+            {/* Invisible reCAPTCHA container — Firebase requires this in the DOM */}
+            <div id="recaptcha-container" ref={recaptchaContainerRef} />
+
+            {/* Header */}
+            <header className="w-full top-0 left-0 z-50 transition-all duration-300">
                 <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
-                    <div className="flex items-center gap-4">
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="relative lg:w-36 md:w-28 sm:w-24 w-28 h-auto aspect-[3/1]">
-                                <Image
-                                    src="https://assets.adbuthverse.com/website-assets/brand/logo.webp"
-                                    alt="logo"
-                                    fill
-                                    style={{ objectFit: 'contain' }}
-                                    className="drop-shadow-md"
-                                    priority
-                                />
-                            </div>
-                        </Link>
-                    </div>
+                    <Link href="/" className="flex items-center gap-2">
+                        <div className="relative lg:w-36 md:w-28 sm:w-24 w-28 h-auto aspect-[3/1]">
+                            <Image src="https://assets.adbuthverse.com/website-assets/brand/logo.webp"
+                                alt="logo" fill style={{ objectFit: 'contain' }} className="drop-shadow-md" priority />
+                        </div>
+                    </Link>
                 </div>
             </header>
 
-            <div className="flex my-auto w-full flex items-center justify-center p-4 my-auto">
+            {/* Card */}
+            <div className="flex my-auto w-full items-center justify-center p-4 py-8">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 20, filter: 'blur(10px)' }}
                     animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     className="w-full max-w-sm sm:max-w-md relative z-20"
                 >
-                    {/* Glassmorphism Card with Noise */}
                     <div className="relative group">
-                        {/* Noise Texture Overlay */}
+                        {/* Noise overlay */}
                         <div className="absolute inset-0 z-0 opacity-10 pointer-events-none rounded-3xl" style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                        }}></div>
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                        }} />
 
-                        <div className="relative bg-neutral-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl overflow-hidden w-full min-h-[500px] flex flex-col justify-center">
+                        <div className="relative bg-neutral-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl overflow-hidden w-full flex flex-col">
 
-                            {/* No internal glow blobs as per request */}
-
-                            <div className="text-center relative z-10 mb-4 lg:mb-6">
-                                <h2 className="text-xl sm:text-2xl lg:text-2xl font-bold text-white mb-1 drop-shadow-lg tracking-tight">
-                                    Welcome Back
-                                </h2>
-                                <p className="text-white/70 text-sm lg:text-xs">Enter your credentials to access your workspace</p>
+                            {/* Title */}
+                            <div className="text-center mb-5">
+                                <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 tracking-tight">Welcome Back</h1>
+                                <p className="text-white/50 text-xs">Sign in to your account</p>
                             </div>
 
-                            {error && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="bg-red-900/30 border border-red-500/30 text-red-200 px-4 py-2 rounded-lg text-xs text-center mb-6 backdrop-blur-sm w-fit mx-auto"
-                                >
-                                    <FontAwesomeIcon icon={faLock} className="mr-2" />
-                                    {error}
-                                </motion.div>
-                            )}
-
-                            <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5 relative z-10">
-                                {/* Email Input */}
-                                <div>
-                                    <input
-                                        type="email"
-                                        required
-                                        placeholder="EMAIL"
-                                        className={`w-full bg-transparent border-b text-white placeholder-white/20 px-0 py-1.5 focus:outline-none transition-colors rounded-none ${!isEmailValid && touched
-                                            ? 'border-red-400 focus:border-red-400'
-                                            : 'border-white/20 focus:border-purple-500'
-                                            } text-sm md:text-base lg:text-sm`}
-                                        value={email}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    />
-                                    {!isEmailValid && touched && (
-                                        <p className="text-red-400 text-[10px] uppercase tracking-wider font-semibold mt-1 text-right">Invalid email</p>
-                                    )}
-                                </div>
-
-                                {/* Password Input */}
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        required
-                                        placeholder="PASSWORD"
-                                        className="w-full bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 focus:outline-none focus:border-purple-500 transition-colors rounded-none text-sm md:text-base lg:text-sm pr-8"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
+                            {/* Tab Switcher */}
+                            <div className="flex gap-1 bg-white/5 rounded-xl p-1 mb-5 border border-white/10">
+                                {tabs.map(tab => (
                                     <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-0 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors focus:outline-none"
+                                        key={tab.id}
+                                        id={`login-tab-${tab.id}`}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-xs font-semibold transition-all duration-200 ${activeTab === tab.id
+                                            ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg'
+                                            : 'text-white/40 hover:text-white/70'}`}
                                     >
-                                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="text-xs" />
+                                        <FontAwesomeIcon icon={tab.icon} className="text-[10px]" />
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Alert Messages */}
+                            <AnimatePresence mode="wait">
+                                {error && (
+                                    <motion.div key="err"
+                                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                                        className="bg-red-900/30 border border-red-500/30 text-red-300 px-4 py-2.5 rounded-xl text-xs text-center mb-4">
+                                        {error}
+                                    </motion.div>
+                                )}
+                                {success && (
+                                    <motion.div key="ok"
+                                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                                        className="bg-green-900/30 border border-green-500/30 text-green-300 px-4 py-2.5 rounded-xl text-xs text-center mb-4 flex items-center justify-center gap-2">
+                                        <FontAwesomeIcon icon={faCheckCircle} />
+                                        {success}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <AnimatePresence mode="wait">
+
+                                {/* ── TAB: Password ── */}
+                                {activeTab === 'password' && (
+                                    <motion.div key="pw"
+                                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+                                        transition={{ duration: 0.2 }}>
+                                        <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                                            <input id="login-email-input" type="email" required placeholder="EMAIL"
+                                                className="w-full bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                                                value={email} onChange={e => setEmail(e.target.value)} />
+
+                                            <div className="relative">
+                                                <input id="login-password-input" type={showPassword ? 'text' : 'password'} required placeholder="PASSWORD"
+                                                    className="w-full bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 pr-8 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                                                    value={password} onChange={e => setPassword(e.target.value)} />
+                                                <button type="button" onClick={() => setShowPassword(p => !p)}
+                                                    className="absolute right-0 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
+                                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="text-xs" />
+                                                </button>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <button type="button" id="forgot-password-btn"
+                                                    onClick={() => { setActiveTab('email_otp'); setForgotMode(true); setOtpStep('input'); setError(''); setSuccess(''); }}
+                                                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                                                    Forgot password?
+                                                </button>
+                                            </div>
+
+                                            <button id="login-submit-btn" type="submit" disabled={isSubmitting}
+                                                className="w-full bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-70 shadow-lg flex items-center justify-center gap-2 text-sm">
+                                                {isSubmitting ? (
+                                                    <><div className="animate-spin w-4 h-4 border-2 border-black/30 border-t-black rounded-full" /><span>Signing In...</span></>
+                                                ) : <>Sign In <FontAwesomeIcon icon={faArrowRight} className="text-xs" /></>}
+                                            </button>
+                                        </form>
+                                    </motion.div>
+                                )}
+
+                                {/* ── TAB: Email OTP ── */}
+                                {activeTab === 'email_otp' && (
+                                    <motion.div key="eotp"
+                                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+                                        transition={{ duration: 0.2 }}>
+
+                                        {forgotMode && (
+                                            <div className="flex items-center justify-between mb-4 bg-purple-900/20 border border-purple-500/20 rounded-xl px-3 py-2">
+                                                <span className="text-xs text-purple-300 font-semibold">🔑 Forgot Password Mode</span>
+                                                <button id="cancel-forgot-btn" type="button"
+                                                    onClick={() => { setForgotMode(false); setOtpStep('input'); setError(''); setSuccess(''); }}
+                                                    className="text-[10px] text-white/40 hover:text-white/70 underline">Cancel</button>
+                                            </div>
+                                        )}
+
+                                        {otpStep === 'input' && (
+                                            <form onSubmit={handleSendEmailOtp} className="space-y-4">
+                                                <div>
+                                                    <label className="block text-white/50 text-[10px] uppercase tracking-wider mb-1.5">
+                                                        {forgotMode ? 'Enter your registered email' : 'Enter your email to receive OTP'}
+                                                    </label>
+                                                    <input id="email-otp-input" type="email" required placeholder="your@email.com"
+                                                        className="w-full bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                                                        value={otpEmail} onChange={e => { setOtpEmail(e.target.value); setError(''); }} />
+                                                </div>
+                                                <button id="send-email-otp-btn" type="submit" disabled={isSubmitting}
+                                                    className="w-full bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-70 shadow-lg flex items-center justify-center gap-2 text-sm">
+                                                    {isSubmitting ? (
+                                                        <><div className="animate-spin w-4 h-4 border-2 border-black/30 border-t-black rounded-full" /><span>Sending...</span></>
+                                                    ) : <><FontAwesomeIcon icon={faEnvelope} className="text-xs" /> Send OTP</>}
+                                                </button>
+                                                {!forgotMode && (
+                                                    <p className="text-center text-xs text-white/40 mt-2">
+                                                        Forgot password?{' '}
+                                                        <button type="button" onClick={() => { setForgotMode(true); setError(''); setSuccess(''); }}
+                                                            className="text-purple-400 hover:text-purple-300 underline">Reset via OTP</button>
+                                                    </p>
+                                                )}
+                                            </form>
+                                        )}
+
+                                        {otpStep === 'verify' && (
+                                            <form onSubmit={handleVerifyEmailOtp} className="space-y-2">
+                                                <div className="text-center">
+                                                    <p className="text-white/60 text-xs mb-1">OTP sent to</p>
+                                                    <p className="text-white text-sm font-semibold">{otpEmail}</p>
+                                                </div>
+                                                <OtpInput length={6} value={emailOtpValue} onChange={v => { setEmailOtpValue(v); setError(''); }} />
+                                                <div className="flex items-center justify-between text-xs text-white/40 px-1">
+                                                    <span>Expires in: <Countdown seconds={otpTimer} onExpire={() => setError('OTP expired. Please resend.')} /></span>
+                                                    <button id="resend-email-otp-btn" type="button" disabled={isSubmitting}
+                                                        onClick={() => { setError(''); setSuccess(''); handleSendEmailOtp(); }}
+                                                        className="text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50">
+                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> Resend
+                                                    </button>
+                                                </div>
+                                                <button id="verify-email-otp-btn" type="submit" disabled={isSubmitting || emailOtpValue.length < 6}
+                                                    className="w-full mt-2 bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 text-sm">
+                                                    {isSubmitting ? (
+                                                        <><div className="animate-spin w-4 h-4 border-2 border-black/30 border-t-black rounded-full" /><span>Verifying...</span></>
+                                                    ) : <><FontAwesomeIcon icon={faShieldHalved} className="text-xs" /> Verify OTP</>}
+                                                </button>
+                                                <button type="button" onClick={() => { setOtpStep('input'); setEmailOtpValue(''); setError(''); setSuccess(''); }}
+                                                    className="w-full text-xs text-white/30 hover:text-white/60 mt-1">← Change Email</button>
+                                            </form>
+                                        )}
+
+                                        {otpStep === 'reset' && (
+                                            <form onSubmit={handleResetPassword} className="space-y-4">
+                                                <div className="text-center mb-2">
+                                                    <p className="text-white/60 text-xs">Set a new password for</p>
+                                                    <p className="text-white text-sm font-semibold">{otpEmail}</p>
+                                                </div>
+                                                <div className="relative">
+                                                    <input id="new-password-input" type={showNewPwd ? 'text' : 'password'} required placeholder="NEW PASSWORD"
+                                                        className="w-full bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 pr-8 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                                                        value={newPassword} onChange={e => { setNewPassword(e.target.value); setError(''); }} />
+                                                    <button type="button" onClick={() => setShowNewPwd(p => !p)}
+                                                        className="absolute right-0 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
+                                                        <FontAwesomeIcon icon={showNewPwd ? faEyeSlash : faEye} className="text-xs" />
+                                                    </button>
+                                                </div>
+                                                <p className="text-white/30 text-[10px]">Min 6 chars · 1 uppercase · 1 special character</p>
+                                                <button id="reset-password-btn" type="submit" disabled={isSubmitting}
+                                                    className="w-full bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-70 shadow-lg flex items-center justify-center gap-2 text-sm">
+                                                    {isSubmitting ? (
+                                                        <><div className="animate-spin w-4 h-4 border-2 border-black/30 border-t-black rounded-full" /><span>Resetting...</span></>
+                                                    ) : 'Reset Password'}
+                                                </button>
+                                            </form>
+                                        )}
+                                    </motion.div>
+                                )}
+
+                                {/* ── TAB: Phone OTP (Firebase) ── */}
+                                {activeTab === 'phone_otp' && (
+                                    <motion.div key="potp"
+                                        initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                                        transition={{ duration: 0.2 }}>
+
+                                        {/* Firebase badge */}
+                                        <div className="flex items-center justify-center gap-2 mb-4 bg-orange-900/20 border border-orange-500/20 rounded-xl px-3 py-1.5">
+                                            <span className="text-xs text-orange-300 font-semibold">🔥 Powered by Firebase · Real SMS</span>
+                                        </div>
+
+                                        {forgotMode && (
+                                            <div className="flex items-center justify-between mb-4 bg-purple-900/20 border border-purple-500/20 rounded-xl px-3 py-2">
+                                                <span className="text-xs text-purple-300 font-semibold">🔑 Forgot Password Mode</span>
+                                                <button id="cancel-phone-forgot-btn" type="button"
+                                                    onClick={() => { setForgotMode(false); setPhoneStep('input'); setError(''); setSuccess(''); }}
+                                                    className="text-[10px] text-white/40 hover:text-white/70 underline">Cancel</button>
+                                            </div>
+                                        )}
+
+                                        {phoneStep === 'input' && (
+                                            <form onSubmit={handleSendPhoneOtp} className="space-y-4">
+                                                <label className="block text-white/50 text-[10px] uppercase tracking-wider mb-1">
+                                                    {forgotMode ? 'Enter registered phone number' : 'Your Phone Number'}
+                                                </label>
+                                                <div className="flex gap-3 items-end">
+                                                    <select id="phone-country-select"
+                                                        className="bg-transparent border-b border-white/20 text-white py-1.5 focus:border-purple-500 outline-none [&>option]:text-black w-28 text-sm cursor-pointer"
+                                                        value={countryCode} onChange={e => setCountryCode(e.target.value)}>
+                                                        {countryOptions.map(o => (
+                                                            <option key={o.code} value={o.code}>{o.country} ({o.code})</option>
+                                                        ))}
+                                                    </select>
+                                                    <input id="phone-number-input" type="tel" required placeholder="98765 43210"
+                                                        className="flex-1 bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                                                        value={phoneNumber} onChange={e => { setPhoneNumber(e.target.value); setError(''); }} />
+                                                </div>
+                                                <p className="text-white/30 text-[10px]">
+                                                    A real SMS will be sent to your phone via Firebase
+                                                </p>
+                                                <button id="send-phone-otp-btn" type="submit" disabled={isSubmitting}
+                                                    className="w-full bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-70 shadow-lg flex items-center justify-center gap-2 text-sm">
+                                                    {isSubmitting ? (
+                                                        <><div className="animate-spin w-4 h-4 border-2 border-black/30 border-t-black rounded-full" /><span>Sending SMS...</span></>
+                                                    ) : <><FontAwesomeIcon icon={faPhone} className="text-xs" /> {forgotMode ? 'Send Reset OTP' : 'Send SMS OTP'}</>}
+                                                </button>
+                                                {!forgotMode && (
+                                                    <p className="text-center text-xs text-white/40 mt-2">
+                                                        Forgot password?{' '}
+                                                        <button type="button" onClick={() => { setForgotMode(true); setError(''); setSuccess(''); }}
+                                                            className="text-purple-400 hover:text-purple-300 underline">Reset via Phone SMS</button>
+                                                    </p>
+                                                )}
+                                            </form>
+                                        )}
+
+                                        {phoneStep === 'verify' && (
+                                            <form onSubmit={handleVerifyPhoneOtp} className="space-y-2">
+                                                <div className="text-center">
+                                                    <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-3">
+                                                        <FontAwesomeIcon icon={faPhone} className="text-green-400 text-lg" />
+                                                    </div>
+                                                    <p className="text-white/60 text-xs mb-1">SMS sent to</p>
+                                                    <p className="text-white text-sm font-semibold">{countryCode} {phoneNumber}</p>
+                                                </div>
+                                                <OtpInput length={6} value={phoneOtpValue} onChange={v => { setPhoneOtpValue(v); setError(''); }} />
+                                                <div className="flex items-center justify-between text-xs text-white/40 px-1">
+                                                    <span>Expires in: <Countdown seconds={phoneTimer} onExpire={() => setError('OTP expired. Please resend.')} /></span>
+                                                    <button id="resend-phone-otp-btn" type="button" disabled={isSubmitting}
+                                                        onClick={() => {
+                                                            setPhoneStep('input');
+                                                            setConfirmationResult(null);
+                                                            cleanupRecaptcha();
+                                                            setError(''); setSuccess('');
+                                                        }}
+                                                        className="text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50">
+                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> Resend
+                                                    </button>
+                                                </div>
+                                                <button id="verify-phone-otp-btn" type="submit" disabled={isSubmitting || phoneOtpValue.length < 6}
+                                                    className="w-full mt-2 bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 text-sm">
+                                                    {isSubmitting ? (
+                                                        <><div className="animate-spin w-4 h-4 border-2 border-black/30 border-t-black rounded-full" /><span>Verifying...</span></>
+                                                    ) : <><FontAwesomeIcon icon={faShieldHalved} className="text-xs" /> Verify OTP</>}
+                                                </button>
+                                            </form>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Divider + Social */}
+                            <div className="mt-5">
+                                <div className="relative flex py-2 items-center">
+                                    <div className="flex-grow border-t border-white/10" />
+                                    <span className="flex-shrink-0 mx-4 text-white/30 text-xs">OR</span>
+                                    <div className="flex-grow border-t border-white/10" />
+                                </div>
+                                <p className="text-white/40 text-xs text-center mb-3">Continue with social</p>
+                                <div className="flex justify-center gap-5">
+                                    <button id="facebook-login-btn" onClick={handleFacebookLogin} title="Facebook"
+                                        className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+                                        <FontAwesomeIcon icon={faFacebookF} className="text-sm" />
+                                    </button>
+                                    <button id="google-login-btn" onClick={handleGoogleLogin} title="Google"
+                                        className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+                                        <FontAwesomeIcon icon={faGoogle} className="text-sm" />
+                                    </button>
+                                    <button id="twitter-login-btn" onClick={handleTwitterLogin} title="Twitter/X"
+                                        className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+                                        <FontAwesomeIcon icon={faXTwitter} className="text-sm" />
                                     </button>
                                 </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full mt-3 sm:mt-4 bg-white text-black font-bold py-2 sm:py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-white/10 flex items-center justify-center gap-2 text-base lg:text-sm"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <div className="animate-spin w-5 h-5 border-2 border-black/30 border-t-black rounded-full"></div>
-                                            <span>Signing In...</span>
-                                        </>
-                                    ) : (
-                                        'Sign In'
-                                    )}
-                                </button>
-                            </form>
-
-                            {/* Social Login Section */}
-                            <div className="mt-4">
-                                <div className="relative flex py-2 items-center">
-                                    <div className="flex-grow border-t border-white/20"></div>
-                                    <span className="flex-shrink-0 mx-4 text-white/40 text-xs">OR</span>
-                                    <div className="flex-grow border-t border-white/20"></div>
-                                </div>
-
-                                <div className="text-center mt-2">
-                                    <p className="text-white/60 text-xs mb-3">Sign up with Social Networks</p>
-                                    <div className="flex justify-center gap-6">
-                                        <button
-                                            onClick={handleFacebookLogin}
-                                            className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
-                                        >
-                                            <FontAwesomeIcon icon={faFacebookF} className="text-lg" />
-                                        </button>
-                                        <button
-                                            onClick={handleGoogleLogin}
-                                            className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
-                                        >
-                                            <FontAwesomeIcon icon={faGoogle} className="text-lg" />
-                                        </button>
-                                        <button
-                                            onClick={handleTwitterLogin}
-                                            className="w-10 h-10 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-purple-900/50"
-                                        >
-                                            <FontAwesomeIcon icon={faXTwitter} className="text-lg" />
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
 
-                            <div className="mt-4 sm:mt-6 text-center text-sm text-white/60 relative z-10">
-                                Don't have an account? {' '}
-                                <Link href="/signup" className="text-white font-bold hover:text-purple-300 transition-colors underline decoration-purple-400/50 hover:decoration-purple-300">
+                            <div className="mt-4 text-center text-xs text-white/40">
+                                Don't have an account?{' '}
+                                <Link href="/signup" className="text-white font-bold hover:text-purple-300 transition-colors underline decoration-purple-400/50">
                                     Create Account
                                 </Link>
                             </div>

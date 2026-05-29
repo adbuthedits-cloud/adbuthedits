@@ -1,0 +1,7 @@
+# Backend .gitignore
+node_modules/
+.env
+uploads/
+config/firebase-service-account.json
+scratch/
+*.log
