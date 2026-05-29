@@ -13,6 +13,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -27,4 +28,19 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-export { app, auth };
+// Initialize App Check only on client-side
+let appCheck;
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+    try {
+        appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+            isTokenAutoRefreshEnabled: true,
+        });
+        console.log('[Firebase App Check] Initialized with reCAPTCHA Enterprise.');
+    } catch (err) {
+        console.error('[Firebase App Check] Initialization failed:', err.message);
+    }
+}
+
+export { app, auth, appCheck };
+
