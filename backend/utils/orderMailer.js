@@ -1,7 +1,7 @@
 const { transporter, senders } = require('./emailService');
 
 const SHOP_URL = process.env.SHOP_URL || 'http://localhost:3000';
-const BRAND_NAME = 'Adbuth Edits';
+const BRAND_NAME = 'Adbuth Productions';
 
 /**
  * Sends a professional light-theme "Order In Progress" email to the customer.
@@ -27,7 +27,7 @@ async function sendOrderProcessingEmail({ to, name, orderId, orderRef }) {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#7D287E,#4a1070);padding:40px;text-align:center;">
-              <img src="${SHOP_URL}/images/logo.png" alt="${BRAND_NAME}" style="height:60px;width:auto;margin-bottom:12px;filter:brightness(0) invert(1);">
+              <img src="https://assets.adbuthverse.com/website-assets/brand/logo.png" alt="${BRAND_NAME}" style="height:60px;width:auto;margin-bottom:12px;filter:brightness(0) invert(1);image-rendering:-webkit-optimize-contrast;">
               <h1 style="color:#ffffff;font-size:26px;margin:0;font-weight:700;letter-spacing:-0.5px;">${BRAND_NAME}</h1>
               <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:6px 0 0;">Professional Order Processing</p>
             </td>
@@ -151,7 +151,7 @@ async function sendDeliveryEmail({ to, name, orderId, orderRef, orderUrl, expire
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#7D287E,#4a1070);padding:40px;text-align:center;">
-              <img src="${SHOP_URL}/images/logo.png" alt="${BRAND_NAME}" style="height:60px;width:auto;margin-bottom:12px;filter:brightness(0) invert(1);">
+              <img src="https://assets.adbuthverse.com/website-assets/brand/logo.png" alt="${BRAND_NAME}" style="height:60px;width:auto;margin-bottom:12px;filter:brightness(0) invert(1);image-rendering:-webkit-optimize-contrast;">
               <h1 style="color:#ffffff;font-size:26px;margin:0;font-weight:700;letter-spacing:-0.5px;">${BRAND_NAME}</h1>
               <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:6px 0 0;">Your Order is Ready!</p>
             </td>
@@ -286,7 +286,7 @@ async function sendReassignmentNotificationEmail({ to, name, orderId, newAssigne
         <table width="580" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;border:1px solid #e5deff;overflow:hidden;">
           <tr>
             <td style="background:linear-gradient(135deg,#7D287E,#4a1070);padding:32px;text-align:center;">
-              <img src="${SHOP_URL}/images/logo.png" alt="${BRAND_NAME}" style="height:40px;width:auto;margin-bottom:10px;filter:brightness(0) invert(1);">
+              <img src="https://assets.adbuthverse.com/website-assets/brand/logo.png" alt="${BRAND_NAME}" style="height:40px;width:auto;margin-bottom:10px;filter:brightness(0) invert(1);image-rendering:-webkit-optimize-contrast;">
               <h1 style="color:#ffffff;font-size:22px;margin:0;font-weight:700;">${BRAND_NAME}</h1>
               <p style="color:rgba(255,255,255,0.8);font-size:12px;margin:6px 0 0;">Internal Workflow Notification</p>
             </td>

@@ -30,7 +30,7 @@ async function sendOtpEmail({ to, otp, purpose }) {
     const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0a; color: #fff; padding: 40px 20px; max-width: 520px; margin: 0 auto; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 32px;">
-            <img src="https://assets.adbuthverse.com/website-assets/brand/logo.webp" alt="Adbuth Edits" style="height: 36px; object-fit: contain;" />
+            <img src="https://assets.adbuthverse.com/website-assets/brand/logo.png" alt="Adbuth Productions" style="height: 50px; object-fit: contain; image-rendering: -webkit-optimize-contrast;" />
         </div>
         <div style="background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; text-align: center;">
             <h2 style="font-size: 20px; font-weight: 700; margin: 0 0 8px; color: #fff;">${label} OTP</h2>
@@ -42,13 +42,13 @@ async function sendOtpEmail({ to, otp, purpose }) {
             </div>
             <p style="color: #555; font-size: 12px; margin: 24px 0 0;">If you did not request this, please ignore this email.</p>
         </div>
-        <p style="text-align: center; color: #333; font-size: 11px; margin-top: 24px;">© ${new Date().getFullYear()} Adbuth Edits. All rights reserved.</p>
+        <p style="text-align: center; color: #333; font-size: 11px; margin-top: 24px;">© ${new Date().getFullYear()} Adbuth Productions. All rights reserved.</p>
     </div>`;
 
     await transporter.sendMail({
-        from: `"Adbuth Edits" <${senders.system}>`,
+        from: `"Adbuth Productions" <${senders.system}>`,
         to,
-        subject: `${otp} — Your ${label} OTP | Adbuth Edits`,
+        subject: `${otp} — Your ${label} OTP | Adbuth Productions`,
         html,
     });
 }

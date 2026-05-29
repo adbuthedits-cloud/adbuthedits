@@ -72,11 +72,11 @@ const getDeletionWarningTemplate = (userName, productName, orderId) => `
             
             <p>If you haven't already, please ensure you have downloaded your final delivery and saved any customization assets you might need. Once deleted, these files <strong>cannot be recovered</strong>.</p>
             
-            <p style="margin-top: 30px;">Thank you for choosing Adbuth Edits!</p>
+            <p style="margin-top: 30px;">Thank you for choosing Adbuth Productions!</p>
         </div>
         
         <div style="${footerStyles}">
-            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuth Edits. All rights reserved.</p>
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuth Productions. All rights reserved.</p>
             <p style="margin: 4px 0;">This is an automated notification regarding your account privacy.</p>
         </div>
     </div>
@@ -106,15 +106,15 @@ const getDeletionConfirmedTemplate = (userName, productName) => `
             
             <p>We are writing to confirm that, following our privacy policy, the temporary media files associated with your order of <strong>${productName}</strong> have been permanently deleted from our servers.</p>
             
-            <p>At Adbuth Edits, we take your data privacy seriously. By removing these assets after delivery, we ensure that your personal media is not stored longer than necessary for the fulfillment of your order.</p>
+            <p>At Adbuth Productions, we take your data privacy seriously. By removing these assets after delivery, we ensure that your personal media is not stored longer than necessary for the fulfillment of your order.</p>
             
             <p>We hope you are enjoying your digital assets! If you need further assistance, our support team is always here to help.</p>
             
-            <p style="margin-top: 30px;">Warm regards,<br>The Adbuth Edits Team</p>
+            <p style="margin-top: 30px;">Warm regards,<br>The Adbuth Productions Team</p>
         </div>
         
         <div style="${footerStyles}">
-            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuth Edits. All rights reserved.</p>
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuth Productions. All rights reserved.</p>
             <p style="margin: 4px 0;">Your data security is our priority.</p>
         </div>
     </div>
