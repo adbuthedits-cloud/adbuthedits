@@ -92,8 +92,8 @@ router.post('/contact', async (req, res) => {
 
 // POST /api/enquiry/incoming-webhook — Zoho Mail Incoming Webhook
 router.post('/incoming-webhook', async (req, res) => {
-    // Optional: verify webhook security token if configured
-    const webhookToken = req.headers['x-webhook-token'];
+    // Verify webhook security token (either via header or via query parameter ?secret=...)
+    const webhookToken = req.headers['x-webhook-token'] || req.query.secret;
     if (process.env.ZOHO_WEBHOOK_SECRET && webhookToken !== process.env.ZOHO_WEBHOOK_SECRET) {
         console.warn('[Webhook] Unauthorized access attempt');
         return res.status(401).json({ error: 'Unauthorized' });
