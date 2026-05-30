@@ -250,7 +250,7 @@ export default function AdminLayout({ children }) {
                 <div className="h-20 flex items-center px-6 mb-2 border-b border-[#2d1b4e]/50">
                     {!collapsed ? (
                         <div className="flex items-center gap-2">
-                            <Image src="/images/logo.png" alt="Adbuth" width={120} height={32} className="h-8 w-auto object-contain" style={{ height: "auto" }} priority />
+                            <Image src="/images/logo.png" alt="Adbuth" width={90} height={24} className="h-6 w-auto object-contain" style={{ height: "auto" }} priority />
                         </div>
                     ) : (
                         <Image src="/images/logo.png" alt="Adbuth" width={32} height={32} className="w-8 h-8 mx-auto object-contain" style={{ height: "auto" }} priority />

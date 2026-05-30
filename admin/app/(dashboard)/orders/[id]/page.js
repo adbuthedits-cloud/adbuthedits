@@ -8,7 +8,7 @@ import {
     faArrowLeft, faBox, faUser, faEdit, faPaperPlane, faCheckCircle,
     faTrash, faCircleNotch, faRoute, faSpinner, faImage, faFile,
     faCreditCard, faCalendarDays, faDownload, faEye, faPlay,
-    faHashtag, faPhone, faEnvelope, faCircleDot, faClock
+    faHashtag, faPhone, faEnvelope, faCircleDot, faClock, faUserShield
 } from '@fortawesome/free-solid-svg-icons';
 import DeliveryModal from '../../../../components/DeliveryModal';
 import { getAuthToken, getAuthUser } from '../../../../utils/auth';
@@ -24,6 +24,29 @@ function fmt(d) {
 function fmtDate(d) {
     if (!d) return '—';
     return new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(d));
+}
+
+function CustomImagePreview({ value, label }) {
+    const [error, setError] = useState(false);
+    
+    if (error) return (
+        <div className="mt-1 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
+            <FontAwesomeIcon icon={faImage} className="text-red-400" />
+            <div className="overflow-hidden">
+                <p className="text-xs font-bold text-red-400">Image Expired / Deleted</p>
+                <p className="text-[10px] text-red-300 truncate max-w-[200px]">{value.split('/').pop().split('?')[0]}</p>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="mt-1 space-y-1">
+            <img src={value} alt={label} onError={() => setError(true)} className="max-h-48 w-full object-contain rounded-xl border border-[#2d1b4e] bg-[#0d0816]" />
+            <a href={value} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#a78bfa] hover:underline">
+                <FontAwesomeIcon icon={faEye} /> Open Full Size
+            </a>
+        </div>
+    );
 }
 
 /** Renders a value — shows media inline */
@@ -50,14 +73,7 @@ function FieldValue({ label, value }) {
         const ext = value.split('?')[0].split('.').pop().toLowerCase();
         const isImg = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
         const isVid = ['mp4','mov','webm','mkv','avi'].includes(ext);
-        if (isImg) return (
-            <div className="mt-1 space-y-1">
-                <img src={value} alt={label} className="max-h-48 w-full object-contain rounded-xl border border-[#2d1b4e] bg-[#0d0816]" />
-                <a href={value} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#a78bfa] hover:underline">
-                    <FontAwesomeIcon icon={faEye} /> Open Full Size
-                </a>
-            </div>
-        );
+        if (isImg) return <CustomImagePreview value={value} label={label} />;
         if (isVid) return (
             <div className="mt-1">
                 <video src={value} controls className="w-full max-h-48 rounded-xl border border-[#2d1b4e] bg-black" />
@@ -281,15 +297,23 @@ function OrderDetails() {
                                     <div key={idx} className="p-5">
                                         {/* Item header */}
                                         <div className="flex gap-4">
-                                            <div className="w-16 h-16 bg-[#2d1b4e] rounded-xl border border-[#3b2a5f] overflow-hidden relative flex-shrink-0">
-                                                {item.product?.thumbnail && (
-                                                    <Image src={item.product.thumbnail} alt="Product" fill className="object-cover" sizes="64px" />
-                                                )}
+                                            <div className="w-16 h-16 bg-[#2d1b4e] rounded-xl border border-[#3b2a5f] overflow-hidden relative flex-shrink-0 flex items-center justify-center">
+                                                {item.product?.thumbnail ? (
+                                                    <img 
+                                                        src={item.product.thumbnail} 
+                                                        alt="Product" 
+                                                        className="w-full h-full object-cover" 
+                                                        onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }} 
+                                                    />
+                                                ) : null}
+                                                <div className={item.product?.thumbnail ? "hidden" : "block"}>
+                                                    <FontAwesomeIcon icon={faBox} className="text-gray-500 text-xl" />
+                                                </div>
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-start justify-between gap-2">
                                                     <div>
-                                                        <h3 className="font-bold text-white text-sm">{item.product?.title || `Item #${idx+1}`}</h3>
+                                                        <h3 className="font-bold text-white text-sm">{item.product?.title || <span className="text-red-400 italic">Deleted Product / Unknown</span>}</h3>
                                                         <p className="text-xs text-gray-500 mt-0.5">₹{item.price_at_purchase?.toLocaleString()} × {item.quantity}</p>
                                                     </div>
                                                     <div className="text-right flex-shrink-0">
@@ -400,6 +424,21 @@ function OrderDetails() {
                         </div>
                     </div>
 
+                    {/* Staff Assignment */}
+                    <div className="bg-[#1a1025] rounded-2xl border border-[#2d1b4e] p-5">
+                        <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2 pb-3 border-b border-[#2d1b4e]">
+                            <FontAwesomeIcon icon={faUserShield} className="text-emerald-400" /> Staff Assignment
+                        </h2>
+                        {order.assignedEmployee ? (
+                            <div className="space-y-3">
+                                <InfoRow icon={faUserShield} label="Assigned To" value={`${order.assignedEmployee.first_name || ''} ${order.assignedEmployee.last_name || ''}`.trim()} />
+                                <InfoRow icon={faCheckCircle} label="Role" value={order.assignedEmployee.role?.replace('_', ' ') || 'Staff'} />
+                            </div>
+                        ) : (
+                            <p className="text-gray-500 text-xs text-center py-2 italic">Unassigned</p>
+                        )}
+                    </div>
+
                     {/* Timeline */}
                     <div className="bg-[#1a1025] rounded-2xl border border-[#2d1b4e] p-5">
                         <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2 pb-3 border-b border-[#2d1b4e]">
@@ -415,6 +454,12 @@ function OrderDetails() {
                                         <div key={event.timeline_id} className="relative">
                                             <div className={`absolute -left-[22px] w-3.5 h-3.5 rounded-full border-2 border-[#1a1025] ${cfg.dot}`} />
                                             <p className={`text-xs font-semibold ${cfg.text}`}>{event.status_label}</p>
+                                            {event.actor?.first_name || event.actor_name ? (
+                                                <p className="text-gray-400 text-[9px] font-medium mt-0.5">
+                                                    By: {event.actor?.first_name || event.actor_name} 
+                                                    {event.actor?.role || event.actor_role ? ` (${(event.actor?.role || event.actor_role).replace('_', ' ')})` : ''}
+                                                </p>
+                                            ) : null}
                                             <p className="text-gray-600 text-[10px] mt-0.5">{fmt(event.event_at)}</p>
                                             {event.notes && <p className="text-gray-500 text-[10px] mt-0.5 italic">{event.notes}</p>}
                                         </div>
