@@ -257,9 +257,11 @@ const productStorage = multerS3({
 
         // Extract hierarchy from request body
         // Ensure these are sent BEFORE the file in the FormData on the frontend
-        const { parentCategory, typeCode, variantCode, categoryCode, subCategoryCode, orientationCode, sku, subfolder } = req.body;
+        const { parentCategory, typeCode, variantCode, categoryCode, subCategoryCode, orientationCode, sku, subfolder, explicitKey } = req.body;
 
-        if (parentCategory && typeCode && categoryCode && subCategoryCode && sku) {
+        if (explicitKey) {
+            cb(null, explicitKey);
+        } else if (parentCategory && typeCode && categoryCode && subCategoryCode && sku) {
             // Industrial Hierarchical Path
             let folder = `products/${parentCategory}/${typeCode}/${variantCode || 'Variant'}/${categoryCode}/${subCategoryCode}/${orientationCode || 'Orientation'}/${sku}/`;
 

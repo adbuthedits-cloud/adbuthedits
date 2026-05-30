@@ -494,7 +494,7 @@ function EditProduct() {
         setCustomizations(customizations.filter((_, i) => i !== index));
     };
 
-    const handleFileUpload = async (file, subfolder = 'image') => {
+    const handleFileUpload = async (file, subfolder = 'image', explicitKey = null) => {
         if (!file) return null;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -516,6 +516,7 @@ function EditProduct() {
             formDataPayload.append('orientationCode', orientationCode.replace(/\s+/g, ''));
             formDataPayload.append('sku', (internalSku || 'no-sku').replace(/\s+/g, ''));
             formDataPayload.append('subfolder', subfolder); 
+            if (explicitKey) formDataPayload.append('explicitKey', explicitKey);
             formDataPayload.append('file', file);
 
             const token = getAuthToken();
@@ -603,8 +604,10 @@ function EditProduct() {
                     setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: "compressing", pct } }));
                 });
 
-                // Replace placeholder with the compressed file
-                setVideos(prev => prev.map((v, idx) => idx === vidIdx ? compressed : v));
+                // Attach the compressed file to the original file object
+                // We do NOT replace the placeholder. The original file stays in `videos` array.
+                file.compressedVersion = compressed;
+                
                 setVideoCompressStatus(s => ({
                     ...s,
                     [vidIdx]: compressed.size < file.size
@@ -627,6 +630,12 @@ function EditProduct() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (isCompressing) {
+            alert("Please wait for video compression to finish before submitting. Large videos might take a minute.");
+            return;
+        }
+
         setSaving(true);
 
         try {
@@ -667,7 +676,21 @@ function EditProduct() {
             for (const item of videos) {
                 if (item instanceof File) {
                     const url = await handleFileUpload(item, 'video');
-                    if (url) finalVideos.push(url);
+                    if (url) {
+                        finalVideos.push(url);
+                        // If we have a compressed version, upload it with _web suffix
+                        if (item.compressedVersion && item.compressedVersion !== item) {
+                            try {
+                                const urlObj = new URL(url);
+                                let originalKey = decodeURIComponent(urlObj.pathname);
+                                if (originalKey.startsWith('/')) originalKey = originalKey.substring(1);
+                                const webKey = originalKey.replace(/\.[^/.]+$/, '_web.mp4');
+                                await handleFileUpload(item.compressedVersion, "video", webKey);
+                            } catch (e) {
+                                console.error("Failed to upload compressed version", e);
+                            }
+                        }
+                    }
                     else throw new Error('Video upload failed');
                 } else {
                     finalVideos.push(item);
@@ -1447,7 +1470,7 @@ function EditProduct() {
                 </div>
 
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#130C1C]/80 backdrop-blur-md border-t border-[#2d1b4e] z-40 flex justify-end gap-4">
-                    <button type="submit" formNoValidate onClick={() => setIsDraftSubmit(true)} disabled={saving} className="w-full max-w-[250px] bg-[#2d1b4e] text-gray-300 py-2 rounded-full font-bold hover:bg-[#3b2a5f] transition-all shadow-xl shadow-purple-900/10 flex items-center justify-center gap-3 text-lg border border-[#3b2a5f]">
+                    <button type="submit" formNoValidate onClick={() => setIsDraftSubmit(true)} disabled={saving || isCompressing} className="w-full max-w-[250px] bg-[#2d1b4e] text-gray-300 py-2 rounded-full font-bold hover:bg-[#3b2a5f] transition-all shadow-xl shadow-purple-900/10 flex items-center justify-center gap-3 text-lg border border-[#3b2a5f] disabled:opacity-50 disabled:cursor-not-allowed">
                         {saving && isDraftSubmit ? (
                             <>
                                 <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
@@ -1460,7 +1483,7 @@ function EditProduct() {
                             </>
                         )}
                     </button>
-                    <button type="submit" onClick={() => setIsDraftSubmit(false)} disabled={saving} className="w-full max-w-[250px] bg-[#7C3AED] text-white py-2 rounded-full font-bold hover:bg-[#6D28D9] transition-all shadow-2xl shadow-purple-900/20 flex items-center justify-center gap-3 text-lg">
+                    <button type="submit" onClick={() => setIsDraftSubmit(false)} disabled={saving || isCompressing} className="w-full max-w-[250px] bg-[#7C3AED] text-white py-2 rounded-full font-bold hover:bg-[#6D28D9] transition-all shadow-2xl shadow-purple-900/20 flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
                         {saving && !isDraftSubmit ? (
                             <>
                                 <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>

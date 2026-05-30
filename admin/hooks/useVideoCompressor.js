@@ -119,13 +119,16 @@ export function useVideoCompressor() {
             // Write input file to virtual FS
             await ff.writeFile(inputName, await fetchFile(file));
 
-            // Re-encode: H.264 CRF 26, AAC 128k, scale to max 1280px width, 30fps cap
+            // Re-encode: H.264 CRF 28, AAC 128k, scale height to 720px (maintains vertical/horizontal aspect), max bitrate 1500k
             await ff.exec([
                 "-i", inputName,
                 "-vcodec", "libx264",
-                "-crf", "26",
+                "-crf", "28",
                 "-preset", "ultrafast",
-                "-vf", "scale=iw*min(1\\,1280/iw):-2,fps=fps=30",
+                "-vf", "scale=-2:720,fps=fps=30",
+                "-b:v", "1500k",
+                "-maxrate", "1500k",
+                "-bufsize", "3000k",
                 "-acodec", "aac",
                 "-b:a", "128k",
                 "-movflags", "+faststart",
