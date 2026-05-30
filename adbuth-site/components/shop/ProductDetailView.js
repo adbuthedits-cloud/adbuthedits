@@ -404,7 +404,7 @@ export default function ProductDetailView({ slug, masterData }) {
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-10 md:pt-0 md:mt-0 relative bg-[#fff]">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 lg:mt-8 lg:mb-12">
-                    <div className="lg:sticky lg:top-24 self-start">
+                    <div>
                         {(() => {
                             // Find orientation in masterData using the product's asset_orientation_id
                             const orientation = masterData?.orientations?.find(o => o.orientation_id === product.asset_orientation_id)
@@ -534,12 +534,13 @@ export default function ProductDetailView({ slug, masterData }) {
                             )}
                         </div>
 
-                        {/* Related Products Slider (Compact for Sidebar area) */}
-                        {relatedProducts.length > 0 && (
-                            <ProductSlider products={relatedProducts} title="Recommended For You" />
-                        )}
                     </div>
                 </div>
+
+                {/* ── Recommended For You — full width below the product section ── */}
+                {relatedProducts.length > 0 && (
+                    <ProductSlider products={relatedProducts} title="Recommended For You" />
+                )}
 
 
 

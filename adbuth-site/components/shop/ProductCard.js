@@ -26,101 +26,133 @@ function isNewProduct(updatedAt) {
     return diffDays <= NEW_BADGE_DAYS;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 export default function ProductCard({ product, index = 0 }) {
     const [wishlisted, setWishlisted] = useState(false);
+    // isPlaying: video is actively playing
     const [isPlaying, setIsPlaying] = useState(false);
+    // isHovered: mouse is currently over the card
+    const [isHovered, setIsHovered] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
+    // Lazy-loaded video URL — fetched on first hover to keep page payload small
+    const [lazyVideoSrc, setLazyVideoSrc] = useState(null);
+    const [videoFetched, setVideoFetched] = useState(false);
     const containerRef = useRef(null);
     const videoRef = useRef(null);
 
-    // Ensure client-side render and detect viewport visibility
+    // ── Client-side mount + IntersectionObserver ──────────────────────────────
     useEffect(() => {
         setIsMounted(true);
-
         if (!containerRef.current) return;
         const observer = new IntersectionObserver(
-            ([entry]) => {
-                setIsVisible(entry.isIntersecting);
-            },
-            { rootMargin: '150px' } // Load video elements slightly before they enter the viewport
+            ([entry]) => setIsVisible(entry.isIntersecting),
+            { rootMargin: '150px' }
         );
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
 
-    // Auto-pause/unload video when the card is scrolled offscreen
+    // ── Stop video when scrolled off-screen ───────────────────────────────────
     useEffect(() => {
-        if (!isVisible && isPlaying) {
-            setIsPlaying(false);
-        }
+        if (!isVisible && isPlaying) setIsPlaying(false);
     }, [isVisible, isPlaying]);
 
-    // Programmatically play/pause preview video based on isPlaying state
+    // ── Drive the <video> element ─────────────────────────────────────────────
     useEffect(() => {
-        if (!videoRef.current) return;
+        const vid = videoRef.current;
+        if (!vid) return;
         if (isPlaying) {
-            const playPromise = videoRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                    // Autoplay prevented or interrupted - silently ignore
-                });
-            }
+            const p = vid.play();
+            if (p !== undefined) p.catch(() => {});
         } else {
-            videoRef.current.pause();
-            videoRef.current.currentTime = 0;
+            vid.pause();
+            vid.currentTime = 0;
         }
     }, [isPlaying]);
+
+    // ── Lazy-fetch video URL on first hover ───────────────────────────────────
+    const handleMouseEnter = () => {
+        setIsHovered(true);
+        // Only fetch if no video data was included in the page props
+        if (!videoFetched && product.slug && !product.video?.[0] && !product.video_url) {
+            setVideoFetched(true);
+            fetch(`${API_URL}/api/products/${product.slug}`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (data?.video?.[0] || data?.video_url) {
+                        setLazyVideoSrc(cdnVideo(data.video?.[0] || data.video_url));
+                    }
+                })
+                .catch(() => {});
+        }
+    };
+
+    // ── Mouse leave: stop video + mark as not hovered ─────────────────────────
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        setIsPlaying(false); // always stop when pointer leaves
+    };
+
+    // ── Click play: start video, button hides automatically ───────────────────
+    const handlePlayClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsPlaying(true); // button hides because showPlayButton = isHovered && !isPlaying
+    };
 
     if (!product) return null;
 
     const isNew = isNewProduct(product.updatedAt || product.updated_at);
-    const rating = (product.averageRating && !isNaN(parseFloat(product.averageRating))) 
-        ? parseFloat(product.averageRating).toFixed(1) 
+    const rating = (product.averageRating && !isNaN(parseFloat(product.averageRating)))
+        ? parseFloat(product.averageRating).toFixed(1)
         : null;
     const reviewCount = product.reviewCount ? parseInt(product.reviewCount) : 0;
 
-    // Build the product detail URL
     const parentSlug = product.parentCategory?.slug || 'all';
     const eventSlug = product.assetCategory?.slug || 'general';
     const productSlug = product.slug || '';
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
 
-    // Use web-optimized versions: WebP for images, _web.mp4 for videos
     const thumbnail = product.thumbnail ? cdnImage(product.thumbnail) : null;
-    const videoSrc  = product.video?.[0] || product.video_url
-        ? cdnVideo(product.video?.[0] || product.video_url)
-        : null;
+    // lazyVideoSrc wins when lazy-loaded; fall back to inline props
+    const videoSrc = lazyVideoSrc ||
+        (product.video?.[0] || product.video_url
+            ? cdnVideo(product.video?.[0] || product.video_url)
+            : null);
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount
         ? Math.round(((product.compared_price - product.price) / product.compared_price) * 100)
         : 0;
 
-    const handleMouseEnter = () => {
-        // Handled automatically by dynamic mounting
-    };
-
-    const handleMouseLeave = () => {
-        // Handled automatically by dynamic mounting
-    };
+    // Button visibility (pure React state, no CSS group-hover tricks):
+    //   • Not hovered            → hidden
+    //   • Hovered + not playing  → visible (▶ play icon)
+    //   • Hovered + playing      → hidden  (video is showing, no UI clutter)
+    const showPlayButton = isHovered && !isPlaying && videoSrc;
 
     return (
-        <div className="group relative flex flex-col bg-white hover:shadow-md transition-all duration-200">
-            {/* Image Container */}
+        <div
+            className="relative flex flex-col bg-white hover:shadow-md transition-shadow duration-200"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            {/* ── Image / Video Container ─────────────────────────────────── */}
             <Link
                 href={productUrl}
                 className="block relative overflow-hidden bg-gray-50"
                 style={{ aspectRatio: '3/4' }}
                 ref={containerRef}
             >
-                {/* Default Thumbnail - Always present for performance */}
+                {/* Thumbnail — fades out when video plays */}
                 {thumbnail ? (
                     <Image
                         src={thumbnail}
                         alt={product.title || 'Product Image'}
                         fill
-                        className={`object-cover transition-opacity duration-300 ${isPlaying && videoSrc ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                        className={`object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                         priority={index < 8}
                     />
@@ -130,7 +162,7 @@ export default function ProductCard({ product, index = 0 }) {
                     </div>
                 )}
 
-                {/* Client-only video element — preload none to optimize network and only load on play */}
+                {/* Video element — mounted client-side only, when in viewport */}
                 {isMounted && isVisible && videoSrc && (
                     <video
                         ref={videoRef}
@@ -143,26 +175,16 @@ export default function ProductCard({ product, index = 0 }) {
                     />
                 )}
 
-                {/* Play/Pause Button Overlay */}
-                {videoSrc && (
+                {/* ▶ Play button — only when hovered AND not playing */}
+                {showPlayButton && (
                     <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setIsPlaying(prev => !prev);
-                        }}
-                        className="absolute inset-0 m-auto w-12 h-12 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all duration-200 z-20 shadow-lg border border-white/20 group/play"
-                        aria-label={isPlaying ? "Pause preview" : "Play preview"}
+                        onClick={handlePlayClick}
+                        aria-label="Play preview"
+                        className="absolute inset-0 m-auto w-12 h-12 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center z-20 shadow-lg border border-white/20 transition-colors duration-150"
                     >
-                        {isPlaying ? (
-                            <svg className="w-5 h-5 fill-white transition-transform group-hover/play:scale-110" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clipRule="evenodd" />
-                            </svg>
-                        ) : (
-                            <svg className="w-5 h-5 fill-white ml-0.5 transition-transform group-hover/play:scale-110" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                        )}
+                        <svg className="w-5 h-5 fill-white ml-0.5" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
                     </button>
                 )}
 
@@ -181,7 +203,7 @@ export default function ProductCard({ product, index = 0 }) {
                 )}
             </Link>
 
-            {/* Wishlist Button */}
+            {/* ── Wishlist Button ─────────────────────────────────────────── */}
             <button
                 onClick={(e) => { e.preventDefault(); setWishlisted(v => !v); }}
                 className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center hover:bg-white transition-all duration-300 shadow-sm group/wishlist"
@@ -194,7 +216,7 @@ export default function ProductCard({ product, index = 0 }) {
                 />
             </button>
 
-            {/* Product Info */}
+            {/* ── Product Info ────────────────────────────────────────────── */}
             <Link href={productUrl} className="flex flex-col p-3 flex-1">
                 <p className="text-[13px] font-semibold text-gray-900 leading-tight line-clamp-1 mb-1">
                     {product.title}
