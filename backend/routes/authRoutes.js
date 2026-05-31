@@ -181,17 +181,45 @@ router.post('/register', async (req, res) => {
         }
 
         let user = await User.findOne({ where: { email } });
-        if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
+        if (user && user.email_verified) {
+            return res.status(400).json({ msg: 'User already exists with this email address' });
         }
 
-        user = await User.create({
-            first_name,
-            last_name,
-            email,
-            password_hash: password,
-            phone_number
-        });
+        if (phone_number && phone_number.code && phone_number.number) {
+            const allUsers = await User.findAll({
+                where: { phone_number: { [Op.ne]: null } }
+            });
+            const existingPhone = allUsers.find(u => {
+                try {
+                    if (user && u.user_id === user.user_id) return false;
+                    const p = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
+                    if (!p) return false;
+                    return p.code === phone_number.code && p.number === phone_number.number;
+                } catch {
+                    return false;
+                }
+            });
+            if (existingPhone) {
+                return res.status(400).json({ msg: 'User already exists with this phone number' });
+            }
+        }
+
+        if (user) {
+            await user.update({
+                first_name,
+                last_name,
+                password_hash: password,
+                phone_number
+            });
+        } else {
+            user = await User.create({
+                first_name,
+                last_name,
+                email,
+                password_hash: password,
+                phone_number
+            });
+        }
 
         const payload = {
             user: {

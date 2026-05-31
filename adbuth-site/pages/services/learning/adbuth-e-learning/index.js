@@ -5,6 +5,11 @@ import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import Image from 'next/image';
 import Link from 'next/link';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
+// Reactivation Flag - Set to true for Coming Soon, false to restore original page
+const IS_COMING_SOON = true;
 
 // Icons using SVG directly for portability
 const ChevronLeftIcon = () => (
@@ -18,6 +23,306 @@ const ChevronRightIcon = () => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
     </svg>
 );
+
+// Coming Soon Component with Inquiry Form
+const ComingSoonELearning = () => {
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        course: '',
+        query: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        if (name === 'phone') {
+            const numeric = value.replace(/\D/g, '').slice(0, 10);
+            setFormData(prev => ({ ...prev, [name]: numeric }));
+            return;
+        }
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.name.trim()) {
+            toast.error('Please enter your name');
+            return;
+        }
+        if (!formData.email.trim()) {
+            toast.error('Please enter your email address');
+            return;
+        }
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
+            toast.error('Please enter a valid email address');
+            return;
+        }
+        if (formData.phone && formData.phone.length !== 10) {
+            toast.error('Please enter a valid 10-digit phone number');
+            return;
+        }
+        if (!formData.course) {
+            toast.error('Please select a course of interest');
+            return;
+        }
+        if (!formData.query.trim()) {
+            toast.error('Please write a bit about your query or learning goals');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const payload = {
+                fullName: formData.name.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone || null,
+                source: 'elearning_coming_soon',
+                service: 'E-Learning',
+                subService: formData.course,
+                requirementDesc: formData.query.trim()
+            };
+
+            const response = await axios.post(`${apiUrl}/api/enquiry`, payload);
+            if (response.data.success) {
+                toast.success('Your query has been submitted! We will get in touch soon.');
+                setFormData({ name: '', email: '', phone: '', course: '', query: '' });
+            } else {
+                toast.error(response.data.message || 'Failed to submit query');
+            }
+        } catch (err) {
+            console.error('Submission Error:', err);
+            toast.error(err.response?.data?.message || 'Failed to submit your query. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-[#0A0512] text-white flex flex-col justify-between font-sans relative overflow-hidden">
+            <SeoHead page="service-learning-e-learning" title="Adbuth E-Learning | Coming Soon" description="Express your interest or ask any queries about our upcoming E-Learning programs." />
+            <Navbar highlight='services' isdark={true} />
+
+            {/* Glowing background blobs */}
+            <div className="absolute inset-0 pointer-events-none z-0">
+                <div className="absolute top-[20%] left-[-10%] w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-purple-900/15 rounded-full blur-[80px] md:blur-[150px]" />
+                <div className="absolute bottom-[20%] right-[-10%] w-[350px] h-[350px] md:w-[600px] md:h-[600px] bg-cyan-900/15 rounded-full blur-[80px] md:blur-[150px]" />
+            </div>
+
+            <main className="flex-grow pt-32 pb-20 px-6 relative z-10 flex items-center justify-center">
+                <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                    
+                    {/* Left Panel: Content / Announcement */}
+                    <div className="flex flex-col text-left">
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold uppercase tracking-wider mb-6 w-fit"
+                        >
+                            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                            Launching Soon
+                        </motion.div>
+
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] text-white mb-6"
+                        >
+                            Adbuth <br />
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400">
+                                E-Learning
+                            </span>
+                        </motion.h1>
+
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            className="text-gray-300 text-base md:text-lg max-w-lg mb-8 leading-relaxed font-medium"
+                        >
+                            We are building an immersive, project-based education ecosystem. Learn state-of-the-art video editing, graphic design, and AI workflows from industry professionals.
+                        </motion.p>
+
+                        {/* Features List */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                            className="space-y-4 max-w-md"
+                        >
+                            <div className="flex gap-4 items-start">
+                                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-pink-400">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-sm">Project-Based Curriculum</h3>
+                                    <p className="text-gray-400 text-xs mt-1">Don't just learn theory. Work on real-world agency briefs and finish with a professional portfolio.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 items-start">
+                                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-purple-400">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-sm">Expert Mentor Guidance</h3>
+                                    <p className="text-gray-400 text-xs mt-1">Get detailed reviews on your final submissions and direct feedback from expert editors.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 items-start">
+                                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-cyan-400">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-sm">Recognized Certification</h3>
+                                    <p className="text-gray-400 text-xs mt-1">Earn certificates of completion and shareable gold credentials to accelerate your career.</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* Right Panel: Enquiry Form Card */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="w-full max-w-lg bg-white/5 border border-white/10 p-8 rounded-[2rem] shadow-2xl backdrop-blur-md relative overflow-hidden"
+                    >
+                        <h2 className="text-2xl font-extrabold text-white mb-2">Have a Query?</h2>
+                        <p className="text-gray-400 text-sm mb-6">Drop us a line about what you want to learn or ask your questions</p>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <input
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    placeholder="Full Name"
+                                    className="w-full bg-[#130E1F] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-sm"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <input
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder="Email Address"
+                                    className="w-full bg-[#130E1F] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-sm"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                </div>
+                                <input
+                                    name="phone"
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    placeholder="Phone Number (Optional)"
+                                    className="w-full bg-[#130E1F] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-sm"
+                                    disabled={isSubmitting}
+                                    maxLength={10}
+                                />
+                            </div>
+
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </div>
+                                <select
+                                    name="course"
+                                    value={formData.course}
+                                    onChange={handleChange}
+                                    className="w-full bg-[#130E1F] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-sm appearance-none cursor-pointer"
+                                    disabled={isSubmitting}
+                                >
+                                    <option value="" disabled className="text-gray-500">Course of Interest</option>
+                                    <option value="DaVinci Resolve Video Editing">DaVinci Resolve Video Editing</option>
+                                    <option value="After Effects & Motion Graphics">After Effects & Motion Graphics</option>
+                                    <option value="Canva & Graphic Design">Canva & Graphic Design</option>
+                                    <option value="Photoshop Mastery">Photoshop Mastery</option>
+                                    <option value="AI Tools for Content Creation">AI Tools for Content Creation</option>
+                                    <option value="Custom Training / Other">Custom Training / Other</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="relative">
+                                <div className="absolute top-3.5 left-0 pl-3.5 pointer-events-none text-gray-500">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
+                                <textarea
+                                    name="query"
+                                    value={formData.query}
+                                    onChange={handleChange}
+                                    placeholder="Tell us about your learning goals or write your query..."
+                                    rows={4}
+                                    className="w-full bg-[#130E1F] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-sm resize-none"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className={`w-full py-3.5 bg-gradient-to-r from-pink-500 via-purple-600 to-cyan-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-purple-500/20 active:scale-95 flex items-center justify-center gap-2 mt-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                        Submitting...
+                                    </>
+                                ) : 'Express Interest'}
+                            </button>
+                        </form>
+                    </motion.div>
+                </div>
+            </main>
+
+            <Footer />
+        </div>
+    );
+};
 
 // Custom Infinite Carousel Component for Mobile/Tablet
 const InfiniteCarousel = ({ children, gap = 16, cardWidth = "calc(100% - 32px)", containerClass = "" }) => {
@@ -129,6 +434,10 @@ const InfiniteCarousel = ({ children, gap = 16, cardWidth = "calc(100% - 32px)",
 };
 
 export default function AdbuthELearning() {
+    if (IS_COMING_SOON) {
+        return <ComingSoonELearning />;
+    }
+
     const scrollToPricing = () => {
         const section = document.getElementById('pricing-section');
         if (section) {

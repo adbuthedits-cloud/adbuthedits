@@ -21,6 +21,7 @@ const SOURCE_CONFIG = {
     enquiry_form: { label: 'Enquiry', color: 'text-violet-400' },
     contact_form: { label: 'Contact', color: 'text-sky-400' },
     get_in_touch: { label: 'Get In Touch', color: 'text-teal-400' },
+    elearning_coming_soon: { label: 'E-Learning Coming Soon', color: 'text-pink-400' },
 };
 
 function SortIcon({ col, cfg }) {
@@ -168,6 +169,7 @@ function EnquiriesContent() {
                     <option value="all">All Sources</option>
                     <option value="enquiry_form">Enquiry Form</option>
                     <option value="contact_form">Contact Form</option>
+                    <option value="elearning_coming_soon">E-Learning Coming Soon</option>
                 </select>
             </div>
 

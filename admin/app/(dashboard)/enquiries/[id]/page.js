@@ -22,6 +22,7 @@ const SOURCE_LABELS = {
     enquiry_form:  { label: 'Enquiry Form',    color: 'text-violet-400 bg-violet-500/10 border-violet-500/20' },
     contact_form:  { label: 'Contact Form',    color: 'text-sky-400 bg-sky-500/10 border-sky-500/20' },
     get_in_touch:  { label: 'Get In Touch',    color: 'text-teal-400 bg-teal-500/10 border-teal-500/20' },
+    elearning_coming_soon: { label: 'E-Learning Coming Soon', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20' },
 };
 
 function Avatar({ name, role }) {

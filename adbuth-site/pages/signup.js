@@ -248,12 +248,29 @@ export default function Signup() {
         e.preventDefault();
         setError('');
 
+        if (!firstName.trim() || !lastName.trim()) {
+            setError('Please enter your first and last name.');
+            return;
+        }
+
         const vEmail = validateEmail(email);
         const vPhone = validatePhone(phone);
         setIsEmailValid(vEmail);
         setIsPhoneValid(vPhone);
         setTouched({ email: true, phone: true });
-        if (!vEmail || !vPhone) return;
+        
+        if (!vEmail) {
+            setError('Please enter a valid email address.');
+            return;
+        }
+        if (!vPhone) {
+            setError('Please enter a valid phone number.');
+            return;
+        }
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            return;
+        }
 
         setIsSubmitting(true);
         try {
