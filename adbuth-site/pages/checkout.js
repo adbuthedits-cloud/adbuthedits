@@ -189,7 +189,7 @@ export default function Checkout() {
 
             // 2. Open Razorpay
             const options = {
-                key: orderData.key,
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || orderData.key,
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: "Adbuth Edits",

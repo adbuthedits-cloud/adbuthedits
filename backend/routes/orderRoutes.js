@@ -153,8 +153,13 @@ router.post('/create-payment', auth, async (req, res) => {
             }
         }
 
+        const amountPaise = finalAmount * 100;
+        if (amountPaise < 100) {
+            return res.status(400).json({ msg: 'Minimum order amount must be at least ₹1 (100 paise)' });
+        }
+
         const options = {
-            amount: finalAmount * 100, // Amount in paise
+            amount: amountPaise, // Amount in paise
             currency: 'INR',
             receipt: `receipt_${Date.now()}`
         };
@@ -178,6 +183,10 @@ router.post('/create-payment', auth, async (req, res) => {
 router.post('/verify-payment', auth, async (req, res) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, couponCode } = req.body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ msg: 'Missing payment signature verification fields' });
+        }
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
