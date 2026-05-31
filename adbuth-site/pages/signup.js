@@ -129,6 +129,8 @@ export default function Signup() {
     const [step, setStep] = useState('register');
     const [registeredEmail, setRegisteredEmail] = useState('');
     const [authToken, setAuthToken] = useState('');
+    const [pendingToken, setPendingToken] = useState(''); // Holds registration data until OTP verified
+
 
     // ── Form state
     const [firstName, setFirstName] = useState('');
@@ -243,7 +245,7 @@ export default function Signup() {
     const handleFacebookSignup = () => { window.location.href = `${API_URL}/api/auth/facebook`; };
     const handleTwitterSignup = () => { window.location.href = `${API_URL}/api/auth/twitter`; };
 
-    // ── Step 1: Register
+    // ── Step 1: Register — validate + send OTP atomically (NO user created yet)
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
@@ -274,7 +276,9 @@ export default function Signup() {
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_URL}/api/auth/register`, {
+            // Single API call: validates availability + sends OTP + returns pendingToken
+            // NO user is created in the database at this point
+            const res = await fetch(`${API_URL}/api/otp/send-registration-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -284,52 +288,42 @@ export default function Signup() {
                     password,
                     phone_number: { code: countryCode, number: phone }
                 })
-                        });
+            });
             const text = await res.text();
             let data;
             try {
                 data = JSON.parse(text);
             } catch (err) {
-                throw new Error(`Server returned invalid registration response (Status ${res.status}).`);
+                throw new Error(`Server returned invalid response (Status ${res.status}).`);
             }
-            if (!res.ok) throw new Error(data.msg || 'Registration failed');
+            if (!res.ok) throw new Error(data.msg || 'Failed to send verification OTP');
 
-            // Store token temporarily (user is NOT logged in until email is verified)
-            setAuthToken(data.token);
+            // Store the pending token — all registration data lives in this token until OTP is verified
+            setPendingToken(data.pendingToken);
             setRegisteredEmail(email);
-
-            // Send email verification OTP
-            const otpRes = await fetch(`${API_URL}/api/otp/send-email-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, purpose: 'email_verify' })
-            });
-            const otpText = await otpRes.text();
-            let otpData;
-            try {
-                otpData = JSON.parse(otpText);
-            } catch (err) {
-                throw new Error(`Server returned invalid verification response (Status ${otpRes.status}).`);
-            }
-            if (!otpRes.ok) throw new Error(otpData.msg || 'Failed to send verification OTP');
-
             setStep('verify_email');
             setOtpTimer(600);
-            setSuccess('Account created! Please verify your email to continue.');
+            setSuccess('OTP sent! Please check your email to complete registration.');
         } catch (err) {
             setError(err.message);
         }
         setIsSubmitting(false);
     };
 
-    // ── Resend OTP
+    // ── Resend OTP (re-runs the full send-registration-otp to get a fresh token)
     const handleResendOtp = async () => {
         setError(''); setSuccess(''); setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
+            const res = await fetch(`${API_URL}/api/otp/send-registration-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: registeredEmail, purpose: 'email_verify' })
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: registeredEmail,
+                    password,
+                    phone_number: { code: countryCode, number: phone }
+                })
             });
             const text = await res.text();
             let data;
@@ -339,6 +333,8 @@ export default function Signup() {
                 throw new Error(`Server returned invalid response (Status ${res.status}).`);
             }
             if (!res.ok) throw new Error(data.msg || 'Failed to resend OTP');
+            // Update the pending token with the new OTP
+            setPendingToken(data.pendingToken);
             setOtpTimer(600);
             setOtpValue('');
             setSuccess('New OTP sent to your email!');
@@ -346,16 +342,17 @@ export default function Signup() {
         setIsSubmitting(false);
     };
 
-    // ── Step 2: Verify Email OTP
+    // ── Step 2: Verify Email OTP — creates user ONLY on success
     const handleVerifyOtp = async (e) => {
         e?.preventDefault();
         if (otpValue.length < 6) return setError('Please enter the complete 6-digit OTP.');
         setError(''); setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_URL}/api/otp/verify-email-otp`, {
+            // This is the ONLY place where the user is created in the database
+            const res = await fetch(`${API_URL}/api/otp/verify-registration-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: registeredEmail, otp: otpValue, purpose: 'email_verify' })
+                body: JSON.stringify({ pendingToken, otp: otpValue })
             });
             const text = await res.text();
             let data;

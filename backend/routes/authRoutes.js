@@ -164,34 +164,37 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
     }
 });
 
-// POST /api/auth/register
-router.post('/register', async (req, res) => {
+// POST /api/auth/check-availability
+// Validates email + phone availability WITHOUT creating any user.
+// Called by the frontend before sending registration OTP.
+router.post('/check-availability', async (req, res) => {
     try {
-        const { first_name, last_name, email, password, phone_number } = req.body;
+        const { email, phone_number } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ msg: 'Please enter all fields' });
+        if (!email) {
+            return res.status(400).json({ msg: 'Email is required.' });
         }
-        if (password.length < 6) {
-            return res.status(400).json({ msg: 'Password must be at least 6 characters' });
-        }
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ msg: 'Invalid email address' });
+            return res.status(400).json({ msg: 'Invalid email address.' });
         }
 
-        let user = await User.findOne({ where: { email } });
-        if (user && user.email_verified) {
-            return res.status(400).json({ msg: 'User already exists with this email address' });
+        // Check if email is taken by a verified account
+        const existingEmail = await User.findOne({ where: { email } });
+        if (existingEmail && existingEmail.email_verified) {
+            return res.status(400).json({ field: 'email', msg: 'An account with this email already exists.' });
         }
 
+        // Check if phone is taken by a verified account
         if (phone_number && phone_number.code && phone_number.number) {
             const allUsers = await User.findAll({
                 where: { phone_number: { [Op.ne]: null } }
             });
             const existingPhone = allUsers.find(u => {
                 try {
-                    if (user && u.user_id === user.user_id) return false;
+                    // Skip the same unverified email user (same person re-trying)
+                    if (existingEmail && u.user_id === existingEmail.user_id) return false;
                     const p = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
                     if (!p) return false;
                     return p.code === phone_number.code && p.number === phone_number.number;
@@ -200,49 +203,35 @@ router.post('/register', async (req, res) => {
                 }
             });
             if (existingPhone) {
-                return res.status(400).json({ msg: 'User already exists with this phone number' });
+                return res.status(400).json({ field: 'phone', msg: 'An account with this phone number already exists.' });
             }
         }
 
-        if (user) {
-            await user.update({
-                first_name,
-                last_name,
-                password_hash: password,
-                phone_number
-            });
-        } else {
-            user = await User.create({
-                first_name,
-                last_name,
-                email,
-                password_hash: password,
-                phone_number
-            });
-        }
+        res.json({ available: true });
 
-        const payload = {
-            user: {
-                id: user.user_id,
-                role: user.role
-            }
-        };
+    } catch (err) {
+        console.error('[Auth] check-availability error:', err.message);
+        res.status(500).json({ msg: 'Server error. Please try again.' });
+    }
+});
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET || 'secretkey',
-            { expiresIn: '24h' },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token, user: { id: user.user_id, email: user.email, role: user.role } });
-            }
-        );
-
+/* ── OLD /register route (DEPRECATED — kept for reference only) ────────────────
+   This route was removed because it created a user in the DB BEFORE email OTP
+   verification, causing ghost accounts and data overwrite bugs.
+   User creation now happens in POST /api/otp/verify-registration-otp ONLY after
+   OTP is confirmed successfully.
+──────────────────────────────────────────────────────────────────────────────── */
+/*
+router.post('/register', async (req, res) => {
+    try {
+        const { first_name, last_name, email, password, phone_number } = req.body;
+        // ... old code removed — DO NOT RESTORE ...
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
     }
 });
+*/
 
 router.get('/google', (req, res, next) => {
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {

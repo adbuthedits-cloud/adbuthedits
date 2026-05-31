@@ -97,6 +97,179 @@ async function sendOtpEmail({ to, otp, purpose }) {
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
 /**
+ * POST /api/otp/send-registration-otp
+ * Body: { first_name, last_name, email, password, phone_number }
+ *
+ * NEW secure registration flow:
+ *  1. Validates email + phone are not already taken by a verified account
+ *  2. Generates an OTP and sends it to the email
+ *  3. Returns a signed 'pending registration token' containing all form data
+ *     (NOT stored in DB yet)
+ *  4. User is only created after /verify-registration-otp succeeds
+ */
+router.post('/send-registration-otp', async (req, res) => {
+    try {
+        const { first_name, last_name, email, password, phone_number } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ msg: 'Email and password are required.' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ msg: 'Password must be at least 6 characters.' });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ msg: 'Invalid email address.' });
+        }
+
+        // Check email availability — reject if a verified account exists
+        const existingEmail = await User.findOne({ where: { email } });
+        if (existingEmail && existingEmail.email_verified) {
+            return res.status(400).json({ field: 'email', msg: 'An account with this email already exists.' });
+        }
+
+        // Check phone availability
+        const { Op } = require('sequelize');
+        if (phone_number && phone_number.code && phone_number.number) {
+            const allUsers = await User.findAll({ where: { phone_number: { [Op.ne]: null } } });
+            const existingPhone = allUsers.find(u => {
+                try {
+                    if (existingEmail && u.user_id === existingEmail.user_id) return false;
+                    const p = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
+                    if (!p) return false;
+                    return p.code === phone_number.code && p.number === phone_number.number;
+                } catch { return false; }
+            });
+            if (existingPhone) {
+                return res.status(400).json({ field: 'phone', msg: 'An account with this phone number already exists.' });
+            }
+        }
+
+        // If there's an old unverified ghost record for this email, delete it to keep DB clean
+        if (existingEmail && !existingEmail.email_verified) {
+            await existingEmail.destroy();
+        }
+
+        // Generate OTP
+        const otp = generateOtp();
+        const expires = otpExpiry();
+
+        // Store all registration data in a signed pending token (NOT in DB)
+        const pendingToken = jwt.sign(
+            {
+                type: 'pending_registration',
+                first_name,
+                last_name,
+                email,
+                password,
+                phone_number,
+                otp_code: otp,
+                otp_expires_at: expires.toISOString(),
+            },
+            process.env.JWT_SECRET || 'secretkey',
+            { expiresIn: '15m' }
+        );
+
+        // Send OTP email
+        await sendOtpEmail({ to: email, otp, purpose: 'email_verify' });
+
+        res.json({
+            success: true,
+            pendingToken,
+            msg: 'OTP sent to your email. Please verify to complete registration.'
+        });
+
+    } catch (err) {
+        console.error('[OTP] send-registration-otp error:', err.message);
+        res.status(500).json({ msg: 'Failed to send OTP. Please try again.' });
+    }
+});
+
+/**
+ * POST /api/otp/verify-registration-otp
+ * Body: { pendingToken, otp }
+ *
+ * Verifies the OTP from the pending registration token.
+ * If valid → creates the user in the DB and returns a JWT.
+ * If invalid → returns error. NO user is created.
+ */
+router.post('/verify-registration-otp', async (req, res) => {
+    try {
+        const { pendingToken, otp } = req.body;
+
+        if (!pendingToken || !otp) {
+            return res.status(400).json({ msg: 'Pending token and OTP are required.' });
+        }
+
+        // Decode and verify the pending token
+        let pending;
+        try {
+            pending = jwt.verify(pendingToken, process.env.JWT_SECRET || 'secretkey');
+        } catch (e) {
+            return res.status(400).json({ msg: 'Registration session has expired. Please start over.' });
+        }
+
+        if (pending.type !== 'pending_registration') {
+            return res.status(400).json({ msg: 'Invalid registration token.' });
+        }
+
+        // Check OTP expiry
+        if (!pending.otp_expires_at || new Date() > new Date(pending.otp_expires_at)) {
+            return res.status(400).json({ msg: 'OTP has expired. Please request a new one.' });
+        }
+
+        // Check OTP value
+        if (pending.otp_code !== String(otp).trim()) {
+            return res.status(400).json({ msg: 'Incorrect OTP. Please try again.' });
+        }
+
+        // Double-check email availability one more time (race condition protection)
+        const existingEmail = await User.findOne({ where: { email: pending.email } });
+        if (existingEmail && existingEmail.email_verified) {
+            return res.status(400).json({ field: 'email', msg: 'An account with this email was just created. Please log in.' });
+        }
+
+        // Clean up any ghost unverified record
+        if (existingEmail && !existingEmail.email_verified) {
+            await existingEmail.destroy();
+        }
+
+        // OTP is valid — NOW create the user in the database
+        const user = await User.create({
+            first_name: pending.first_name,
+            last_name: pending.last_name,
+            email: pending.email,
+            password_hash: pending.password,
+            phone_number: pending.phone_number,
+            email_verified: true,  // Mark verified immediately since they just verified the OTP
+        });
+
+        console.log(`[Registration] New user created: ${user.email} (ID: ${user.user_id})`);
+
+        // Issue full auth JWT
+        const payload = { user: { id: user.user_id, role: user.role, type: 'customer' } };
+        const token = await new Promise((resolve, reject) => {
+            jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, t) => {
+                if (err) reject(err); else resolve(t);
+            });
+        });
+
+        res.json({
+            success: true,
+            token,
+            user: { id: user.user_id, email: user.email, role: user.role, email_verified: true },
+            msg: 'Email verified successfully! Welcome to Adbuth Edits.'
+        });
+
+    } catch (err) {
+        console.error('[OTP] verify-registration-otp error:', err.message);
+        res.status(500).json({ msg: 'Registration failed. Please try again.' });
+    }
+});
+
+
+
+/**
  * POST /api/otp/send-email-otp
  * Body: { email, purpose }  — purpose: 'email_login' | 'email_verify' | 'forgot_password' | 'change_password_settings'
  */
