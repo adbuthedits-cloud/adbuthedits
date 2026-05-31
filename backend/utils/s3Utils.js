@@ -28,6 +28,16 @@ const getPrivateSignedUrl = async (key, expiresIn = 3600) => {
  */
 const signCustomizationData = async (data) => {
     if (typeof data === 'string') {
+        // Try parsing it as JSON first (Sequelize might return stringified JSON)
+        try {
+            const parsed = JSON.parse(data);
+            if (parsed && typeof parsed === 'object') {
+                const processed = await signCustomizationData(parsed);
+                return JSON.stringify(processed);
+            }
+        } catch (e) {
+            // Not JSON, treat as a potential URL string
+        }
         return await signCustomizationUrl(data);
     } else if (Array.isArray(data)) {
         return await Promise.all(data.map(item => signCustomizationData(item)));

@@ -320,64 +320,94 @@ export default function MediaManagerPage() {
         }
     };
 
-    // ─── Upload files (with client-side video compression) ────────────────
+    // ─── Upload files: uploads ORIGINAL + COMPRESSED version both to cloud ─
     const handleUpload = async (fileList) => {
         setUploading(true);
         setError("");
         const queue = fileList.map(f => ({ name: f.name, status: "pending", label: "Pending", url: null }));
         setUploadQueue(queue);
         const authHeaders = getHeaders();
+        const uploadUrl = `${apiUrl}/api/file-manager/upload?prefix=${encodeURIComponent(prefix)}`;
 
         for (let i = 0; i < fileList.length; i++) {
-            let file = fileList[i];
-            const isVideo = file.type.startsWith("video/");
-            const isImage = file.type.startsWith("image/");
+            const originalFile = fileList[i]; // always keep a reference to the original
+            const isVideo = originalFile.type.startsWith("video/");
+            const isImage = originalFile.type.startsWith("image/");
 
-            // ── Step 1: Client-side compression ─────────────────────────────
+            // ── Step 1: Generate compressed version (without replacing original) ──
+            let compressedFile = null;
+
             if (isVideo) {
                 setUploadQueue(q => q.map((item, idx) =>
-                    idx === i ? { ...item, status: "compressing", label: "Compressing video…" } : item
+                    idx === i ? { ...item, status: "compressing", label: "Compressing video..." } : item
                 ));
                 try {
-                    file = await compressVideo(file, (pct) => {
+                    const result = await compressVideo(originalFile, (pct) => {
                         setUploadQueue(q => q.map((item, idx) =>
                             idx === i ? { ...item, label: `Compressing video ${pct}%` } : item
                         ));
                     });
+                    if (result && result !== originalFile && result.size < originalFile.size) {
+                        compressedFile = result;
+                    }
                 } catch {
-                    // compression failed — fall back to original
+                    // compression failed — original only
                 }
             } else if (isImage) {
                 setUploadQueue(q => q.map((item, idx) =>
-                    idx === i ? { ...item, status: "compressing", label: "Compressing image…" } : item
+                    idx === i ? { ...item, status: "compressing", label: "Compressing image..." } : item
                 ));
                 try {
-                    file = await compressImage(file);
+                    const result = await compressImage(originalFile);
+                    if (result && result !== originalFile && result.size < originalFile.size) {
+                        compressedFile = result;
+                    }
                 } catch {
-                    // compression failed — fall back to original
+                    // compression failed — original only
                 }
             }
 
-            // ── Step 2: Upload (original or compressed) ─────────────────────
+            // ── Step 2: Always upload ORIGINAL file first ────────────────────
             setUploadQueue(q => q.map((item, idx) =>
-                idx === i ? { ...item, status: "uploading", label: "Uploading…" } : item
+                idx === i ? { ...item, status: "uploading", label: compressedFile ? "Uploading original..." : "Uploading..." } : item
             ));
 
             try {
                 const formData = new FormData();
-                formData.append("file", file);
-                formData.append("prefix", prefix); // kept as body fallback
-
-                // Send prefix as query param too — multer-s3 reads req.query before body is parsed
-                const uploadUrl = `${apiUrl}/api/file-manager/upload?prefix=${encodeURIComponent(prefix)}`;
+                formData.append("file", originalFile); // THE ORIGINAL — never the compressed
+                formData.append("prefix", prefix);
 
                 const res = await axios.post(uploadUrl, formData, {
                     headers: { ...authHeaders, "Content-Type": "multipart/form-data" },
                 });
 
                 setUploadQueue(q => q.map((item, idx) =>
-                    idx === i ? { ...item, status: "done", label: "Done ✓", url: res.data.file.url } : item
+                    idx === i ? { ...item, status: "done", label: "Done", url: res.data.file.url } : item
                 ));
+
+                // ── Step 3: ALSO upload compressed version if it exists ──────
+                if (compressedFile) {
+                    setUploadQueue(q => q.map((item, idx) =>
+                        idx === i ? { ...item, label: "Uploading compressed copy..." } : item
+                    ));
+                    try {
+                        const compressedFormData = new FormData();
+                        compressedFormData.append("file", compressedFile);
+                        compressedFormData.append("prefix", prefix);
+                        await axios.post(uploadUrl, compressedFormData, {
+                            headers: { ...authHeaders, "Content-Type": "multipart/form-data" },
+                        });
+                        setUploadQueue(q => q.map((item, idx) =>
+                            idx === i ? { ...item, label: "Done (+ compressed copy saved)" } : item
+                        ));
+                    } catch {
+                        // Compressed upload failed — original is already safe
+                        setUploadQueue(q => q.map((item, idx) =>
+                            idx === i ? { ...item, label: "Done (compressed copy failed)" } : item
+                        ));
+                    }
+                }
+
             } catch (err) {
                 setUploadQueue(q => q.map((item, idx) =>
                     idx === i ? { ...item, status: "error", label: err.response?.data?.error || "Upload failed" } : item

@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import withPermission from '../../../../../components/withPermission';
+import { useVideoCompressor } from '../../../../../hooks/useVideoCompressor';
 
 function EditProduct() {
     const router = useRouter();
@@ -79,6 +80,11 @@ function EditProduct() {
     const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
     const [uploadingGallery, setUploadingGallery] = useState(false);
     const [uploadingVideo, setUploadingVideo] = useState(false);
+    // Per-video compression status: { [index]: { status: 'compressing'|'done'|'skipped', pct: number } }
+    const [videoCompressStatus, setVideoCompressStatus] = useState({});
+
+    // Client-side video compression
+    const { compressVideo, isCompressing, compressStatus } = useVideoCompressor();
     const [uploadingResource, setUploadingResource] = useState(false);
 
     useEffect(() => {
@@ -508,12 +514,38 @@ function EditProduct() {
         e.target.value = '';
     };
 
-    const handleVideoUpload = (e) => {
+    const handleVideoUpload = async (e) => {
         const files = Array.from(e.target.files);
-        if (files.length > 0) {
-            setVideos(prev => [...prev, ...files]);
-        }
+        if (files.length === 0) return;
         e.target.value = '';
+
+        // Add raw files immediately so user sees them in the list
+        setVideos(prev => [...prev, ...files]);
+        const startIdx = videos.length;
+
+        // Compress each video in the browser before upload (WASM FFmpeg)
+        for (let i = 0; i < files.length; i++) {
+            const vidIdx = startIdx + i;
+            const file = files[i];
+            if (!file.type.startsWith('video/')) continue;
+
+            setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: 'compressing', pct: 0 } }));
+            try {
+                const compressed = await compressVideo(file, (pct) => {
+                    setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: 'compressing', pct } }));
+                });
+                // Swap placeholder with compressed File
+                setVideos(prev => prev.map((v, idx) => idx === vidIdx ? compressed : v));
+                setVideoCompressStatus(s => ({
+                    ...s,
+                    [vidIdx]: compressed.size < file.size
+                        ? { status: 'done', pct: 100 }
+                        : { status: 'skipped', pct: 100 }
+                }));
+            } catch {
+                setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: 'skipped', pct: 0 } }));
+            }
+        }
     };
 
     const handleResourceFileUpload = (e) => {
@@ -975,7 +1007,18 @@ function EditProduct() {
                                         <button type="button" onClick={(e) => { e.stopPropagation(); removeItem(idx, videos, setVideos); }} className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                                             <FontAwesomeIcon icon={faTimes} />
                                         </button>
-                                        {isLocal && <span className="absolute bottom-2 left-2 bg-purple-600 text-[8px] text-white px-1.5 py-0.5 rounded font-bold uppercase">Local</span>}
+                                        {/* Compression status badge */}
+                                        {isLocal && (() => {
+                                            const cs = videoCompressStatus[idx];
+                                            if (!cs) return <span className="absolute bottom-2 left-2 bg-purple-600 text-[8px] text-white px-1.5 py-0.5 rounded font-bold uppercase">Local</span>;
+                                            if (cs.status === 'compressing') return (
+                                                <span className="absolute bottom-2 left-2 bg-yellow-500 text-[8px] text-black px-1.5 py-0.5 rounded font-bold uppercase">
+                                                    Compressing {cs.pct}%
+                                                </span>
+                                            );
+                                            if (cs.status === 'done') return <span className="absolute bottom-2 left-2 bg-green-500 text-[8px] text-white px-1.5 py-0.5 rounded font-bold uppercase">Compressed ✓</span>;
+                                            return <span className="absolute bottom-2 left-2 bg-gray-600 text-[8px] text-white px-1.5 py-0.5 rounded font-bold uppercase">Original</span>;
+                                        })()}
                                     </div>
                                 );
                             })}
@@ -985,6 +1028,13 @@ function EditProduct() {
                                 </div>
                             )}
                         </div>
+                        {/* Global compressor status */}
+                        {(isCompressing || compressStatus) && (
+                            <div className="mt-2 flex items-center gap-2 text-xs font-semibold px-3 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-300">
+                                {isCompressing && <FontAwesomeIcon icon={faSpinner} spin />}
+                                {compressStatus || 'Compressing video…'}
+                            </div>
+                        )}
                     </div>
                     <div className="space-y-4 pt-4 border-t border-[#2d1b4e]">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Resource File (Zip/Rar)</label>

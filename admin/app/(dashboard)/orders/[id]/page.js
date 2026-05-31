@@ -292,7 +292,12 @@ function OrderDetails() {
                         </div>
                         <div className="divide-y divide-[#2d1b4e]">
                             {order.items?.map((item, idx) => {
-                                const cust = item.customization && typeof item.customization === 'object' ? item.customization : null;
+                                const rawCust = item.customization;
+                                let parsedCust = rawCust;
+                                if (typeof rawCust === 'string') {
+                                    try { parsedCust = JSON.parse(rawCust); } catch(e) {}
+                                }
+                                const cust = parsedCust && typeof parsedCust === 'object' ? parsedCust : null;
                                 return (
                                     <div key={idx} className="p-5">
                                         {/* Item header */}
