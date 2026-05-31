@@ -366,9 +366,12 @@ export default function MediaManagerPage() {
             try {
                 const formData = new FormData();
                 formData.append("file", file);
-                formData.append("prefix", prefix);
+                formData.append("prefix", prefix); // kept as body fallback
 
-                const res = await axios.post(`${apiUrl}/api/file-manager/upload`, formData, {
+                // Send prefix as query param too — multer-s3 reads req.query before body is parsed
+                const uploadUrl = `${apiUrl}/api/file-manager/upload?prefix=${encodeURIComponent(prefix)}`;
+
+                const res = await axios.post(uploadUrl, formData, {
                     headers: { ...authHeaders, "Content-Type": "multipart/form-data" },
                 });
 

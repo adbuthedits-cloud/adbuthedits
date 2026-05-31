@@ -60,8 +60,9 @@ const upload = multer({
             });
         },
         key: (req, file, cb) => {
-            // Use prefix from body + sanitized filename + timestamp
-            const rawPrefix = (req.body.prefix || '').trim().replace(/^\/+/, '');
+            // IMPORTANT: req.body is NOT available here (multer hasn't parsed it yet).
+            // Use req.query.prefix instead — it's always available from the URL.
+            const rawPrefix = (req.query.prefix || req.body?.prefix || '').trim().replace(/^\/+/, '');
             const prefix = rawPrefix && !rawPrefix.endsWith('/') ? rawPrefix + '/' : rawPrefix;
             const originalName = file.originalname.replace(/[^a-zA-Z0-9\-_. ()]/g, '_');
             const ext = path.extname(originalName);
