@@ -87,10 +87,12 @@ export default function Orders() {
     const getStatusInfo = (order) => {
         const total = order.items?.length || 0;
         const delivered = order.items?.filter(i => i.delivery_status === 'delivered').length || 0;
-        if (total > 0 && delivered === total) return { label: 'Delivered', cls: 'bg-purple-600 text-white', icon: faCheckCircle };
+        if ((total > 0 && delivered === total) || ['delivered', 'completed'].includes(order.status)) return { label: 'Delivered', cls: 'bg-purple-600 text-white', icon: faCheckCircle };
         if (delivered > 0) return { label: `${delivered}/${total} Delivered`, cls: 'bg-purple-100 text-purple-700', icon: faCheckCircle };
         if (['inprocessing', 'in_progress'].includes(order.status)) return { label: 'In Progress', cls: 'bg-amber-100 text-amber-700', icon: faClock };
-        return { label: 'Processing', cls: 'bg-blue-100 text-blue-700', icon: faClock };
+        if (order.status === 'pending') return { label: 'Pending Payment', cls: 'bg-amber-100 text-amber-700', icon: faClock };
+        if (['failed', 'cancelled'].includes(order.status)) return { label: 'Cancelled', cls: 'bg-red-100 text-red-700', icon: faCircleExclamation };
+        return { label: 'Order Placed', cls: 'bg-blue-100 text-blue-700', icon: faCheckCircle };
     };
 
     const renderContent = () => {

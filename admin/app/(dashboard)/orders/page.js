@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faClock, faEye, faSearch, faSort, faCheckCircle, faBoxOpen,
     faShoppingBag, faTruckFast, faHourglassHalf, faArrowUpRightFromSquare,
-    faSpinner, faFilter, faChevronDown
+    faSpinner, faFilter, faChevronDown, faCircleExclamation
 } from "@fortawesome/free-solid-svg-icons";
 import { useSortableData } from "../../../hooks/useSortableData";
 
@@ -32,14 +32,18 @@ function StatCard({ icon, label, value, color }) {
 function StatusBadge({ order }) {
     const total = order.items?.length || 0;
     const delivered = order.items?.filter(i => i.delivery_status === "delivered").length || 0;
-    if (total > 0 && total === delivered)
+    if ((total > 0 && total === delivered) || ["delivered", "completed"].includes(order.status))
         return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20"><FontAwesomeIcon icon={faCheckCircle} />Delivered</span>;
     if (delivered > 0)
         return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><FontAwesomeIcon icon={faBoxOpen} />{delivered}/{total} Delivered</span>;
     if (["inprocessing", "in_progress"].includes(order.status))
         return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"><FontAwesomeIcon icon={faHourglassHalf} />In Progress</span>;
     if (order.status === "paid")
-        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20"><FontAwesomeIcon icon={faClock} />Processing</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"><FontAwesomeIcon icon={faCheckCircle} />Order Placed</span>;
+    if (order.status === "pending")
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-500/10 text-gray-400 border border-gray-500/20"><FontAwesomeIcon icon={faClock} />Pending Payment</span>;
+    if (["failed", "cancelled"].includes(order.status))
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#f43f5e]/10 text-[#f43f5e] border border-[#f43f5e]/20"><FontAwesomeIcon icon={faCircleExclamation} />Cancelled</span>;
     return <span className="text-gray-500 text-xs">—</span>;
 }
 
