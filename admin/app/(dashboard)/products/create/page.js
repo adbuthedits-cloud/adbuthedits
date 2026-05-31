@@ -891,9 +891,22 @@ function CreateProduct() {
                                     <VideoThumbnailGenerator
                                         videoUrl={videoObjectUrl}
                                         isFile={videos[0] instanceof File}
-                                        onCapture={(file, previewUrl) => {
-                                            setFormData(prev => ({ ...prev, thumbnail: file }));
-                                            setThumbnailPreview(previewUrl);
+                                        onCapture={async (file, previewUrl) => {
+                                            setUploadingThumbnail(true);
+                                            try {
+                                                const compressed = await compressImage(file);
+                                                setFormData(prev => ({ ...prev, thumbnail: compressed }));
+                                                if (thumbnailPreview && thumbnailPreview.startsWith('blob:')) {
+                                                    URL.revokeObjectURL(thumbnailPreview);
+                                                }
+                                                setThumbnailPreview(URL.createObjectURL(compressed));
+                                            } catch (err) {
+                                                console.error("Frame compression failed:", err);
+                                                setFormData(prev => ({ ...prev, thumbnail: file }));
+                                                setThumbnailPreview(previewUrl);
+                                            } finally {
+                                                setUploadingThumbnail(false);
+                                            }
                                             setShowVideoCapture(false);
                                         }}
                                     />
