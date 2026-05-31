@@ -385,20 +385,29 @@ export default function MediaManagerPage() {
                     idx === i ? { ...item, status: "done", label: "Done", url: res.data.file.url } : item
                 ));
 
-                // ── Step 3: ALSO upload compressed version if it exists ──────
+                // ── Step 3: ALSO upload compressed version with _web suffix ──
                 if (compressedFile) {
                     setUploadQueue(q => q.map((item, idx) =>
-                        idx === i ? { ...item, label: "Uploading compressed copy..." } : item
+                        idx === i ? { ...item, label: "Uploading compressed (_web) copy..." } : item
                     ));
                     try {
+                        // Rename: inject _web before the extension
+                        // e.g. photo.jpg → photo_web.webp  |  clip.mp4 → clip_web.mp4
+                        const ext = compressedFile.name.includes(".")
+                            ? "." + compressedFile.name.split(".").pop()
+                            : "";
+                        const baseName = compressedFile.name.slice(0, compressedFile.name.length - ext.length);
+                        const webName = `${baseName}_web${ext}`;
+                        const renamedFile = new File([compressedFile], webName, { type: compressedFile.type });
+
                         const compressedFormData = new FormData();
-                        compressedFormData.append("file", compressedFile);
+                        compressedFormData.append("file", renamedFile);
                         compressedFormData.append("prefix", prefix);
                         await axios.post(uploadUrl, compressedFormData, {
                             headers: { ...authHeaders, "Content-Type": "multipart/form-data" },
                         });
                         setUploadQueue(q => q.map((item, idx) =>
-                            idx === i ? { ...item, label: "Done (+ compressed copy saved)" } : item
+                            idx === i ? { ...item, label: `Done (+ ${webName} saved)` } : item
                         ));
                     } catch {
                         // Compressed upload failed — original is already safe
