@@ -321,9 +321,13 @@ export default function Checkout() {
                             <div className="space-y-4">
                                 {cart?.items.map(item => (
                                     <div key={item.cart_item_id} className="flex gap-4 py-4 border-b border-gray-50 last:border-0">
-                                        <div className="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100">
-                                            {item.product?.images && (
-                                                <img src={cdnImage(item.product.images[0])} className="w-full h-full object-cover" alt={item.product?.title} />
+                                        <div className="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100 flex items-center justify-center">
+                                            {item.product?.thumbnail || item.product?.images?.[0] ? (
+                                                <img src={cdnImage(item.product.thumbnail || item.product.images[0])} className="w-full h-full object-cover" alt={item.product?.title} />
+                                            ) : (
+                                                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                                    <span className="text-gray-300 text-[10px]">No Preview</span>
+                                                </div>
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -335,7 +339,7 @@ export default function Checkout() {
                                                     {Object.entries(item.customization).map(([groupName, fields]) => (
                                                         <div key={groupName} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
                                                             <h4 className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1">{groupName}</h4>
-                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                                                            <div className="flex flex-col gap-y-1.5">
                                                                 {Object.entries(fields).map(([label, value]) => (
                                                                     <div key={label} className="text-xs flex gap-1">
                                                                         <span className="font-medium text-gray-400">{label}:</span>

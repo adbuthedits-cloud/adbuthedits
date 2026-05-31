@@ -7,6 +7,112 @@ import { useState, useRef, useEffect } from 'react';
 import SeoHead from '../../../../components/SeoHead';
 import ProductCard from '../../../../components/shop/ProductCard';
 
+const featuredRow1 = [
+    {
+        title: "Baby Shower Video Invite",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WO/PE/BS/VER/JAP-VI-WO-PE-BS-VER-1001/1778929506038-341233628.webp",
+        url: "/shop/category/digital-invitations/personal-events/baby-shower-video-invite"
+    },
+    {
+        title: "Birthday Celebration Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/BIR/HOR/JAP-VI-WI-PE-BIR-HOR-1001/1778929857872-857416054.webp",
+        url: "/shop/category/digital-invitations/personal-events/birthday-celebration-video-invitation"
+    },
+    {
+        title: "Anniversary Video",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WO/PE/AN/VER/JAP-VI-WO-PE-AN-VER-1001/1778929481645-558305760.webp",
+        url: "/shop/category/digital-invitations/personal-events/anniversary-video"
+    },
+    {
+        title: "Business Anniversary Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/AN/HOR/JAP-VI-WI-PE-AN-HOR-1001/1778929579175-791346400.webp",
+        url: "/shop/category/digital-invitations/personal-events/business-anniversary-video-invitation"
+    },
+    {
+        title: "Baby Shower Video Invite With Photo",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/BS/VER/JAP-VI-WI-PE-BS-VER-1002/1778929697383-299736538.webp",
+        url: "/shop/category/digital-invitations/personal-events/baby-shower-video-invite-with-photo-1"
+    },
+    {
+        title: "Engagement Video Template",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/EN/HOR/JAP-VI-WI-PE-EN-HOR-1004/1779000697823-254912672.webp",
+        url: "/shop/category/digital-invitations/personal-events/engagement-video-template-1"
+    },
+    {
+        title: "Floral Baby Shower",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WO/PE/BS/HOR/JAP-VI-WO-PE-BS-HOR-1001/1778929753977-424058315.webp",
+        url: "/shop/category/digital-invitations/personal-events/floral-baby-shower"
+    },
+    {
+        title: "Wedding Reception Bloom Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/RE/VER/JAP-VI-WI-PE-RE-VER-1001/1779171577888-405739536.webp",
+        url: "/shop/category/digital-invitations/personal-events/wedding-reception-bloom-video-invitation"
+    },
+    {
+        title: "Traditional Dhoti Function Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WO/PE/DF/HOR/JAP-VI-WO-PE-DF-HOR-1001/1778944944769-430596473.webp",
+        url: "/shop/category/digital-invitations/personal-events/traditional-dhoti-function-video-invitation"
+    },
+    {
+        title: "Floral Engagement Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WO/PE/EN/VER/JAP-VI-WO-PE-EN-VER-1004/1778949373921-699955436.webp",
+        url: "/shop/category/digital-invitations/personal-events/floral-engagement-invitation"
+    }
+];
+
+const featuredRow2 = [
+    {
+        title: "Birthday Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/BIR/VER/JAP-VI-WI-PE-BIR-VER-1001/1778929835222-56379326.webp",
+        url: "/shop/category/digital-invitations/personal-events/birthday-video-invitation"
+    },
+    {
+        title: "Baby Shower Video Invite With Photo",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/BS/VER/JAP-VI-WI-PE-BS-VER-1001/1778929679930-938559156.webp",
+        url: "/shop/category/digital-invitations/personal-events/baby-shower-video-invite-with-photo"
+    },
+    {
+        title: "Birthday Celebration Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/BIR/HOR/JAP-VI-WI-PE-BIR-HOR-1005/1778928929722-355397396.webp",
+        url: "/shop/category/digital-invitations/personal-events/birthday-celebration-video-invitation-1"
+    },
+    {
+        title: "Birthday Video Template",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/BIR/HOR/JAP-VI-WI-PE-BIR-HOR-1004/1778929935126-251444520.webp",
+        url: "/shop/category/digital-invitations/personal-events/birthday-video-template-1"
+    },
+    {
+        title: "Engagement Video Invitation Template",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WO/PE/EN/VER/JAP-VI-WO-PE-EN-VER-1001/1778945483521-576361946.webp",
+        url: "/shop/category/digital-invitations/personal-events/engagement-video-invitation-template"
+    },
+    {
+        title: "Haldi Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/HA/HOR/JAP-VI-WI-PE-HA-HOR-1001/1779168428671-485384668.webp",
+        url: "/shop/category/digital-invitations/personal-events/haldi-video-invitation-1"
+    },
+    {
+        title: "Elegant Floral Baby Shower",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/BS/HOR/JAP-VI-WI-PE-BS-HOR-1002/1778929553049-126981970.webp",
+        url: "/shop/category/digital-invitations/personal-events/elegant-floral-baby-shower"
+    },
+    {
+        title: "Celebration Birthday Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WO/PE/BIR/HOR/JAP-VI-WO-PE-BIR-HOR-1001/1778929815309-998835378.webp",
+        url: "/shop/category/digital-invitations/personal-events/celebration-birthday-video-invitation"
+    },
+    {
+        title: "Dhoti Ceremony Video Invitation",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/DF/HOR/JAP-VI-WI-PE-DF-HOR-1001/1778943327933-361500429.webp",
+        url: "/shop/category/digital-invitations/personal-events/dhoti-ceremony-video-invitation-1"
+    },
+    {
+        title: "South Indian Dhoti Function Video",
+        image: "https://assets.adbuthverse.com/products/DigitalInvitations/VI/WI/PE/DF/VER/JAP-VI-WI-PE-DF-VER-1002/1778937365702-715979019.webp",
+        url: "/shop/category/digital-invitations/personal-events/south-indian-dhoti-function-video"
+    }
+];
+
 const DigitalInvitations = ({ masterData, initialProducts }) => {
     const [activeOccasion, setActiveOccasion] = useState(0);
 
@@ -273,19 +379,33 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                     {/* Row 1 - Left to Right */}
                     <div className="relative flex overflow-hidden">
                         <motion.div
-                            animate={{ x: [0, -1920] }}
+                            animate={{ x: ["0%", "-50%"] }}
                             transition={{
-                                duration: 40,
+                                duration: 35,
                                 repeat: Infinity,
                                 ease: "linear"
                             }}
                             className="flex gap-6 whitespace-nowrap min-w-full"
                         >
-                            {[...Array(10)].map((_, i) => (
-                                <div key={`row1-set1-${i}`} className="w-[300px] h-[400px] bg-[#C1C1C1] flex-shrink-0" />
-                            ))}
-                            {[...Array(10)].map((_, i) => (
-                                <div key={`row1-set2-${i}`} className="w-[300px] h-[400px] bg-[#C1C1C1] flex-shrink-0" />
+                            {[...featuredRow1, ...featuredRow1].map((item, i) => (
+                                <Link
+                                    key={`row1-${i}`}
+                                    href={item.url}
+                                    className="w-[300px] h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
+                                >
+                                    <img
+                                        src={item.image}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                        <div className="text-white">
+                                            <p className="text-xs uppercase tracking-widest text-[#E188E2] mb-1 font-semibold">Template</p>
+                                            <h4 className="text-lg font-bold whitespace-normal leading-tight">{item.title}</h4>
+                                        </div>
+                                    </div>
+                                </Link>
                             ))}
                         </motion.div>
                     </div>
@@ -293,19 +413,33 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                     {/* Row 2 - Right to Left */}
                     <div className="relative flex overflow-hidden">
                         <motion.div
-                            animate={{ x: [-1920, 0] }}
+                            animate={{ x: ["-50%", "0%"] }}
                             transition={{
-                                duration: 40,
+                                duration: 35,
                                 repeat: Infinity,
                                 ease: "linear"
                             }}
                             className="flex gap-6 whitespace-nowrap min-w-full"
                         >
-                            {[...Array(10)].map((_, i) => (
-                                <div key={`row2-set1-${i}`} className="w-[300px] h-[400px] bg-[#C1C1C1] flex-shrink-0" />
-                            ))}
-                            {[...Array(10)].map((_, i) => (
-                                <div key={`row2-set2-${i}`} className="w-[300px] h-[400px] bg-[#C1C1C1] flex-shrink-0" />
+                            {[...featuredRow2, ...featuredRow2].map((item, i) => (
+                                <Link
+                                    key={`row2-${i}`}
+                                    href={item.url}
+                                    className="w-[300px] h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
+                                >
+                                    <img
+                                        src={item.image}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                        <div className="text-white">
+                                            <p className="text-xs uppercase tracking-widest text-[#E188E2] mb-1 font-semibold">Template</p>
+                                            <h4 className="text-lg font-bold whitespace-normal leading-tight">{item.title}</h4>
+                                        </div>
+                                    </div>
+                                </Link>
                             ))}
                         </motion.div>
                     </div>

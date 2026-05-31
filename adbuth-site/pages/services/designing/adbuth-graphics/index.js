@@ -127,19 +127,27 @@ export default function AdbuthGraphics() {
         "Posters & Campaign Graphics": {
             subtitle: "Bold visuals that command attention",
             images: [
-                "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/FashionWeek_web_1780195404965.webp",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/RealEstate_web_1780195406963.webp",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/SuperBike_web_1780195409103.webp"]
         },
         "Social Media Creatives": {
             subtitle: "Consistent, on-brand content to boost engagement.",
-            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
+            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/Jewel_web_1780195541855.webp",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/Fitness_web_1780195543416.webp",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/Aviation_web_1780195545480.webp"]
         },
         "Branding Designs": {
             subtitle: "Logos, color palettes, and templates that define your identity.",
-            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
+            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/CoffeeBrand_1780194527009.webp",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/Lambo_1780194522504.webp",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/TimePiece_1780194524858.webp"]
         },
         "Thumbnails": {
             subtitle: "Eye-catching thumbnails to increase clicks and views",
-            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_2.webp", "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/our_design_services_1.webp"]
+            images: ["https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/Lambo_1780195631491.png",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/TimePiece_1780194524858.webp",
+                "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-graphics/CoffeeBrand_web_1780195635750.webp"]
         }
     };
 

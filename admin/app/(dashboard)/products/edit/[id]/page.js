@@ -677,18 +677,21 @@ function EditProduct() {
                 if (item instanceof File) {
                     const url = await handleFileUpload(item, 'video');
                     if (url) {
-                        finalVideos.push(url);
-                        // If we have a compressed version, upload it with _web suffix
+                        // If we have a compressed version, upload it with _web suffix and store its URL instead
                         if (item.compressedVersion && item.compressedVersion !== item) {
                             try {
                                 const urlObj = new URL(url);
                                 let originalKey = decodeURIComponent(urlObj.pathname);
                                 if (originalKey.startsWith('/')) originalKey = originalKey.substring(1);
                                 const webKey = originalKey.replace(/\.[^/.]+$/, '_web.mp4');
-                                await handleFileUpload(item.compressedVersion, "video", webKey);
+                                const webUrl = await handleFileUpload(item.compressedVersion, "video", webKey);
+                                finalVideos.push(webUrl || url);
                             } catch (e) {
                                 console.error("Failed to upload compressed version", e);
+                                finalVideos.push(url);
                             }
+                        } else {
+                            finalVideos.push(url);
                         }
                     }
                     else throw new Error('Video upload failed');

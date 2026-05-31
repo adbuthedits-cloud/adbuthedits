@@ -7,7 +7,7 @@ import { useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import useSeo from '../../../../hooks/useSeo';
-import { cdnImage } from '../../../../utils/cdn';
+import { cdnImage, cdnVideo } from '../../../../utils/cdn';
 
 
 export default function AdbuthAds() {
@@ -112,15 +112,20 @@ export default function AdbuthAds() {
 
                         {/* Right Content (Video Placeholder) - Mobile Order 1 (Overlap) */}
                         <div className="lg:h-[500px] md:h-[400px] lg:w-[54%] w-[88%] h-[250px] bg-gray-400 overflow-hidden flex items-center absolute -top-16 md:-top-40 md:left-12 lg:-top-56 left-6 lg:left-auto lg:right-0 z-20 shadow-xl">
-                            {/* Video Placeholder */}
-                            <div className="absolute inset-0 flex items-center justify-center text-gray-500 z-0 bg-[#aaaaaa]">
-                                {/* Video Placeholder */}
-                            </div>
+                            <video
+                                src={cdnVideo("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-ads/Ads%20Video_web_1780192057567.mp4")}
+                                className="absolute inset-0 w-full h-full object-cover z-0"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+
+                            />
 
                             {/* Scrolling PLAY Text */}
                             <motion.div
                                 style={{ x: playX }}
-                                className="absolute -bottom-2 md:-bottom-4 lg:-bottom-6 left-0 lg:left-auto whitespace-nowrap pointer-events-none z-10 mix-blend-overlay opacity-100"
+                                className="absolute -bottom-2 md:-bottom-4 lg:-bottom-6 left-0 lg:left-auto whitespace-nowrap pointer-events-none z-10 opacity-100"
                             >
                                 <span className="text-[60px] md:text-[100px] lg:text-[140px] font-black uppercase text-white leading-none">PLAY</span>
                             </motion.div>

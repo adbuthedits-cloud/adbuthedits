@@ -172,7 +172,16 @@ export default function Login() {
     useEffect(() => {
         const { token, error: qErr } = router.query;
         if (token) { localStorage.setItem('token', token); window.location.href = '/'; }
-        if (qErr) setError(qErr === 'google_failed' ? 'Google authentication failed' : 'Social login error');
+        if (qErr) {
+            let msg = 'Social login error';
+            if (qErr === 'google_failed') msg = 'Google authentication failed';
+            else if (qErr === 'google_not_configured') msg = 'Google login is not configured in backend .env';
+            else if (qErr === 'facebook_failed') msg = 'Facebook authentication failed';
+            else if (qErr === 'facebook_not_configured') msg = 'Facebook login is not configured in backend .env';
+            else if (qErr === 'twitter_not_configured') msg = 'Twitter login is not configured in backend .env';
+            else if (qErr === 'twitter_failed') msg = 'Twitter authentication failed';
+            setError(msg);
+        }
     }, [router.query]);
 
     useEffect(() => {

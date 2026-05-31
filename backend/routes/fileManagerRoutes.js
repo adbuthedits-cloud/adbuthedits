@@ -209,29 +209,6 @@ router.post('/upload', checkPermission('media_manager', 'edit'), upload.single('
         const mimeType = req.file.mimetype;
         const fileUrl = publicUrl(uniqueKey);
 
-        // Trigger background image optimization (images only — videos skip server compression)
-        // Videos are already compressed in the browser via WASM before upload.
-        let webAssetKey = null;
-        const isImage = mimeType.startsWith('image/');
-        const isVideo = mimeType.startsWith('video/');
-
-        if (isImage) {
-            // Safe: sharp uses sequential queue, low memory, no crash risk
-            generateWebAsset(uniqueKey, mimeType)
-                .then(key => {
-                    if (key) console.log(`[FileManager] ✅ WebP asset ready: ${key}`);
-                })
-                .catch(err => {
-                    console.error(`[FileManager] ⚠️ WebP generation failed:`, err.message);
-                });
-
-            const { webpKey } = require('../utils/webAssets');
-            webAssetKey = publicUrl(webpKey(uniqueKey));
-        } else if (isVideo) {
-            // Videos: no server-side FFmpeg — browser already compressed before upload
-            console.log(`[FileManager] 🎬 Video uploaded (browser-compressed): ${uniqueKey}`);
-        }
-
         res.json({
             success: true,
             file: {
@@ -240,12 +217,10 @@ router.post('/upload', checkPermission('media_manager', 'edit'), upload.single('
                 url: fileUrl,
                 size: req.file.size,
                 mimeType,
-                webAssetUrl: webAssetKey,
-                compressionStatus: isImage ? 'processing' : 'not_applicable',
+                webAssetUrl: null,
+                compressionStatus: 'not_applicable',
             },
-            message: isImage
-                ? 'File uploaded. WebP version is being generated in the background.'
-                : 'File uploaded successfully.',
+            message: 'File uploaded successfully.',
         });
     } catch (err) {
         console.error('[FileManager] Upload error:', err);

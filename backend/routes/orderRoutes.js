@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { Order, OrderItem, Product, Cart, CartItem, Payment, Coupon, CouponUsage, OrderTimeline } = require('../models');
+const { Order, OrderItem, Product, Cart, CartItem, Payment, Coupon, CouponUsage, OrderTimeline, User } = require('../models');
 const auth = require('../middleware/authMiddleware');
 const { signCustomizationData, signCustomizationUrl } = require('../utils/s3Utils');
+const { sendOrderConfirmationEmail } = require('../utils/orderMailer');
 
 // Get User Orders
 router.get('/', auth, async (req, res) => {
@@ -304,6 +305,20 @@ router.post('/verify-payment', auth, async (req, res) => {
             });
 
             await t.commit();
+
+            // 7. Send confirmation email to customer
+            const user = await User.findByPk(req.user.id);
+            if (user && user.email) {
+                sendOrderConfirmationEmail({
+                    to: user.email,
+                    name: user.first_name,
+                    orderId: order.order_id,
+                    orderRef: order.order_id.substring(0, 8).toUpperCase(),
+                    totalAmount: finalAmount
+                }).catch(mailErr => {
+                    console.error('[Order Placement Mail Error]', mailErr.message);
+                });
+            }
 
             res.json({
                 msg: 'Payment verified and order placed successfully',

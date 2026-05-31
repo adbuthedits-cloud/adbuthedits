@@ -159,8 +159,8 @@ function OrderItem({ item, idx }) {
             >
                 {/* Thumbnail */}
                 <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                    {item.product?.thumbnail
-                        ? <img src={cdnImage(item.product.thumbnail)} alt={item.product.title} className="w-full h-full object-cover" />
+                    {item.product?.thumbnail || item.product?.images?.[0]
+                        ? <img src={cdnImage(item.product.thumbnail || item.product.images[0])} alt={item.product.title} className="w-full h-full object-cover" />
                         : <FontAwesomeIcon icon={faImage} className="text-gray-300" />
                     }
                 </div>

@@ -25,3 +25,16 @@ admin/.env
 backend/.env
 backend/uploads/
 backend/scratch/
+.env*.local
+.env.local
+*.env.local
+.antigravity/
+.gemini/
+*antigravity*
+*scratch*
+*tmp.js
+*temp.js
+*test*.js
+check_smtp.js
+test_register.js
+list_products.js

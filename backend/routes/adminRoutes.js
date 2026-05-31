@@ -226,16 +226,7 @@ router.post('/upload-blog-image', checkPermission('blogs', 'edit'), blogUpload.s
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        let returnKey = req.file.key;
-        if (req.file.mimetype.startsWith('image/')) {
-            returnKey = webpKey(req.file.key);
-        } else if (req.file.mimetype.startsWith('video/')) {
-            returnKey = webVideoKey(req.file.key);
-        }
-        const fileUrl = publicFileUrl(returnKey);
-        // Trigger background web asset generation
-        generateWebAsset(req.file.key, req.file.mimetype);
-        res.json({ url: fileUrl });
+        res.json({ url: publicFileUrl(req.file.key) });
     } catch (err) {
         console.error('[Upload] Error processing upload:', err);
         res.status(500).json({ error: err.message });
@@ -346,20 +337,7 @@ router.post('/upload-media', checkPermission('products', 'edit'), productUpload.
             }
         }
 
-        // Trigger background web asset generation (images only - videos are browser-compressed)
-        // Videos already compressed via WASM in browser before upload. Server FFmpeg skipped.
-        // Resource files (subfolder='file'): no optimization needed.
-        let returnKey = req.file.key;
-        if (subfolder !== 'file') {
-            if (req.file.mimetype.startsWith('image/')) {
-                // Safe: sharp uses sequential queue, low memory, no crash risk
-                returnKey = webpKey(req.file.key);
-                generateWebAsset(req.file.key, req.file.mimetype);
-            }
-            // Videos: return original key - browser already compressed, server FFmpeg disabled
-        }
-
-        res.json({ url: publicFileUrl(returnKey) });
+        res.json({ url: publicFileUrl(req.file.key) });
     } catch (err) {
         console.error('[Upload] Error:', err);
         res.status(500).json({ error: err.message });
@@ -2349,14 +2327,7 @@ router.post('/coupons', checkPermission('coupons', 'edit'), async (req, res) => 
 // --- Coupon Media Upload ---
 router.post('/coupons/upload', checkPermission('coupons', 'edit'), uploadCouponMedia.single('media'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    let returnKey = req.file.key;
-    if (req.file.mimetype.startsWith('image/')) {
-        returnKey = webpKey(req.file.key);
-    } else if (req.file.mimetype.startsWith('video/')) {
-        returnKey = webVideoKey(req.file.key);
-    }
-    generateWebAsset(req.file.key, req.file.mimetype);
-    res.json({ url: publicFileUrl(returnKey) });
+    res.json({ url: publicFileUrl(req.file.key) });
 });
 
 router.put('/coupons/:id', checkPermission('coupons', 'edit'), async (req, res) => {
@@ -2668,15 +2639,8 @@ router.get('/master-data', checkPermission('master_data', 'view'), async (req, r
 // --- Banner Upload Utility ---
 router.post('/master-data/upload-banner', checkPermission('settings', 'edit'), uploadBanner.single('banner'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    let returnKey = req.file.key;
-    if (req.file.mimetype.startsWith('image/')) {
-        returnKey = webpKey(req.file.key);
-    } else if (req.file.mimetype.startsWith('video/')) {
-        returnKey = webVideoKey(req.file.key);
-    }
-    generateWebAsset(req.file.key, req.file.mimetype);
     // Force usage of the public R2 domain instead of the default S3-compatible location.
-    res.json({ url: publicFileUrl(returnKey) });
+    res.json({ url: publicFileUrl(req.file.key) });
 });
 
 // --- ShopSettings CRUD ---

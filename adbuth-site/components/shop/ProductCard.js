@@ -15,6 +15,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as faHeartSolid, faStar } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartOutline } from '@fortawesome/free-regular-svg-icons';
 import { cdnImage, cdnVideo } from '../../utils/cdn';
+import { useWishlist } from '../../context/WishlistContext';
+
 
 const NEW_BADGE_DAYS = 15;
 
@@ -29,7 +31,10 @@ function isNewProduct(updatedAt) {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function ProductCard({ product, index = 0 }) {
-    const [wishlisted, setWishlisted] = useState(false);
+    const { toggleWishlist, isInWishlist } = useWishlist();
+    const productId = product?.products_id || product?.id;
+    const wishlisted = isInWishlist(productId);
+
     // isPlaying: video is actively playing
     const [isPlaying, setIsPlaying] = useState(false);
     // isHovered: mouse is currently over the card
@@ -205,7 +210,13 @@ export default function ProductCard({ product, index = 0 }) {
 
             {/* ── Wishlist Button ─────────────────────────────────────────── */}
             <button
-                onClick={(e) => { e.preventDefault(); setWishlisted(v => !v); }}
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (productId) {
+                        toggleWishlist(productId);
+                    }
+                }}
                 className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center hover:bg-white transition-all duration-300 shadow-sm group/wishlist"
                 aria-label={wishlisted ? `Remove ${product.title} from wishlist` : `Add ${product.title} to wishlist`}
             >

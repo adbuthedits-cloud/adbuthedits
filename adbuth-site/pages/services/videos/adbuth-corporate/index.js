@@ -18,7 +18,7 @@ function VideoPlayer({ src, shouldPlay, className = "" }) {
     useEffect(() => {
         if (!videoRef.current) return;
         if (shouldPlay) {
-            videoRef.current.play().catch(() => {});
+            videoRef.current.play().catch(() => { });
         } else {
             videoRef.current.pause();
             videoRef.current.currentTime = 0;
@@ -53,63 +53,37 @@ export default function AdbuthCorporate() {
     const CARDS = [
         { title: 'Corporate Films', desc: 'High-quality films that highlight your company\'s values, culture, and achievements.', video: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/corporatefilms-v1.1_web.mp4' },
         { title: 'Training Videos', desc: 'Engaging, easy-to-follow content to educate and upskill employees effectively.', video: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/Training_web.mp4' },
-        { title: 'Brand Stories', desc: 'Narratives that showcase your brand journey, connect emotionally, and leave a lasting impact.', video: '' },
+        { title: 'Brand Stories', desc: 'Narratives that showcase your brand journey, connect emotionally, and leave a lasting impact.', video: 'https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/Brand Stories Video_web_1780192465819.mp4' },
     ];
-    // Triple the array so the user can scroll infinitely in both directions
-    const [activeCard, setActiveCard] = useState(0);   
+    const [activeCard, setActiveCard] = useState(0);
     const [hoveredIndex, setHoveredIndex] = useState(null);
-    const scrollContainerRef = useRef(null);
-    const isUserInteracting = useRef(false);
-    const currentAbsRef = useRef(0);         
+    const [isDragging, setIsDragging] = useState(false);
 
-    // ─── Initialise scroll position ───────────────────────────
-    useEffect(() => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-        const firstCard = container.children[0];
-        if (firstCard) {
-            container.scrollLeft =
-                firstCard.offsetLeft - container.offsetWidth / 2 + firstCard.offsetWidth / 2;
+    const touchStartX = useRef(0);
+    const touchEndX = useRef(0);
+
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchEndX.current = e.touches[0].clientX; // Reset to avoid click conflict
+        setIsDragging(true);
+    };
+
+    const handleTouchMove = (e) => {
+        touchEndX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+        const diffX = touchStartX.current - touchEndX.current;
+        const swipeThreshold = 45;
+
+        if (diffX > swipeThreshold) {
+            // Swipe Left -> next card
+            setActiveCard((prev) => Math.min(prev + 1, CARDS.length - 1));
+        } else if (diffX < -swipeThreshold) {
+            // Swipe Right -> prev card
+            setActiveCard((prev) => Math.max(prev - 1, 0));
         }
-    }, []);
-
-    // ─── Auto-scroll every 3 s ──────────────────────────────────────────────────
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (isUserInteracting.current || !scrollContainerRef.current) return;
-            const container = scrollContainerRef.current;
-            
-            // Loop back to start if at the end
-            const nextIdx = (currentAbsRef.current + 1) % CARDS.length;
-            const nextCard = container.children[nextIdx];
-            
-            if (nextCard) {
-                container.scrollTo({
-                    left: nextCard.offsetLeft - container.offsetWidth / 2 + nextCard.offsetWidth / 2,
-                    behavior: 'smooth',
-                });
-            }
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const handleScroll = () => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-
-        // Find the card whose centre is closest to the viewport centre
-        let closestIndex = 0;
-        let minDistance = Infinity;
-        const cardEls = container.children;
-        for (let i = 0; i < cardEls.length; i++) {
-            const card = cardEls[i];
-            const center = card.offsetLeft + card.offsetWidth / 2;
-            const distance = Math.abs(container.scrollLeft + container.offsetWidth / 2 - center);
-            if (distance < minDistance) { minDistance = distance; closestIndex = i; }
-        }
-
-        currentAbsRef.current = closestIndex;
-        setActiveCard(closestIndex);
     };
 
     return (
@@ -162,7 +136,7 @@ export default function AdbuthCorporate() {
                 </section>
 
                 {/* Why Choose Section */}
-                <section className="py-24 px-6 md:px-12 lg:px-24 bg-white ">
+                <section className="py-10 md:py-24 px-6 md:px-12 lg:px-24 bg-white ">
                     <div className="flex lg:flex-row flex-col gap-12 lg:gap-24 justify-between items-center mb-20 ">
                         <div className="w-full lg:w-1/2">
                             <motion.div
@@ -214,7 +188,7 @@ export default function AdbuthCorporate() {
                 </section>
 
                 {/* What We Create Section */}
-                <section className="py-24 px-0 md:px-12 lg:px-24 bg-[#142151] text-white">
+                <section className="md:py-24 py-12 px-0 md:px-12 lg:px-24 bg-[#142151] text-white">
                     <div className="text-center mb-16 px-6">
                         <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-wide">What We Create</h2>
                     </div>
@@ -250,45 +224,64 @@ export default function AdbuthCorporate() {
                         ))}
                     </div>
 
-                    {/* Mobile Slider – infinite loop */}
+                    {/* Mobile Slider – touch-driven single-card snap carousel */}
                     <div
-                        ref={scrollContainerRef}
-                        onScroll={handleScroll}
-                        onTouchStart={() => { isUserInteracting.current = true; }}
-                        onTouchEnd={() => {
-                            setTimeout(() => { isUserInteracting.current = false; }, 5000);
-                        }}
-                        className="flex md:hidden overflow-x-auto snap-x snap-mandatory gap-4 px-[15vw] pb-10 no-scrollbar"
+                        className="relative w-full overflow-hidden md:hidden pb-10"
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
                     >
-                        {CARDS.map((card, index) => (
-                            <motion.div
-                                key={index}
-                                animate={{
-                                    scale: activeCard === index ? 1 : 0.9,
-                                    opacity: activeCard === index ? 1 : 0.6,
-                                }}
-                                transition={{ duration: 0.35, ease: 'easeOut' }}
-                                className="snap-center flex-shrink-0 w-[58vw] aspect-[3/4] rounded-2xl flex flex-col justify-end shadow-lg relative overflow-hidden text-white"
-                            >
-                                {card.video ? (
-                                    <VideoPlayer src={card.video} shouldPlay={activeCard === index} />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-[#1a2151]">
-                                        <FontAwesomeIcon icon={faPlay} className="text-4xl opacity-10" />
+                        <motion.div
+                            className="flex gap-[4vw] px-[12.5vw]"
+                            animate={{ x: `-${activeCard * 79}vw` }}
+                            transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+                        >
+                            {CARDS.map((card, index) => (
+                                <motion.div
+                                    key={index}
+                                    onClick={() => setActiveCard(index)}
+                                    animate={{
+                                        scale: activeCard === index ? 1 : 0.9,
+                                        opacity: activeCard === index ? 1 : 0.5,
+                                    }}
+                                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                                    className="flex-shrink-0 w-[75vw] aspect-[3/4] rounded-2xl flex flex-col justify-end shadow-xl relative overflow-hidden text-white cursor-pointer"
+                                >
+                                    {card.video ? (
+                                        <VideoPlayer
+                                            src={card.video}
+                                            shouldPlay={activeCard === index && !isDragging}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-[#1a2151]">
+                                            <FontAwesomeIcon icon={faPlay} className="text-4xl opacity-10" />
+                                        </div>
+                                    )}
+                                    {/* Gradient overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/80 pointer-events-none" />
+                                    <div className="relative z-10 p-6 pointer-events-none">
+                                        <h3 className="text-xl font-bold mb-3">{card.title}</h3>
+                                        <p className="text-gray-200 text-xs leading-relaxed">{card.desc}</p>
                                     </div>
-                                )}
-                                {/* Gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/80" />
-                                <div className="relative z-10 p-6">
-                                    <h3 className="text-xl font-bold mb-3">{card.title}</h3>
-                                    <p className="text-gray-200 text-xs leading-relaxed">{card.desc}</p>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            ))}
+                        </motion.div>
+
+                        {/* Pagination Dots */}
+                        <div className="flex justify-center gap-2 mt-6">
+                            {CARDS.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setActiveCard(index)}
+                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${activeCard === index ? 'bg-white w-6' : 'bg-white/30'}`}
+                                    aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </section>
                 {/* Footer CTA Desktop */}
-                <section className="py-24 px-6 lg:px-24 bg-white text-black ">
+                <section className="py-14 md:py-24 px-6 lg:px-24 bg-white text-black ">
                     <div className="max-w-7xl text-center lg:text-left">
                         <h2 className="text-4xl lg:text-4xl font-bold mb-4 leading-tight">
                             Your story deserves the spotlight

@@ -9,6 +9,7 @@ const ALLOWED_HOSTNAME_PATTERNS = [
     /\.r2\.dev$/,                       // public R2 buckets (pub-xxx.r2.dev)
     /\.cloudflarestorage\.com$/,        // private R2 via S3 API
     /\.cloudflare\.com$/,
+    /(^|\.)adbuthverse\.com$/,          // assets CDN and main domain
 ];
 
 function isAllowedUrl(rawUrl) {

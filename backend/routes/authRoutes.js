@@ -216,12 +216,22 @@ router.post('/register', async (req, res) => {
     }
 });
 
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
+router.get('/google', (req, res, next) => {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+        return res.redirect(`${FRONTEND_URL}/login?error=google_not_configured`);
+    }
+    passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
+});
 router.get('/google/callback',
-    passport.authenticate('google', {
-        failureRedirect: `${FRONTEND_URL}/login?error=google_failed`,
-        session: false
-    }),
+    (req, res, next) => {
+        if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+            return res.redirect(`${FRONTEND_URL}/login?error=google_not_configured`);
+        }
+        passport.authenticate('google', {
+            failureRedirect: `${FRONTEND_URL}/login?error=google_failed`,
+            session: false
+        })(req, res, next);
+    },
     (req, res) => {
         const payload = { user: { id: req.user.user_id, role: req.user.role, type: 'customer' } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, token) => {
@@ -231,12 +241,22 @@ router.get('/google/callback',
     }
 );
 
-router.get('/facebook', passport.authenticate('facebook', { scope: ['email'], session: false }));
+router.get('/facebook', (req, res, next) => {
+    if (!process.env.FACEBOOK_APP_ID || !process.env.FACEBOOK_APP_SECRET) {
+        return res.redirect(`${FRONTEND_URL}/login?error=facebook_not_configured`);
+    }
+    passport.authenticate('facebook', { scope: ['email'], session: false })(req, res, next);
+});
 router.get('/facebook/callback',
-    passport.authenticate('facebook', {
-        failureRedirect: `${FRONTEND_URL}/login?error=facebook_failed`,
-        session: false
-    }),
+    (req, res, next) => {
+        if (!process.env.FACEBOOK_APP_ID || !process.env.FACEBOOK_APP_SECRET) {
+            return res.redirect(`${FRONTEND_URL}/login?error=facebook_not_configured`);
+        }
+        passport.authenticate('facebook', {
+            failureRedirect: `${FRONTEND_URL}/login?error=facebook_failed`,
+            session: false
+        })(req, res, next);
+    },
     (req, res) => {
         const payload = { user: { id: req.user.user_id, role: req.user.role, type: 'customer' } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, token) => {

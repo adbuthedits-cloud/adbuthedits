@@ -292,13 +292,17 @@ export default function Cart() {
                         {cart.items.map((item) => (
                             <div key={item.cart_item_id} className="bg-white p-4 rounded-2xl shadow-sm border border-white flex gap-6 hover:shadow-md transition-shadow">
                                 {/* Product Image */}
-                                <Link href={buildProductUrl(item.product)} className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100 shrink-0 hover:opacity-90 transition-opacity">
-                                    {item.product?.images && (
+                                <Link href={buildProductUrl(item.product)} className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100 shrink-0 hover:opacity-90 transition-opacity flex items-center justify-center">
+                                    {item.product?.thumbnail || item.product?.images?.[0] ? (
                                         <img
-                                            src={cdnImage(item.product.images[0])}
-                                            alt={item.product.title}
+                                            src={cdnImage(item.product.thumbnail || item.product.images[0])}
+                                            alt={item.product.title || 'Product'}
                                             className="w-full h-full object-cover"
                                         />
+                                    ) : (
+                                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                            <span className="text-gray-300 text-[10px]">No Preview</span>
+                                        </div>
                                     )}
                                 </Link>
 
@@ -332,7 +336,7 @@ export default function Cart() {
                                             {Object.entries(item.customization).map(([groupName, fields]) => (
                                                 <div key={groupName} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
                                                     <h4 className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1">{groupName}</h4>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                                                    <div className="flex flex-col gap-y-1.5">
                                                         {Object.entries(fields).map(([label, value]) => (
                                                             <div key={label} className="text-xs flex gap-1">
                                                                 <span className="font-medium text-gray-400">{label}:</span>
