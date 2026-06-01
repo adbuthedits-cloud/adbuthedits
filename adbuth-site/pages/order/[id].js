@@ -10,7 +10,8 @@ import {
     faBoxOpen, faCheckCircle, faClock, faDownload, faChevronLeft,
     faChevronDown, faChevronUp, faCircleDot, faTruckFast, faUserCheck,
     faClipboardList, faSpinner, faCircleExclamation, faImage, faFile,
-    faCreditCard, faCalendarDays, faHashtag, faPlay, faEye, faFilm
+    faCreditCard, faCalendarDays, faHashtag, faPlay, faEye, faFilm,
+    faTimes, faUpload, faTrash
 } from '@fortawesome/free-solid-svg-icons';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -278,6 +279,113 @@ export default function OrderDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    const [showRefundModal, setShowRefundModal] = useState(false);
+    const [showChangesModal, setShowChangesModal] = useState(false);
+    const [refundReason, setRefundReason] = useState('Incorrect customization details');
+    const [refundDetails, setRefundDetails] = useState('');
+    const [changeInstructions, setChangeInstructions] = useState('');
+    const [uploadingFile, setUploadingFile] = useState(false);
+    const [uploadedUrls, setUploadedUrls] = useState([]);
+    const [submittingAction, setSubmittingAction] = useState(false);
+
+    const handleFileUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        setUploadingFile(true);
+        const token = localStorage.getItem('token');
+        const uploaded = [...uploadedUrls];
+
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const res = await fetch(`${API_URL}/api/cart/upload-media`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    uploaded.push(data.url);
+                } else {
+                    alert(`Failed to upload ${file.name}`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert(`Error uploading ${file.name}`);
+            }
+        }
+        setUploadedUrls(uploaded);
+        setUploadingFile(false);
+    };
+
+    const handleRemoveUploadedFile = (indexToRemove) => {
+        setUploadedUrls(prev => prev.filter((_, idx) => idx !== indexToRemove));
+    };
+
+    const handleRefundRequest = async (e) => {
+        e.preventDefault();
+        setSubmittingAction(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/orders/${id}/request-refund`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ reason: refundReason, details: refundDetails })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Refund request submitted successfully');
+                setShowRefundModal(false);
+                router.reload();
+            } else {
+                alert(data.error || 'Failed to submit refund request');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Something went wrong');
+        } finally {
+            setSubmittingAction(false);
+        }
+    };
+
+    const handleChangeRequest = async (e) => {
+        e.preventDefault();
+        setSubmittingAction(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/orders/${id}/request-changes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ instructions: changeInstructions, attachments: uploadedUrls })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Change request submitted successfully');
+                setShowChangesModal(false);
+                setChangeInstructions('');
+                setUploadedUrls([]);
+                router.reload();
+            } else {
+                alert(data.error || 'Failed to submit change request');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Something went wrong');
+        } finally {
+            setSubmittingAction(false);
+        }
+    };
+
     useEffect(() => {
         if (authLoading || !id) return;
         if (!user) { router.push('/login'); return; }
@@ -448,11 +556,201 @@ export default function OrderDetailPage() {
                                         </p>
                                     )}
                                 </div>
+
+                                {/* Order & Refund Actions */}
+                                {['paid', 'placed', 'delivered', 'completed', 'inprocessing', 'in_progress'].includes(order.status) && (
+                                    <div className="mt-6 pt-4 border-t border-gray-100 space-y-3">
+                                        {/* Change Request Status Badges */}
+                                        {order.change_request_status === 'pending' && (
+                                            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faClock} />
+                                                <span>Change request under review</span>
+                                            </div>
+                                        )}
+                                        {order.change_request_status === 'completed' && (
+                                            <div className="p-3 bg-purple-50 border border-purple-200 text-purple-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faCheckCircle} />
+                                                <span>Customization changes completed!</span>
+                                            </div>
+                                        )}
+
+                                        {/* Refund Request Status Badges */}
+                                        {order.payment?.refund_request_status === 'pending' && (
+                                            <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faClock} />
+                                                <span>Refund request pending approval</span>
+                                            </div>
+                                        )}
+                                        {order.payment?.refund_request_status === 'approved' && (
+                                            <div className="p-3 bg-purple-100 border border-purple-200 text-purple-800 text-xs font-bold rounded-xl flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faCheckCircle} />
+                                                <span>Refund Approved / Order Cancelled</span>
+                                            </div>
+                                        )}
+                                        {order.payment?.refund_request_status === 'rejected' && (
+                                            <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faCircleExclamation} />
+                                                <span>Refund Request Declined</span>
+                                            </div>
+                                        )}
+
+                                        {/* Action Buttons */}
+                                        {order.payment?.refund_request_status !== 'approved' && (
+                                            <div className="flex gap-2.5">
+                                                {order.change_request_status !== 'pending' && (
+                                                    <button
+                                                        onClick={() => setShowChangesModal(true)}
+                                                        className="flex-1 py-2.5 px-3 bg-black text-white hover:bg-gray-800 transition-colors text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
+                                                    >
+                                                        Request Changes
+                                                    </button>
+                                                )}
+                                                {order.payment?.refund_request_status !== 'pending' && order.payment?.refund_request_status !== 'approved' && (
+                                                    <button
+                                                        onClick={() => setShowRefundModal(true)}
+                                                        className="flex-1 py-2.5 px-3 border border-red-200 text-red-600 hover:bg-red-50 transition-colors text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+                                                    >
+                                                        Request Refund
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </main>
+
+            {/* Request Refund Modal */}
+            {showRefundModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-fadeIn border border-gray-100">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-50">
+                            <h3 className="text-lg font-bold text-gray-900">Request Refund</h3>
+                            <button onClick={() => setShowRefundModal(false)} className="text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                                <FontAwesomeIcon icon={faTimes} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleRefundRequest} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Reason for Refund</label>
+                                <select
+                                    value={refundReason}
+                                    onChange={(e) => setRefundReason(e.target.value)}
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-purple-600 transition-colors"
+                                >
+                                    <option value="Incorrect customization details">Incorrect customization details</option>
+                                    <option value="Technical download issue">Technical download issue</option>
+                                    <option value="Wrong item ordered">Wrong item ordered</option>
+                                    <option value="Delivered late">Delivered late</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Additional Details (Optional)</label>
+                                <textarea
+                                    value={refundDetails}
+                                    onChange={(e) => setRefundDetails(e.target.value)}
+                                    placeholder="Please provide details about your refund request..."
+                                    rows="4"
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-purple-600 transition-colors resize-none"
+                                />
+                            </div>
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={submittingAction}
+                                    className="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all disabled:opacity-50"
+                                >
+                                    {submittingAction ? 'Submitting...' : 'Submit Refund Request'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Request Changes Modal */}
+            {showChangesModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-fadeIn border border-gray-100">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-50">
+                            <h3 className="text-lg font-bold text-gray-900">Request Customization Edits</h3>
+                            <button onClick={() => setShowChangesModal(false)} className="text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                                <FontAwesomeIcon icon={faTimes} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleChangeRequest} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Instructions / Details</label>
+                                <textarea
+                                    value={changeInstructions}
+                                    onChange={(e) => setChangeInstructions(e.target.value)}
+                                    placeholder="Describe the exact changes you need (e.g. text replacements, color changes, custom requests)..."
+                                    rows="5"
+                                    required
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-purple-600 transition-colors resize-none"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Upload Reference Files / Replacement Media</label>
+                                <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:border-purple-300 transition-colors relative cursor-pointer">
+                                    <input 
+                                        type="file" 
+                                        multiple 
+                                        onChange={handleFileUpload}
+                                        disabled={uploadingFile}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                    />
+                                    <p className="text-xs font-bold text-gray-700">Drag & drop files or click to browse</p>
+                                    <p className="text-[10px] text-gray-400 mt-1">Supports JPEG, PNG, WEBP, GIF, MP4 (Max 50MB per file)</p>
+                                </div>
+                            </div>
+
+                            {uploadedUrls.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Uploaded Attachments ({uploadedUrls.length})</p>
+                                    <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                                        {uploadedUrls.map((url, idx) => (
+                                            <div key={url} className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-100 text-xs">
+                                                <span className="truncate max-w-[280px] font-semibold text-gray-700">{url.split('/').pop().split('?')[0]}</span>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => handleRemoveUploadedFile(idx)} 
+                                                    className="w-6 h-6 rounded-lg hover:bg-red-50 text-red-500 flex items-center justify-center"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} className="text-[10px]" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {uploadingFile && (
+                                <div className="p-3 bg-purple-50 text-purple-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+                                    <FontAwesomeIcon icon={faSpinner} spin />
+                                    <span>Uploading files...</span>
+                                </div>
+                            )}
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={submittingAction || uploadingFile}
+                                    className="w-full py-3 bg-[#7E22CE] text-white font-bold rounded-xl hover:bg-purple-800 transition-all disabled:opacity-50"
+                                >
+                                    {submittingAction ? 'Submitting...' : 'Submit Change Request'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <Footer />
         </div>
     );

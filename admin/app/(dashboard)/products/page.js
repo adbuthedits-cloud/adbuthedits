@@ -23,11 +23,21 @@ function Products() {
     const [deletingId, setDeletingId] = useState(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [search, setSearch] = useState('');
-    const [categories, setCategories] = useState([]);
+    const [parentCategories, setParentCategories] = useState([]);
+    const [assetCategories, setAssetCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [types, setTypes] = useState([]);
+    const [variants, setVariants] = useState([]);
+    const [orientations, setOrientations] = useState([]);
     const [showFilters, setShowFilters] = useState(false);
 
     // Filter States
-    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedParentCategory, setSelectedParentCategory] = useState('');
+    const [selectedAssetCategory, setSelectedAssetCategory] = useState('');
+    const [selectedSubCategory, setSelectedSubCategory] = useState('');
+    const [selectedType, setSelectedType] = useState('');
+    const [selectedVariant, setSelectedVariant] = useState('');
+    const [selectedOrientation, setSelectedOrientation] = useState('');
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -47,16 +57,21 @@ function Products() {
 
     useEffect(() => {
         fetchProducts();
-        fetchCategories();
+        fetchMasterData();
     }, []);
 
-    const fetchCategories = async () => {
+    const fetchMasterData = async () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         try {
-            const res = await axios.get(`${apiUrl}/api/categories`);
-            setCategories(res.data);
+            const res = await axios.get(`${apiUrl}/api/products/master-data`);
+            setParentCategories(res.data.parentCategories || []);
+            setAssetCategories(res.data.categories || []);
+            setSubCategories(res.data.subCategories || []);
+            setTypes(res.data.types || []);
+            setVariants(res.data.variants || []);
+            setOrientations(res.data.orientations || []);
         } catch (error) {
-            console.error('Failed to fetch categories', error);
+            console.error('Failed to fetch master data', error);
         }
     };
 
@@ -94,6 +109,20 @@ function Products() {
         }
     };
 
+    const activeFiltersCount = [
+        selectedParentCategory,
+        selectedAssetCategory,
+        selectedSubCategory,
+        selectedType,
+        selectedVariant,
+        selectedOrientation,
+        minPrice,
+        maxPrice,
+        startDate,
+        endDate,
+        minRating
+    ].filter(Boolean).length;
+
     const filteredProducts = products.filter(p => {
         const s = search.toLowerCase();
         const matchSearch =
@@ -115,7 +144,12 @@ function Products() {
             (p.assetOrientation?.code || '').toLowerCase().includes(s) ||
             JSON.stringify(p.tags || {}).toLowerCase().includes(s);
 
-        const matchCategory = selectedCategory ? p.category_id === selectedCategory : true;
+        const matchParentCategory = selectedParentCategory ? p.parent_category_id === selectedParentCategory : true;
+        const matchAssetCategory = selectedAssetCategory ? p.asset_category_id === selectedAssetCategory : true;
+        const matchSubCategory = selectedSubCategory ? p.asset_sub_category_id === selectedSubCategory : true;
+        const matchType = selectedType ? p.asset_type_id === selectedType : true;
+        const matchVariant = selectedVariant ? p.asset_variant_id === selectedVariant : true;
+        const matchOrientation = selectedOrientation ? p.asset_orientation_id === selectedOrientation : true;
 
         const price = parseFloat(p.price) || 0;
         const matchMinPrice = minPrice ? price >= parseFloat(minPrice) : true;
@@ -130,7 +164,18 @@ function Products() {
         const rating = parseFloat(p.averageRating || p.rating || 0);
         const matchRating = minRating ? rating >= parseFloat(minRating) : true;
 
-        return matchSearch && matchCategory && matchMinPrice && matchMaxPrice && matchStartDate && matchEndDate && matchRating;
+        return matchSearch &&
+               matchParentCategory &&
+               matchAssetCategory &&
+               matchSubCategory &&
+               matchType &&
+               matchVariant &&
+               matchOrientation &&
+               matchMinPrice &&
+               matchMaxPrice &&
+               matchStartDate &&
+               matchEndDate &&
+               matchRating;
     });
 
     const { items: sortedProducts, requestSort, sortConfig, setSortConfig } = useSortableData(filteredProducts);
@@ -381,6 +426,11 @@ function Products() {
                         <motion.button onClick={() => setShowFilters(!showFilters)} whileHover={{ scale: 1.02 }} className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-xs font-semibold cursor-pointer transition-colors shadow-sm whitespace-nowrap ${showFilters ? 'bg-[#7C3AED] text-white border-transparent' : 'bg-[#2d1b4e] text-gray-400 border-[#3b2a5f] hover:bg-[#3b2a5f] hover:text-[#a78bfa]'}`}>
                             <FontAwesomeIcon icon={faFilter} className="text-[10px]" />
                             <span>Filters</span>
+                            {activeFiltersCount > 0 && (
+                                <span className={`ml-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold ${showFilters ? 'bg-white text-[#7C3AED]' : 'bg-[#7C3AED] text-white'}`}>
+                                    {activeFiltersCount}
+                                </span>
+                            )}
                         </motion.button>
                         <div className="w-px h-6 bg-[#2d1b4e] hidden md:block"></div>
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider hidden md:block">Sort:</span>
@@ -424,95 +474,226 @@ function Products() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="bg-[#1a1224] border border-[#2d1b4e] rounded-xl p-5 mb-8 overflow-hidden shadow-lg shadow-black/20"
+                            className="bg-[#1a1224] border border-[#2d1b4e] rounded-xl p-6 mb-8 overflow-hidden shadow-xl shadow-black/30"
                         >
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {/* Category Filter */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</label>
-                                    <select
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="w-full p-2.5 bg-[#2d1b4e] border border-transparent rounded-lg text-sm text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/50 outline-none transition-all cursor-pointer"
-                                    >
-                                        <option value="">All Categories</option>
-                                        {categories.map((cat) => (
-                                            <option key={cat.category_id} value={cat.category_id}>
-                                                {cat.category_name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div className="space-y-6">
+                                {/* Section 1: Category Taxonomy */}
+                                <div className="border-b border-[#2d1b4e]/60 pb-5">
+                                    <h4 className="text-xs font-bold text-[#a78bfa] mb-4 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa]"></span>
+                                        Category Taxonomy
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                                        {/* Parent Category */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Parent Category</label>
+                                            <select
+                                                value={selectedParentCategory}
+                                                onChange={(e) => {
+                                                    setSelectedParentCategory(e.target.value);
+                                                    setSelectedAssetCategory('');
+                                                    setSelectedSubCategory('');
+                                                }}
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm"
+                                            >
+                                                <option value="">All Parent Categories</option>
+                                                {parentCategories.map((cat) => (
+                                                    <option key={cat.category_id} value={cat.category_id}>
+                                                        {cat.category_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                                {/* Price Filter */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Price Range (₹)</label>
-                                    <div className="flex gap-2 items-center">
-                                        <input
-                                            type="number"
-                                            placeholder="Min"
-                                            value={minPrice}
-                                            onChange={(e) => setMinPrice(e.target.value)}
-                                            className="w-1/2 p-2.5 bg-[#2d1b4e] border border-transparent rounded-lg text-sm text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/50 outline-none transition-all placeholder-gray-600"
-                                        />
-                                        <span className="text-gray-500 font-bold">-</span>
-                                        <input
-                                            type="number"
-                                            placeholder="Max"
-                                            value={maxPrice}
-                                            onChange={(e) => setMaxPrice(e.target.value)}
-                                            className="w-1/2 p-2.5 bg-[#2d1b4e] border border-transparent rounded-lg text-sm text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/50 outline-none transition-all placeholder-gray-600"
-                                        />
+                                        {/* Asset Category (Cascading) */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asset Category</label>
+                                            <select
+                                                value={selectedAssetCategory}
+                                                onChange={(e) => {
+                                                    setSelectedAssetCategory(e.target.value);
+                                                    setSelectedSubCategory('');
+                                                }}
+                                                disabled={!selectedParentCategory}
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                <option value="">{selectedParentCategory ? "All Asset Categories" : "Select Parent Category First"}</option>
+                                                {assetCategories
+                                                    .filter(cat => cat.parent_category_id === selectedParentCategory)
+                                                    .map((cat) => (
+                                                        <option key={cat.asset_category_id} value={cat.asset_category_id}>
+                                                            {cat.name} ({cat.code})
+                                                        </option>
+                                                    ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Subcategory (Cascading) */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Subcategory</label>
+                                            <select
+                                                value={selectedSubCategory}
+                                                onChange={(e) => setSelectedSubCategory(e.target.value)}
+                                                disabled={!selectedAssetCategory}
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                <option value="">{selectedAssetCategory ? "All Subcategories" : "Select Asset Category First"}</option>
+                                                {subCategories
+                                                    .filter(sub => sub.asset_category_id === selectedAssetCategory)
+                                                    .map((sub) => (
+                                                        <option key={sub.asset_sub_category_id} value={sub.asset_sub_category_id}>
+                                                            {sub.name} ({sub.code})
+                                                        </option>
+                                                    ))}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Date Filter */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date Added</label>
-                                    <div className="flex gap-2 items-center">
-                                        <input
-                                            type="date"
-                                            value={startDate}
-                                            onChange={(e) => setStartDate(e.target.value)}
-                                            className="w-1/2 p-2.5 bg-[#2d1b4e] border border-transparent rounded-lg text-sm text-gray-400 focus:ring-2 focus:ring-[#a78bfa]/50 outline-none transition-all"
-                                        />
-                                        <span className="text-gray-500 font-bold">-</span>
-                                        <input
-                                            type="date"
-                                            value={endDate}
-                                            onChange={(e) => setEndDate(e.target.value)}
-                                            className="w-1/2 p-2.5 bg-[#2d1b4e] border border-transparent rounded-lg text-sm text-gray-400 focus:ring-2 focus:ring-[#a78bfa]/50 outline-none transition-all"
-                                        />
+                                {/* Section 2: Asset Specifications */}
+                                <div className="border-b border-[#2d1b4e]/60 pb-5">
+                                    <h4 className="text-xs font-bold text-[#a78bfa] mb-4 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa]"></span>
+                                        Asset Specifications
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                                        {/* Type */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asset Type</label>
+                                            <select
+                                                value={selectedType}
+                                                onChange={(e) => setSelectedType(e.target.value)}
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm"
+                                            >
+                                                <option value="">All Types</option>
+                                                {types.map((t) => (
+                                                    <option key={t.asset_type_id} value={t.asset_type_id}>
+                                                        {t.name} ({t.code})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Variant */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asset Variant</label>
+                                            <select
+                                                value={selectedVariant}
+                                                onChange={(e) => setSelectedVariant(e.target.value)}
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm"
+                                            >
+                                                <option value="">All Variants</option>
+                                                {variants.map((v) => (
+                                                    <option key={v.asset_variant_id} value={v.asset_variant_id}>
+                                                        {v.name} ({v.code})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Orientation */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Orientation</label>
+                                            <select
+                                                value={selectedOrientation}
+                                                onChange={(e) => setSelectedOrientation(e.target.value)}
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm"
+                                            >
+                                                <option value="">All Orientations</option>
+                                                {orientations.map((o) => (
+                                                    <option key={o.asset_orientation_id} value={o.asset_orientation_id}>
+                                                        {o.name} ({o.code})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Rating Filter */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Minimum Rating</label>
-                                    <select
-                                        value={minRating}
-                                        onChange={(e) => setMinRating(e.target.value)}
-                                        className="w-full p-2.5 bg-[#2d1b4e] border border-transparent rounded-lg text-sm text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/50 outline-none transition-all cursor-pointer"
-                                    >
-                                        <option value="">Any Rating</option>
-                                        <option value="4.5">4.5+ Stars</option>
-                                        <option value="4">4.0+ Stars</option>
-                                        <option value="3">3.0+ Stars</option>
-                                    </select>
+                                {/* Section 3: Range & Value Filters */}
+                                <div>
+                                    <h4 className="text-xs font-bold text-[#a78bfa] mb-4 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#a78bfa]"></span>
+                                        Price, Rating & Date
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                                        {/* Price Range */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Price Range (₹)</label>
+                                            <div className="flex gap-2 items-center">
+                                                <input
+                                                    type="number"
+                                                    placeholder="Min"
+                                                    value={minPrice}
+                                                    onChange={(e) => setMinPrice(e.target.value)}
+                                                    className="w-1/2 p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all placeholder-gray-600 shadow-sm"
+                                                />
+                                                <span className="text-gray-500 font-bold">-</span>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Max"
+                                                    value={maxPrice}
+                                                    onChange={(e) => setMaxPrice(e.target.value)}
+                                                    className="w-1/2 p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all placeholder-gray-600 shadow-sm"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Rating */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Minimum Rating</label>
+                                            <select
+                                                value={minRating}
+                                                onChange={(e) => setMinRating(e.target.value)}
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm"
+                                            >
+                                                <option value="">Any Rating</option>
+                                                <option value="4.5">4.5+ Stars</option>
+                                                <option value="4">4.0+ Stars</option>
+                                                <option value="3">3.0+ Stars</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Date Added Range */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date Added Range</label>
+                                            <div className="flex gap-2 items-center">
+                                                <input
+                                                    type="date"
+                                                    value={startDate}
+                                                    onChange={(e) => setStartDate(e.target.value)}
+                                                    className="w-1/2 p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-400 outline-none transition-all shadow-sm"
+                                                />
+                                                <span className="text-gray-500 font-bold">-</span>
+                                                <input
+                                                    type="date"
+                                                    value={endDate}
+                                                    onChange={(e) => setEndDate(e.target.value)}
+                                                    className="w-1/2 p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-400 outline-none transition-all shadow-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="mt-5 flex justify-end pt-4 border-t border-[#2d1b4e] border-dashed">
+                            {/* Footer Actions */}
+                            <div className="mt-6 flex justify-end pt-4 border-t border-[#2d1b4e] border-dashed">
                                 <button
                                     onClick={() => {
-                                        setSelectedCategory('');
+                                        setSelectedParentCategory('');
+                                        setSelectedAssetCategory('');
+                                        setSelectedSubCategory('');
+                                        setSelectedType('');
+                                        setSelectedVariant('');
+                                        setSelectedOrientation('');
                                         setMinPrice('');
                                         setMaxPrice('');
                                         setStartDate('');
                                         setEndDate('');
                                         setMinRating('');
                                     }}
-                                    className="px-4 py-2 bg-red-500/10 rounded-lg text-xs font-bold text-red-400 hover:bg-red-500/20 transition-colors"
+                                    className="px-5 py-2.5 bg-red-500/10 rounded-lg text-xs font-bold text-red-400 hover:bg-red-500/20 hover:text-white transition-all duration-200"
                                 >
                                     Clear All Filters
                                 </button>

@@ -8,7 +8,7 @@ import {
     faEnvelope, faLock, faEye, faEyeSlash, faPhone,
     faShieldHalved, faArrowRight, faRotateLeft, faCheckCircle
 } from '@fortawesome/free-solid-svg-icons';
-import { faFacebookF, faGoogle, faXTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import SeoHead from '../components/SeoHead';
@@ -176,10 +176,6 @@ export default function Login() {
             let msg = 'Social login error';
             if (qErr === 'google_failed') msg = 'Google authentication failed';
             else if (qErr === 'google_not_configured') msg = 'Google login is not configured in backend .env';
-            else if (qErr === 'facebook_failed') msg = 'Facebook authentication failed';
-            else if (qErr === 'facebook_not_configured') msg = 'Facebook login is not configured in backend .env';
-            else if (qErr === 'twitter_not_configured') msg = 'Twitter login is not configured in backend .env';
-            else if (qErr === 'twitter_failed') msg = 'Twitter authentication failed';
             setError(msg);
         }
     }, [router.query]);
@@ -241,8 +237,6 @@ export default function Login() {
 
     // ── Social login handlers
     const handleGoogleLogin = () => { window.location.href = `${API_URL}/api/auth/google`; };
-    const handleFacebookLogin = () => { window.location.href = `${API_URL}/api/auth/facebook`; };
-    const handleTwitterLogin = () => { window.location.href = `${API_URL}/api/auth/twitter`; };
 
     // ── Password login
     const handlePasswordSubmit = async (e) => {
@@ -751,17 +745,9 @@ export default function Login() {
                                 </div>
                                 <p className="text-white/40 text-xs text-center mb-3">Continue with social</p>
                                 <div className="flex justify-center gap-5">
-                                    <button id="facebook-login-btn" onClick={handleFacebookLogin} title="Facebook"
-                                        className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
-                                        <FontAwesomeIcon icon={faFacebookF} className="text-sm" />
-                                    </button>
                                     <button id="google-login-btn" onClick={handleGoogleLogin} title="Google"
                                         className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
                                         <FontAwesomeIcon icon={faGoogle} className="text-sm" />
-                                    </button>
-                                    <button id="twitter-login-btn" onClick={handleTwitterLogin} title="Twitter/X"
-                                        className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
-                                        <FontAwesomeIcon icon={faXTwitter} className="text-sm" />
                                     </button>
                                 </div>
                             </div>

@@ -8,7 +8,7 @@ import {
     faEye, faEyeSlash, faEnvelope, faShieldHalved,
     faRotateLeft, faCheckCircle, faUser, faPhone
 } from '@fortawesome/free-solid-svg-icons';
-import { faFacebookF, faGoogle, faXTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import SeoHead from '../components/SeoHead';
@@ -242,8 +242,6 @@ export default function Signup() {
     };
 
     const handleGoogleSignup = () => { window.location.href = `${API_URL}/api/auth/google`; };
-    const handleFacebookSignup = () => { window.location.href = `${API_URL}/api/auth/facebook`; };
-    const handleTwitterSignup = () => { window.location.href = `${API_URL}/api/auth/twitter`; };
 
     // ── Step 1: Register — validate + send OTP atomically (NO user created yet)
     const handleRegister = async (e) => {
@@ -599,17 +597,9 @@ export default function Signup() {
                                             </div>
                                             <p className="text-white/40 text-xs text-center mb-3">Continue with social</p>
                                             <div className="flex justify-center gap-5">
-                                                <button id="signup-facebook-btn" onClick={handleFacebookSignup} title="Facebook"
-                                                    className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
-                                                    <FontAwesomeIcon icon={faFacebookF} className="text-sm" />
-                                                </button>
                                                 <button id="signup-google-btn" onClick={handleGoogleSignup} title="Google"
                                                     className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
                                                     <FontAwesomeIcon icon={faGoogle} className="text-sm" />
-                                                </button>
-                                                <button id="signup-twitter-btn" onClick={handleTwitterSignup} title="Twitter/X"
-                                                    className="w-9 h-9 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
-                                                    <FontAwesomeIcon icon={faXTwitter} className="text-sm" />
                                                 </button>
                                             </div>
                                         </div>

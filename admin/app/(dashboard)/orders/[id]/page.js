@@ -284,6 +284,79 @@ function OrderDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* LEFT: Items */}
                 <div className="lg:col-span-2 space-y-4">
+                    {/* Template Change Request */}
+                    {order.change_request_status === 'pending' && (
+                        <div className="bg-[#1a1025] rounded-2xl border border-amber-500/30 overflow-hidden shadow-lg shadow-amber-900/10">
+                            <div className="flex items-center gap-2 px-6 py-4 bg-amber-500/10 border-b border-[#2d1b4e]">
+                                <FontAwesomeIcon icon={faEdit} className="text-amber-400" />
+                                <h2 className="text-base font-bold text-white">Pending Template Change Request</h2>
+                                <span className="ml-auto text-xs text-amber-400 font-semibold">Change Pending</span>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                <div className="bg-[#130C1C] rounded-xl border border-[#2d1b4e] p-4">
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2">Instructions from Customer</p>
+                                    <p className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">{order.change_request_reason}</p>
+                                </div>
+                                
+                                {order.change_request_attachments && order.change_request_attachments.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Customer Reference Attachments</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {order.change_request_attachments.map((url, idx) => {
+                                                const filename = url.split('/').pop().split('?')[0];
+                                                const ext = filename.split('.').pop().toLowerCase();
+                                                const isImg = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+                                                return (
+                                                    <div key={idx} className="bg-[#130C1C] border border-[#2d1b4e] rounded-xl p-3 flex items-center justify-between gap-3">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <div className="w-8 h-8 rounded-lg bg-[#a78bfa]/10 flex items-center justify-center text-[#a78bfa] flex-shrink-0">
+                                                                <FontAwesomeIcon icon={isImg ? faImage : faFile} className="text-xs" />
+                                                            </div>
+                                                            <span className="text-xs font-semibold text-gray-300 truncate max-w-[120px]" title={filename}>{filename}</span>
+                                                        </div>
+                                                        <a href={url} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#a78bfa] hover:underline whitespace-nowrap">
+                                                            View File
+                                                        </a>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="pt-2">
+                                    <button
+                                        onClick={async () => {
+                                            if (!confirm('Mark this customization change request as completed? This will email the customer.')) return;
+                                            setActionLoadingId('change_complete');
+                                            try {
+                                                const token = getAuthToken();
+                                                await axios.post(`${API_URL}/api/admin/orders/${order.order_id}/complete-changes`, {}, {
+                                                    headers: { Authorization: `Bearer ${token}` }
+                                                });
+                                                alert('Changes marked as completed successfully!');
+                                                fetchOrderDetails();
+                                            } catch (err) {
+                                                alert('Failed to complete change request');
+                                            } finally {
+                                                setActionLoadingId(null);
+                                            }
+                                        }}
+                                        disabled={actionLoadingId === 'change_complete'}
+                                        className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/10 disabled:opacity-50"
+                                    >
+                                        {actionLoadingId === 'change_complete' ? (
+                                            <FontAwesomeIcon icon={faSpinner} spin className="text-xs" />
+                                        ) : (
+                                            <FontAwesomeIcon icon={faCheckCircle} />
+                                        )}
+                                        Mark Changes as Completed
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="bg-[#1a1025] rounded-2xl border border-[#2d1b4e] overflow-hidden">
                         <div className="flex items-center gap-2 px-6 py-4 border-b border-[#2d1b4e]">
                             <FontAwesomeIcon icon={faBox} className="text-[#a78bfa]" />

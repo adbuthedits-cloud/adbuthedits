@@ -134,7 +134,48 @@ router.post('/incoming-webhook', async (req, res) => {
         // Strip HTML tags from the body if HTML is sent
         let cleanMessage = rawContent;
         if (cleanMessage.includes('<') && cleanMessage.includes('>')) {
+            // Replace basic break and block elements first to avoid text gluing
+            cleanMessage = cleanMessage.replace(/<br\s*[\/]?>/gi, '\n');
+            cleanMessage = cleanMessage.replace(/<\/p>/gi, '\n\n');
+            cleanMessage = cleanMessage.replace(/<\/div>/gi, '\n');
+            cleanMessage = cleanMessage.replace(/<\/tr>/gi, '\n');
+            cleanMessage = cleanMessage.replace(/<\/li>/gi, '\n');
             cleanMessage = cleanMessage.replace(/<[^>]*>?/gm, '').trim();
+        }
+
+        // Decode common HTML entities (if sent via HTML or plain text with entities)
+        cleanMessage = cleanMessage
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&nbsp;/g, ' ');
+
+        // Strip quoted email history (e.g., "On Sun, 31 May 2026 at 21:07, ... wrote:")
+        // or "-----Original Message-----"
+        const quoteRegex = /(?:(?:\b|(?<=[a-zA-Z0-9]))On\s+(?:[A-Za-z]{3,10},?\s+)?(?:[A-Za-z]{3,10}[\s,-]+\d{1,2}|\d{1,2}[\s,-]+[A-Za-z]{3,10}|\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}[/\-.]\d{1,2}[/\-.]\d{1,2})[\s\S]{1,250}?wrote:|-----Original Message-----|\bFrom:\s+[\s\S]{1,250}?\bSent:\s+|\bTo:\s+[\s\S]{1,250}?\bSubject:\s+)/im;
+        cleanMessage = cleanMessage.split(quoteRegex)[0];
+        
+        // Final trim and fallback if empty
+        cleanMessage = cleanMessage.trim() || 'Empty message body';
+
+        // Process attachments if present (saving webhook links directly without cloud uploads)
+        const attachmentsInput = body.attachments || [];
+        const savedAttachments = [];
+
+        if (Array.isArray(attachmentsInput) && attachmentsInput.length > 0) {
+            for (const att of attachmentsInput) {
+                const filename = att.name || att.fileName || att.filename || `attachment_${Date.now()}`;
+                const fileUrl = att.url || att.link;
+
+                if (fileUrl) {
+                    savedAttachments.push({
+                        name: filename,
+                        url: fileUrl
+                    });
+                }
+            }
         }
 
         // Save incoming customer reply
@@ -145,7 +186,8 @@ router.post('/incoming-webhook', async (req, res) => {
             admin_role: 'Customer',
             subject: subject,
             message: cleanMessage || 'Empty message body',
-            channel: 'email'
+            channel: 'email',
+            attachments: savedAttachments
         });
 
         // Set enquiry status back to in-review so admins notice it
@@ -313,10 +355,27 @@ router.get('/:id/attachment-url', authMiddleware, adminMiddleware, async (req, r
         const { key } = req.query;
         if (!key) return res.status(400).json({ error: 'File key is required' });
 
-        const enquiry = await Enquiry.findByPk(req.params.id);
+        const enquiry = await Enquiry.findByPk(req.params.id, {
+            include: [{
+                model: EnquiryReply,
+                as: 'replies',
+                required: false
+            }]
+        });
         if (!enquiry) return res.status(404).json({ error: 'Enquiry not found' });
 
+        // Collect keys from main enquiry and all replies
         const keys = (enquiry.attachments || []).map(a => a.key);
+        if (enquiry.replies) {
+            for (const r of enquiry.replies) {
+                if (r.attachments) {
+                    for (const a of r.attachments) {
+                        if (a.key) keys.push(a.key);
+                    }
+                }
+            }
+        }
+
         if (!keys.includes(key)) return res.status(403).json({ error: 'File does not belong to this enquiry' });
 
         const command = new GetObjectCommand({

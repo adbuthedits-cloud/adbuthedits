@@ -50,6 +50,26 @@ const Payment = sequelize.define('Payment', {
     razorpay_signature: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    refund_request_status: {
+        type: DataTypes.STRING,
+        defaultValue: 'none'
+    },
+    refund_request_reason: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    refund_request_details: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    refund_requested_at: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    amount_refunded: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
     }
 });
 

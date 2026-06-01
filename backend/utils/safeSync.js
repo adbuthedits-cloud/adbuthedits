@@ -55,6 +55,22 @@ const migrations = [
         "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`,
+
+    // Add 'attachments' column to enquiry_replies table
+    `ALTER TABLE enquiry_replies ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`,
+
+    // --- Payments Table Refund Columns ---
+    `ALTER TABLE "Payments" ADD COLUMN IF NOT EXISTS refund_request_status VARCHAR(50) DEFAULT 'none'`,
+    `ALTER TABLE "Payments" ADD COLUMN IF NOT EXISTS refund_request_reason VARCHAR(255)`,
+    `ALTER TABLE "Payments" ADD COLUMN IF NOT EXISTS refund_request_details TEXT`,
+    `ALTER TABLE "Payments" ADD COLUMN IF NOT EXISTS refund_requested_at TIMESTAMP WITH TIME ZONE`,
+    `ALTER TABLE "Payments" ADD COLUMN IF NOT EXISTS amount_refunded INTEGER DEFAULT 0`,
+
+    // --- Orders Table Change Request Columns ---
+    `ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS change_request_status VARCHAR(50) DEFAULT 'none'`,
+    `ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS change_request_reason TEXT`,
+    `ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS change_request_attachments JSONB DEFAULT '[]'::jsonb`,
+    `ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS change_requested_at TIMESTAMP WITH TIME ZONE`,
 ];
 
 async function runSafeMigrations() {

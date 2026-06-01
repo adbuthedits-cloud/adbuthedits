@@ -113,7 +113,7 @@ const ComingSoonELearning = () => {
 
             <main className="flex-grow pt-32 pb-20 px-6 relative z-10 flex items-center justify-center">
                 <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                    
+
                     {/* Left Panel: Content / Announcement */}
                     <div className="flex flex-col text-left">
                         <motion.div

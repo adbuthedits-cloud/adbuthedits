@@ -36,6 +36,38 @@ function Avatar({ name, role }) {
     );
 }
 
+function renderFormattedMessage(text) {
+    if (!text) return null;
+    
+    // 1. Decode entities
+    let decoded = text
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&nbsp;/g, ' ');
+
+    // 2. Quote regex split on the frontend as a fallback for old records
+    const quoteRegex = /(?:(?:\b|(?<=[a-zA-Z0-9]))On\s+(?:[A-Za-z]{3,10},?\s+)?(?:[A-Za-z]{3,10}[\s,-]+\d{1,2}|\d{1,2}\s+[A-Za-z]{3,10}|\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}[/\-.]\d{1,2}[/\-.]\d{1,2})[\s\S]{1,250}?wrote:|-----Original Message-----|\bFrom:\s+[\s\S]{1,250}?\bSent:\s+|\bTo:\s+[\s\S]{1,250}?\bSubject:\s+)/im;
+    const cleaned = decoded.split(quoteRegex)[0].trim();
+
+    // 3. Split by URLs to make them clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = cleaned.split(urlRegex);
+    
+    return parts.map((part, i) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-[#a78bfa] hover:underline break-all">
+                    {part}
+                </a>
+            );
+        }
+        return part;
+    });
+}
+
 export default function EnquiryDetailPage() {
     const router = useRouter();
     const params = useParams();
@@ -129,6 +161,10 @@ export default function EnquiryDetailPage() {
     };
 
     const openAttachment = async (file) => {
+        if (!file.key && file.url) {
+            window.open(file.url, '_blank');
+            return;
+        }
         const token = getToken();
         if (!token) return;
         setLoadingAttachment(file.key);
@@ -306,7 +342,36 @@ export default function EnquiryDetailPage() {
                                             {reply.subject && (
                                                 <p className="text-xs text-gray-500 mb-2 font-medium">{reply.subject}</p>
                                             )}
-                                            <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{reply.message}</p>
+                                            <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">
+                                                {console.log("Reply ID:", reply.reply_id, "Message:", reply.message)}
+                                                {renderFormattedMessage(reply.message)}
+                                            </p>
+                                            
+                                            {/* Reply Attachments */}
+                                            {reply.attachments && reply.attachments.length > 0 && (
+                                                <div className="mt-4 pt-3 border-t border-[#2d1b4e] space-y-2">
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2">Attachments ({reply.attachments.length})</p>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        {reply.attachments.map((file, idx) => (
+                                                            <button 
+                                                                key={idx} 
+                                                                onClick={() => openAttachment(file)} 
+                                                                disabled={loadingAttachment === file.key}
+                                                                className="flex items-center gap-2 p-2 rounded-lg bg-[#1E1628] border border-[#2d1b4e] hover:border-[#a78bfa]/40 transition-all group disabled:opacity-50 text-left w-full"
+                                                            >
+                                                                <div className="w-6 h-6 rounded bg-[#a78bfa]/10 flex items-center justify-center flex-shrink-0">
+                                                                    <FontAwesomeIcon 
+                                                                        icon={loadingAttachment === file.key ? faSpinner : faFile}
+                                                                        className={`text-[#a78bfa] text-xs ${loadingAttachment === file.key ? 'animate-spin' : ''}`} 
+                                                                    />
+                                                                </div>
+                                                                <span className="text-xs text-gray-300 truncate flex-1">{file.name}</span>
+                                                                <FontAwesomeIcon icon={faDownload} className="text-gray-600 group-hover:text-[#a78bfa] text-[10px] flex-shrink-0 transition-colors mr-1" />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                         <p className="text-[11px] text-gray-600 mt-1.5 ml-1">
                                             {(() => { const d = new Date(reply.createdAt || reply.created_at); return isNaN(d) ? '—' : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }); })()}

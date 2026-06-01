@@ -283,12 +283,21 @@ router.post('/verify-payment', auth, async (req, res) => {
                 }, { transaction: t })
             ));
 
+            // Fetch payment details from Razorpay to get the actual method used
+            let paymentMethod = 'razorpay';
+            try {
+                const rzpPayment = await razorpay.payments.fetch(razorpay_payment_id);
+                paymentMethod = rzpPayment.method || 'razorpay';
+            } catch (err) {
+                console.error('[Razorpay Fetch Error] Could not retrieve payment method:', err);
+            }
+
             // 4. Create Payment Record
             await Payment.create({
                 user_id: req.user.id,
                 order_id: order.order_id,
                 amount: finalAmount,
-                mode: 'razorpay',
+                mode: paymentMethod,
                 status: 'success',
                 razorpay_order_id,
                 razorpay_payment_id,
@@ -487,6 +496,111 @@ router.get('/public/track', async (req, res) => {
         });
     } catch (err) {
         console.error('[Public Tracking Error]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Customer: Request Refund
+router.post('/:id/request-refund', auth, async (req, res) => {
+    try {
+        const { reason, details } = req.body;
+        if (!reason) {
+            return res.status(400).json({ error: 'Refund reason is required' });
+        }
+
+        const order = await Order.findOne({
+            where: { order_id: req.params.id, user_id: req.user.id },
+            include: [{ model: Payment, as: 'payment' }]
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        if (!order.payment) {
+            return res.status(400).json({ error: 'No payment record found for this order' });
+        }
+
+        if (order.payment.refund_request_status === 'pending') {
+            return res.status(400).json({ error: 'A refund request is already pending for this order' });
+        }
+
+        if (order.payment.refund_request_status === 'approved') {
+            return res.status(400).json({ error: 'Refund request has already been approved' });
+        }
+
+        // Update payment status
+        await order.payment.update({
+            refund_request_status: 'pending',
+            refund_request_reason: reason,
+            refund_request_details: details || '',
+            refund_requested_at: new Date()
+        });
+
+        // Add to Order Timeline
+        await OrderTimeline.create({
+            order_id: order.order_id,
+            action: 'PROGRESS_UPDATE',
+            status_label: 'Refund Requested',
+            notes: `Reason: ${reason}. Details: ${details || 'None'}`
+        });
+
+        res.json({ success: true, message: 'Refund request submitted successfully' });
+    } catch (err) {
+        console.error('[Request Refund Error]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Customer: Request Template Changes
+router.post('/:id/request-changes', auth, async (req, res) => {
+    try {
+        const { instructions, attachments } = req.body;
+        if (!instructions) {
+            return res.status(400).json({ error: 'Instructions are required for requesting changes' });
+        }
+
+        const order = await Order.findOne({
+            where: { order_id: req.params.id, user_id: req.user.id }
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Update order status
+        await order.update({
+            change_request_status: 'pending',
+            change_request_reason: instructions,
+            change_request_attachments: Array.isArray(attachments) ? attachments : [],
+            change_requested_at: new Date(),
+            working_status: 'in_progress' // Put back to in progress so editors see it
+        });
+
+        // Add to Order Timeline
+        await OrderTimeline.create({
+            order_id: order.order_id,
+            action: 'PROGRESS_UPDATE',
+            status_label: 'Changes Requested',
+            notes: instructions
+        });
+
+        // Send Email notification to user
+        const { sendChangeRequestEmail } = require('../utils/refundMailer');
+        const user = await User.findByPk(req.user.id);
+        if (user && user.email) {
+            await sendChangeRequestEmail({
+                to: user.email,
+                name: user.first_name,
+                orderId: order.order_id,
+                status: 'received',
+                details: instructions
+            });
+        }
+
+        res.json({ success: true, message: 'Change request submitted successfully' });
+    } catch (err) {
+        console.error('[Request Changes Error]', err);
         res.status(500).json({ error: err.message });
     }
 });

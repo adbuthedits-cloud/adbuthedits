@@ -36,6 +36,10 @@ const EnquiryReply = sequelize.define('EnquiryReply', {
     channel: {
         type: DataTypes.STRING, // 'email' | 'note'
         defaultValue: 'email',
+    },
+    attachments: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
     }
 }, {
     tableName: 'enquiry_replies',

@@ -39,6 +39,27 @@ import AnalyticsPanel from "./AnalyticsPanel";
 // Initialize global axios interceptors once
 setupAxiosInterceptors();
 
+const ADMIN_PAGES = [
+    { label: "Dashboard", path: "/", icon: faChartPie, module: null },
+    { label: "SEO Management", path: "/seo", icon: faGlobe, module: "seo" },
+    { label: "All Orders", path: "/orders", icon: faClipboardList, module: "orders" },
+    { label: "Order Tracking", path: "/order-tracking", icon: faRoute, module: "order_tracking" },
+    { label: "My Tasks", path: "/my-tasks", icon: faClipboardCheck, module: "my_tasks" },
+    { label: "All Products", path: "/products", icon: faBox, module: "products" },
+    { label: "Master Data", path: "/master-data", icon: faDatabase, module: "master_data" },
+    { label: "Blogs", path: "/blogs", icon: faPenNib, module: "blogs" },
+    { label: "Blog Categories", path: "/blog-categories", icon: faTags, module: "blog_categories" },
+    { label: "Reviews", path: "/reviews", icon: faStar, module: "reviews" },
+    { label: "Payments", path: "/payments", icon: faWallet, module: "payments" },
+    { label: "Enquiries", path: "/enquiries", icon: faEnvelope, module: "enquiries" },
+    { label: "Coupons & Promo", path: "/coupons", icon: faTags, module: "marketing" },
+    { label: "Customers", path: "/users", icon: faUsers, module: "users" },
+    { label: "Staff Members", path: "/staff", icon: faUserShield, module: "staff" },
+    { label: "Role Management", path: "/roles", icon: faClockRotateLeft, module: "staff" },
+    { label: "Media Manager", path: "/media-manager", icon: faCloudUploadAlt, module: "media_manager" },
+    { label: "Settings", path: "/settings", icon: faCog, module: "settings" }
+];
+
 const MenuItem = ({ href, icon, label, collapsed, badge }) => {
     const pathname = usePathname();
     const isActive = pathname === href || pathname?.startsWith(`${href}/`);
@@ -88,6 +109,49 @@ export default function AdminLayout({ children }) {
     const [newOrdersCount, setNewOrdersCount] = useState(0);
     const [showAnalytics, setShowAnalytics] = useState(false);
     const pathname = usePathname();
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+
+    const user = userContext || getAuthUser();
+    const canSee = (module) => canAccessModule(user, module);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        const query = searchQuery.toLowerCase();
+        const filtered = ADMIN_PAGES.filter(page => {
+            if (page.module && !canSee(page.module)) return false;
+            return page.label.toLowerCase().includes(query) || page.path.toLowerCase().includes(query);
+        });
+
+        setSearchResults(filtered);
+    }, [searchQuery]);
+
+    const handleKeyDown = (e) => {
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (searchResults.length ? (prev + 1) % searchResults.length : -1));
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (searchResults.length ? (prev - 1 + searchResults.length) % searchResults.length : -1));
+        } else if (e.key === "Enter") {
+            if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
+                e.preventDefault();
+                const targetPage = searchResults[selectedIndex];
+                router.push(targetPage.path);
+                setSearchQuery("");
+                setShowSuggestions(false);
+            }
+        } else if (e.key === "Escape") {
+            setShowSuggestions(false);
+        }
+    };
 
     const playNotificationSound = () => {
         try {
@@ -239,8 +303,6 @@ export default function AdminLayout({ children }) {
     }
 
     const currentDate = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" });
-    const user = userContext || getAuthUser();
-    const canSee = (module) => canAccessModule(user, module);
 
     return (
         <div className="flex min-h-screen bg-[#130C1C] text-gray-100 font-sans">
@@ -353,9 +415,83 @@ export default function AdminLayout({ children }) {
                         <button onClick={() => setCollapsed(!collapsed)} className="text-gray-400 hover:text-white transition-colors">
                             <FontAwesomeIcon icon={collapsed ? faBars : faTimes} className="text-xl" />
                         </button>
-                        <div className="bg-[#2d1b4e] flex items-center px-4 py-2.5 rounded-lg border border-[#3b2a5f] w-full max-w-md focus-within:border-[#a78bfa] focus-within:ring-2 focus-within:ring-[#a78bfa]/20 transition-all">
-                            <FontAwesomeIcon icon={faSearch} className="text-gray-400 mr-3" />
-                            <input type="text" placeholder="Search data..." className="bg-transparent outline-none text-sm w-full text-gray-200 placeholder-gray-500" />
+                        <div className="relative w-full max-w-md">
+                            <div className="bg-[#2d1b4e] flex items-center px-4 py-2.5 rounded-lg border border-[#3b2a5f] w-full focus-within:border-[#a78bfa] focus-within:ring-2 focus-within:ring-[#a78bfa]/20 transition-all">
+                                <FontAwesomeIcon icon={faSearch} className="text-gray-400 mr-3" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Search pages..." 
+                                    className="bg-transparent outline-none text-sm w-full text-gray-200 placeholder-gray-500"
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setShowSuggestions(true);
+                                        setSelectedIndex(-1);
+                                    }}
+                                    onFocus={() => setShowSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                    onKeyDown={handleKeyDown}
+                                />
+                                {searchQuery && (
+                                    <button 
+                                        onClick={() => {
+                                            setSearchQuery("");
+                                            setSearchResults([]);
+                                        }}
+                                        className="text-gray-500 hover:text-gray-300 ml-2"
+                                    >
+                                        <FontAwesomeIcon icon={faTimes} className="text-xs" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <AnimatePresence>
+                                {showSuggestions && searchQuery && searchResults.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute top-full left-0 mt-2 w-full bg-[#1e1628] border border-[#2d1b4e] rounded-xl shadow-2xl z-50 overflow-hidden max-h-[300px] overflow-y-auto custom-scroll"
+                                    >
+                                        {searchResults.map((page, index) => (
+                                            <Link
+                                                key={page.path}
+                                                href={page.path}
+                                                onClick={() => {
+                                                    setSearchQuery("");
+                                                    setShowSuggestions(false);
+                                                }}
+                                                className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                                                    index === selectedIndex
+                                                        ? "bg-[#2d1b4e] text-white font-medium"
+                                                        : "text-gray-300 hover:bg-[#2d1b4e]/50 hover:text-white"
+                                                }`}
+                                            >
+                                                <FontAwesomeIcon 
+                                                    icon={page.icon} 
+                                                    className={`w-4 text-xs ${
+                                                        index === selectedIndex ? "text-[#a78bfa]" : "text-gray-500"
+                                                    }`} 
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="font-semibold">{page.label}</div>
+                                                    <div className="text-[10px] text-gray-500 font-mono">{page.path}</div>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </motion.div>
+                                )}
+                                {showSuggestions && searchQuery && searchResults.length === 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute top-full left-0 mt-2 w-full bg-[#1e1628] border border-[#2d1b4e] rounded-xl shadow-2xl z-50 p-4 text-center text-xs text-gray-500"
+                                    >
+                                        No matching pages found (or you don't have permission to view them)
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
 

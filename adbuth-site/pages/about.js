@@ -15,7 +15,7 @@ export default function About() {
     "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_768.webp",
     "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_1138%20copy.jpg.webp",
     "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_1129%20copy.jpg.webp",
-    "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_1077%20copy.jpg.webp",
+    "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_1077%20copy1_web_1780305872602.webp",
     "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_1046%20copy.jpg.webp",
     "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_1045%20copy.jpg.webp",
     "https://assets.adbuthverse.com/website-assets/pages/about/office/IMG_1039%20copy.jpg.webp",

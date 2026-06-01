@@ -1973,17 +1973,468 @@ router.put('/orders/mark-viewed', checkPermission('orders', 'edit'), async (req,
 });
 
 // --- PAYMENT MANAGEMENT ---
+
+// GET /api/admin/payments - List payments with direct Razorpay API sync + local DB enrichment
 router.get('/payments', checkPermission('payments', 'view'), async (req, res) => {
     try {
-        const payments = await Payment.findAll({
-            include: [
-                { model: User, as: 'user', attributes: ['first_name', 'last_name', 'email'] },
-                { model: Order, as: 'order', attributes: ['order_id', 'status'] }
-            ],
-            order: [['createdAt', 'DESC']]
+        const { from, to, count, skip, search, status, method } = req.query;
+
+        // Initialize Razorpay
+        const Razorpay = require('razorpay');
+        const razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET
         });
-        res.json(payments);
+
+        // Build parameters for Razorpay API
+        const options = {};
+        if (from) options.from = Math.floor(new Date(from).getTime() / 1000);
+        if (to) options.to = Math.floor(new Date(to).getTime() / 1000);
+        
+        // Fetch recent payments from Razorpay (fetch up to 100 for client side paging/filtering)
+        options.count = 100;
+        
+        let paymentsList = [];
+        try {
+            const rzpResponse = await razorpay.payments.all(options);
+            paymentsList = rzpResponse.items || [];
+        } catch (rzpErr) {
+            console.error('[Razorpay API Error] Falling back to local database:', rzpErr);
+            // Fallback to local DB if Razorpay API fails
+            const localFallback = await Payment.findAll({
+                include: [
+                    { model: User, as: 'user', attributes: ['user_id', 'first_name', 'last_name', 'email', 'phone_number'] },
+                    { model: Order, as: 'order', attributes: ['order_id', 'status'] }
+                ],
+                order: [['createdAt', 'DESC']]
+            });
+            return res.json({
+                payments: localFallback.map(p => ({
+                    id: p.razorpay_payment_id || p.payment_id,
+                    amount: p.amount,
+                    currency: 'INR',
+                    status: p.status === 'success' ? 'captured' : p.status,
+                    method: p.mode || 'online',
+                    email: p.user?.email,
+                    contact: p.user?.phone_number,
+                    created_at: new Date(p.createdAt).getTime(),
+                    localPayment: p
+                })),
+                totalCount: localFallback.length
+            });
+        }
+
+        // Query local database for corresponding Payments and User info
+        const rzpIds = paymentsList.map(p => p.id);
+        const localPayments = await Payment.findAll({
+            where: { razorpay_payment_id: rzpIds },
+            include: [
+                { model: User, as: 'user', attributes: ['user_id', 'first_name', 'last_name', 'email', 'phone_number'] },
+                { 
+                    model: Order, 
+                    as: 'order',
+                    include: [
+                        { 
+                            model: OrderItem, 
+                            as: 'items',
+                            include: [{ model: Product, as: 'product', attributes: ['products_id', 'title', 'thumbnail', 'price'] }]
+                        }
+                    ]
+                }
+            ]
+        });
+
+        // Map local payments by RZP ID
+        const localMap = {};
+        localPayments.forEach(lp => {
+            localMap[lp.razorpay_payment_id] = lp;
+        });
+
+        // Pre-fetch users for payments that don't have a local match to avoid N+1 queries and prevent JSON type crashes
+        const missingEmails = [];
+        const missingContacts = [];
+        paymentsList.forEach(p => {
+            const local = localMap[p.id];
+            if (!local?.user) {
+                if (p.email) missingEmails.push(p.email.toLowerCase().trim());
+                if (p.contact) missingContacts.push(String(p.contact).trim());
+            }
+        });
+
+        let fallbackUsers = [];
+        if (missingEmails.length > 0) {
+            fallbackUsers = await User.findAll({
+                where: {
+                    email: { [Op.in]: missingEmails }
+                },
+                attributes: ['user_id', 'first_name', 'last_name', 'email', 'phone_number']
+            });
+        }
+
+        let phoneUsers = [];
+        if (missingContacts.length > 0) {
+            phoneUsers = await User.findAll({
+                where: { phone_number: { [Op.ne]: null } },
+                attributes: ['user_id', 'first_name', 'last_name', 'email', 'phone_number']
+            });
+        }
+
+        // Resolve and enrich each payment
+        let enriched = await Promise.all(paymentsList.map(async p => {
+            const local = localMap[p.id];
+            let user = local?.user || null;
+
+            // If no local payment but we have user email/phone, search user in pre-fetched lists
+            if (!user && (p.email || p.contact)) {
+                if (p.email) {
+                    const cleanEmail = p.email.toLowerCase().trim();
+                    user = fallbackUsers.find(u => u.email && u.email.toLowerCase().trim() === cleanEmail) || null;
+                }
+                
+                if (!user && p.contact) {
+                    const contactStr = String(p.contact).trim();
+                    user = phoneUsers.find(u => {
+                        try {
+                            const ph = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
+                            if (!ph || !ph.number) return false;
+                            return contactStr.includes(ph.number) || ph.number.includes(contactStr);
+                        } catch (e) {
+                            return false;
+                        }
+                    }) || null;
+                }
+            }
+
+            // Sync local payment mode with Razorpay's original payment method
+            if (local && local.mode !== p.method) {
+                try {
+                    await Payment.update(
+                        { mode: p.method },
+                        { where: { payment_id: local.payment_id } }
+                    );
+                    local.mode = p.method;
+                } catch (updateErr) {
+                    console.error(`Failed to sync payment mode for payment ${local.payment_id}:`, updateErr);
+                }
+            }
+
+            return {
+                id: p.id,
+                amount: p.amount / 100, // paise to INR
+                currency: p.currency,
+                status: p.status, // created, authorized, captured, refunded, failed
+                order_id: p.order_id,
+                method: p.method,
+                amount_refunded: (p.amount_refunded || 0) / 100,
+                refund_status: p.refund_status, // null, partial, full
+                email: p.email || user?.email,
+                contact: p.contact || user?.phone_number,
+                created_at: p.created_at * 1000, // s to ms
+                acquirer_data: p.acquirer_data || {},
+                user: user ? {
+                    user_id: user.user_id,
+                    name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+                    email: user.email,
+                    phone: user.phone_number
+                } : null,
+                localPayment: local ? {
+                    payment_id: local.payment_id,
+                    refund_request_status: local.refund_request_status || 'none',
+                    refund_request_reason: local.refund_request_reason,
+                    refund_request_details: local.refund_request_details,
+                    refund_requested_at: local.refund_requested_at,
+                    amount_refunded: (local.amount_refunded || 0) / 100,
+                    order: local.order
+                } : null
+            };
+        }));
+
+        // Apply status & method filtering on server side
+        if (status && status !== 'all') {
+            if (status === 'refunded') {
+                enriched = enriched.filter(p => p.status === 'refunded' || p.amount_refunded > 0);
+            } else {
+                enriched = enriched.filter(p => p.status === status);
+            }
+        }
+        if (method && method !== 'all') {
+            enriched = enriched.filter(p => p.method === method);
+        }
+
+        // Search filtering (since Razorpay list doesn't support complex searching in Node SDK)
+        if (search) {
+            const query = search.toLowerCase();
+            enriched = enriched.filter(p => 
+                p.id.toLowerCase().includes(query) ||
+                (p.email && p.email.toLowerCase().includes(query)) ||
+                (p.contact && p.contact.includes(query)) ||
+                (p.user?.name && p.user.name.toLowerCase().includes(query)) ||
+                (p.localPayment?.order?.order_id && p.localPayment.order.order_id.toLowerCase().includes(query))
+            );
+        }
+
+        // Pagination slice
+        const limit = parseInt(count) || 20;
+        const offset = parseInt(skip) || 0;
+        const paginated = enriched.slice(offset, offset + limit);
+
+        res.json({
+            payments: paginated,
+            totalCount: enriched.length
+        });
     } catch (err) {
+        console.error('[GET Payments Error]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/admin/payments/stats - Fetch dashboard sum stats from Razorpay
+router.get('/payments/stats', checkPermission('payments', 'view'), async (req, res) => {
+    try {
+        const { from, to } = req.query;
+
+        // Initialize Razorpay
+        const Razorpay = require('razorpay');
+        const razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET
+        });
+
+        const options = { count: 100 };
+        if (from) options.from = Math.floor(new Date(from).getTime() / 1000);
+        if (to) options.to = Math.floor(new Date(to).getTime() / 1000);
+
+        let items = [];
+        try {
+            const rzpResponse = await razorpay.payments.all(options);
+            items = rzpResponse.items || [];
+        } catch (err) {
+            console.error('[Razorpay Stats Fetch Error]', err);
+            // Fallback to local DB sums
+            const localPayments = await Payment.findAll({
+                where: {
+                    status: 'success'
+                }
+            });
+            const collected = localPayments.reduce((s, p) => s + p.amount, 0);
+            return res.json({
+                collectedAmount: collected,
+                capturedCount: localPayments.length,
+                refundedAmount: 0,
+                refundedCount: 0,
+                failedCount: 0
+            });
+        }
+
+        let collectedAmount = 0;
+        let capturedCount = 0;
+        let refundedAmount = 0;
+        let refundedCount = 0;
+        let failedCount = 0;
+
+        items.forEach(p => {
+            if (p.status === 'captured' || p.status === 'refunded') {
+                collectedAmount += p.amount / 100;
+                capturedCount++;
+            }
+            if (p.status === 'refunded' || p.amount_refunded > 0) {
+                refundedAmount += (p.amount_refunded || 0) / 100;
+                refundedCount++;
+            }
+            if (p.status === 'failed') {
+                failedCount++;
+            }
+        });
+
+        res.json({
+            collectedAmount,
+            capturedCount,
+            refundedAmount,
+            refundedCount,
+            failedCount
+        });
+    } catch (err) {
+        console.error('[GET Payments Stats Error]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /api/admin/payments/:id/refund - Issue a full or partial refund via Razorpay
+router.post('/payments/:id/refund', checkPermission('payments', 'edit'), async (req, res) => {
+    try {
+        const paymentId = req.params.id; // This is the Razorpay payment ID (e.g., pay_...)
+        const { amount, adminNotes } = req.body; // amount in INR (optional)
+
+        const Razorpay = require('razorpay');
+        const razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET
+        });
+
+        // 1. Fetch Razorpay Payment to verify details
+        const rzpPayment = await razorpay.payments.fetch(paymentId);
+        if (!rzpPayment) {
+            return res.status(404).json({ error: 'Razorpay payment not found' });
+        }
+
+        // Calculate amount to refund
+        const refundAmountINR = amount ? parseFloat(amount) : (rzpPayment.amount - (rzpPayment.amount_refunded || 0)) / 100;
+        const refundAmountPaise = Math.round(refundAmountINR * 100);
+
+        if (refundAmountPaise <= 0) {
+            return res.status(400).json({ error: 'Invalid refund amount' });
+        }
+
+        // 2. Call Razorpay Refund API
+        const refund = await razorpay.payments.refund(paymentId, {
+            amount: refundAmountPaise,
+            notes: {
+                admin_notes: adminNotes || 'Processed from Admin Dashboard'
+            }
+        });
+
+        // 3. Find matching local payment
+        const localPayment = await Payment.findOne({
+            where: { razorpay_payment_id: paymentId },
+            include: [{ model: User, as: 'user' }, { model: Order, as: 'order' }]
+        });
+
+        if (localPayment) {
+            // Update local payment
+            const newAmountRefunded = (localPayment.amount_refunded || 0) + refundAmountPaise;
+            await localPayment.update({
+                refund_request_status: 'approved',
+                amount_refunded: newAmountRefunded,
+                status: newAmountRefunded >= (localPayment.amount * 100) ? 'refunded' : 'partially_refunded'
+            });
+
+            // Update order status if fully refunded
+            if (newAmountRefunded >= (localPayment.amount * 100)) {
+                await Order.update({ status: 'cancelled' }, { where: { order_id: localPayment.order_id } });
+            }
+
+            // Add Order Timeline Event
+            await OrderTimeline.create({
+                order_id: localPayment.order_id,
+                admin_id: req.user.admin_id || req.user.id,
+                actor_name: `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || 'Admin',
+                actor_role: req.user.role || 'admin',
+                action: 'COMPLETED',
+                status_label: 'Refund Processed',
+                notes: `Refund of ₹${refundAmountINR.toLocaleString()} processed via Razorpay. Notes: ${adminNotes || 'None'}`
+            });
+
+            // Send Refund Confirmation Email to Customer
+            const { sendRefundEmail } = require('../utils/refundMailer');
+            if (localPayment.user?.email) {
+                await sendRefundEmail({
+                    to: localPayment.user.email,
+                    name: localPayment.user.first_name,
+                    orderId: localPayment.order_id,
+                    refundAmount: refundAmountINR,
+                    status: 'approved'
+                });
+            }
+        }
+
+        res.json({ success: true, refund });
+    } catch (err) {
+        console.error('[Admin Process Refund Error]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /api/admin/payments/:id/reject-refund - Reject a customer refund request
+router.post('/payments/:id/reject-refund', checkPermission('payments', 'edit'), async (req, res) => {
+    try {
+        const paymentId = req.params.id; // This is the Razorpay payment ID (e.g. pay_...)
+        const { rejectionReason } = req.body;
+
+        const localPayment = await Payment.findOne({
+            where: { razorpay_payment_id: paymentId },
+            include: [{ model: User, as: 'user' }]
+        });
+
+        if (!localPayment) {
+            return res.status(404).json({ error: 'Local payment record not found' });
+        }
+
+        await localPayment.update({
+            refund_request_status: 'rejected'
+        });
+
+        // Add Order Timeline Event
+        await OrderTimeline.create({
+            order_id: localPayment.order_id,
+            admin_id: req.user.admin_id || req.user.id,
+            actor_name: `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || 'Admin',
+            actor_role: req.user.role || 'admin',
+            action: 'REASSIGNED',
+            status_label: 'Refund Request Rejected',
+            notes: rejectionReason || 'Does not qualify for refund.'
+        });
+
+        // Send Rejection Email to Customer
+        const { sendRefundEmail } = require('../utils/refundMailer');
+        if (localPayment.user?.email) {
+            await sendRefundEmail({
+                to: localPayment.user.email,
+                name: localPayment.user.first_name,
+                orderId: localPayment.order_id,
+                refundAmount: 0,
+                status: 'rejected',
+                reason: rejectionReason
+            });
+        }
+
+        res.json({ success: true, message: 'Refund request rejected' });
+    } catch (err) {
+        console.error('[Admin Reject Refund Error]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /api/admin/orders/:id/complete-changes - Mark template changes as completed
+router.post('/orders/:id/complete-changes', checkPermission('orders', 'edit'), async (req, res) => {
+    try {
+        const order = await Order.findByPk(req.params.id, {
+            include: [{ model: User, as: 'user' }]
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Update change status
+        await order.update({
+            change_request_status: 'completed'
+        });
+
+        // Add Order Timeline Event
+        await OrderTimeline.create({
+            order_id: order.order_id,
+            admin_id: req.user.admin_id || req.user.id,
+            actor_name: `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || 'Admin',
+            actor_role: req.user.role || 'admin',
+            action: 'COMPLETED',
+            status_label: 'Changes Completed',
+            notes: 'The design team has completed your customization updates.'
+        });
+
+        // Send Email to Customer
+        const { sendChangeRequestEmail } = require('../utils/refundMailer');
+        if (order.user?.email) {
+            await sendChangeRequestEmail({
+                to: order.user.email,
+                name: order.user.first_name,
+                orderId: order.order_id,
+                status: 'completed'
+            });
+        }
+
+        res.json({ success: true, message: 'Change request marked as completed' });
+    } catch (err) {
+        console.error('[Admin Complete Changes Error]', err);
         res.status(500).json({ error: err.message });
     }
 });

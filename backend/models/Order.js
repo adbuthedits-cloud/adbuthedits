@@ -59,6 +59,22 @@ const Order = sequelize.define('Order', {
         type: DataTypes.STRING,
         defaultValue: 'unassigned',
     },
+    change_request_status: {
+        type: DataTypes.STRING,
+        defaultValue: 'none'
+    },
+    change_request_reason: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    change_request_attachments: {
+        type: DataTypes.JSONB,
+        defaultValue: []
+    },
+    change_requested_at: {
+        type: DataTypes.DATE,
+        allowNull: true
+    }
 });
 
 module.exports = Order;
