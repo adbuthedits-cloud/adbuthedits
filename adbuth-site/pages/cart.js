@@ -18,7 +18,7 @@ import { cdnImage } from '../utils/cdn';
 
 export default function Cart() {
     const { seoData } = useSeo('cart');
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, isProfileComplete, openProfileModal } = useAuth();
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
     const [subtotal, setSubtotal] = useState(0);
@@ -231,7 +231,13 @@ export default function Cart() {
     };
 
     const handleCheckout = () => {
-        // 1. Validate Customization
+        // 1. Check Profile Completion
+        if (!isProfileComplete(user)) {
+            openProfileModal({});
+            return;
+        }
+
+        // 2. Validate Customization
         const invalidItem = validateCart();
         if (invalidItem) {
             setEditingItem(invalidItem);
@@ -240,7 +246,7 @@ export default function Cart() {
             return;
         }
 
-        // 2. Redirect to Checkout Page
+        // 3. Redirect to Checkout Page
         router.push('/checkout');
     };
 
@@ -385,12 +391,35 @@ export default function Cart() {
                                 </div>
                             </div>
 
+                            {/* Profile Incomplete Warning */}
+                            {user && !isProfileComplete(user) && (
+                                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                                    <p className="text-amber-800 font-bold text-sm mb-1">⚠ Complete Your Profile</p>
+                                    <p className="text-amber-700 text-xs mb-2 leading-relaxed">
+                                        To place orders, you need:
+                                        {!user.first_name && <span className="block">• Your name</span>}
+                                        {!user.email && <span className="block">• Email address</span>}
+                                        {!user.phone_number && <span className="block">• Phone number</span>}
+                                    </p>
+                                    <button
+                                        onClick={() => openProfileModal({})}
+                                        className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 rounded-xl transition-colors"
+                                    >
+                                        Complete Profile
+                                    </button>
+                                </div>
+                            )}
+
                             <button
                                 onClick={handleCheckout}
                                 disabled={loading}
-                                className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    user && !isProfileComplete(user)
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        : 'bg-black text-white hover:bg-gray-900 hover:shadow-lg hover:-translate-y-0.5'
+                                }`}
                             >
-                                {loading ? 'Processing...' : 'Checkout'}
+                                {loading ? 'Processing...' : user && !isProfileComplete(user) ? '⚠ Profile Incomplete' : 'Checkout'}
                             </button>
 
                             <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-400 font-medium">

@@ -122,7 +122,46 @@ const getDeletionConfirmedTemplate = (userName, productName) => `
 </html>
 `;
 
+/**
+ * Review Thank You Template
+ */
+const getReviewThankYouTemplate = (userName, productName) => `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Thank You for Your Feedback!</title>
+</head>
+<body style="${baseStyles} background-color: ${bgColor}; padding: 20px;">
+    <div style="${containerStyles}">
+        <div style="${headerStyles}">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Thank You!</h1>
+            <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">We appreciate your review of ${productName}</p>
+        </div>
+        
+        <div style="${contentStyles}">
+            <p style="font-size: 16px;">Hello ${userName || 'Valued Customer'},</p>
+            
+            <p>Thank you for taking the time to share your feedback on <strong>${productName}</strong>. Your opinion is incredibly valuable to us and our community.</p>
+            
+            <p>We are constantly striving to deliver the highest quality digital assets and service, and your review helps us improve every day.</p>
+            
+            <p>If you have any further ideas, suggestions, or need additional assistance, please don't hesitate to reach out to our support team.</p>
+            
+            <p style="margin-top: 30px;">Best regards,<br>The Adbuth Productions Team</p>
+        </div>
+        
+        <div style="${footerStyles}">
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuth Productions. All rights reserved.</p>
+            <p style="margin: 4px 0;">We value your voice.</p>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
 module.exports = {
     getDeletionWarningTemplate,
-    getDeletionConfirmedTemplate
+    getDeletionConfirmedTemplate,
+    getReviewThankYouTemplate
 };

@@ -13,7 +13,7 @@ import { cdnImage } from '../utils/cdn';
 
 export default function Checkout() {
     const { seoData } = useSeo('checkout');
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, isProfileComplete, openProfileModal } = useAuth();
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
@@ -34,6 +34,12 @@ export default function Checkout() {
         if (!user) {
             localStorage.setItem('intendedDestination', '/checkout');
             router.push('/login');
+            return;
+        }
+        // Profile guard: must have full details to checkout
+        if (!isProfileComplete(user)) {
+            openProfileModal({});
+            router.push('/cart');
             return;
         }
         fetchCart();
@@ -224,9 +230,11 @@ export default function Checkout() {
                         });
 
                         if (verifyRes.ok) {
+                            const verifyData = await verifyRes.json();
+                            const orderId = verifyData.orderId;
                             showToast('Order Placed Successfully!', 'success');
                             setTimeout(() => {
-                                router.push('/orders');
+                                router.push(`/orders?new_order_id=${orderId || ''}`);
                             }, 1500);
                         } else {
                             showToast('Payment Verification Failed', 'error');
@@ -305,11 +313,16 @@ export default function Checkout() {
                                 <h3 className="font-bold text-gray-900 text-lg mb-1">Contact Information</h3>
                                 <p className="text-gray-600 font-medium">{user.first_name} {user.last_name}</p>
                                 <p className="text-gray-500 text-sm">{user.email}</p>
-                                {user.phone && (
+                                {user.phone_number && (
                                     <p className="text-gray-500 text-sm">
-                                        {typeof user.phone === 'object'
-                                            ? `${user.phone.code} ${user.phone.number}`
-                                            : user.phone}
+                                        {(() => {
+                                            try {
+                                                const p = typeof user.phone_number === 'string'
+                                                    ? JSON.parse(user.phone_number)
+                                                    : user.phone_number;
+                                                return p ? `${p.code} ${p.number}` : '';
+                                            } catch { return ''; }
+                                        })()}
                                     </p>
                                 )}
                             </div>

@@ -58,7 +58,10 @@ router.put('/change-password', authMiddleware, async (req, res) => {
         }
 
         // Verify method
-        if (currentPassword) {
+        if (!targetAccount.password_hash) {
+            // User does not have a password set yet (e.g., registered via Google or OTP).
+            // Allow setting the password directly without extra verification.
+        } else if (currentPassword) {
             // Traditional verify
             const isMatch = await targetAccount.checkPassword(currentPassword);
             if (!isMatch) {
@@ -163,6 +166,114 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────────
+// PUT /api/auth/complete-profile
+// Called after OTP login for new/incomplete users to fill in their details.
+// Smart merge: if email/phone matches a partial (incomplete) existing account, merge them.
+// ─────────────────────────────────────────────────────────────────────────────────
+router.put('/complete-profile', authMiddleware, async (req, res) => {
+    try {
+        const { first_name, last_name, email, phone_number } = req.body;
+
+        if (!first_name || !email || !phone_number) {
+            return res.status(400).json({ msg: 'First name, email, and phone number are required.' });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ field: 'email', msg: 'Invalid email address.' });
+        }
+
+        if (!phone_number.code || !phone_number.number) {
+            return res.status(400).json({ field: 'phone', msg: 'Valid phone number with country code is required.' });
+        }
+
+        // Load the current user
+        const currentUser = await User.findByPk(req.user.id);
+        if (!currentUser) {
+            return res.status(404).json({ msg: 'User not found.' });
+        }
+
+        // ─ Check email conflict ────────────────────────────────────────────────
+        if (email !== currentUser.email) {
+            const emailConflict = await User.findOne({ where: { email } });
+            if (emailConflict && emailConflict.user_id !== currentUser.user_id) {
+                const conflictIsComplete = !!(emailConflict.first_name && emailConflict.email && emailConflict.phone_number);
+                if (conflictIsComplete) {
+                    return res.status(400).json({
+                        field: 'email',
+                        msg: 'This email belongs to another account. Please use a different email or log in with that account.'
+                    });
+                }
+                // Merge: conflicting account is incomplete (partial) → absorb its data and delete it
+                console.log(`[complete-profile] Merging email-conflict user ${emailConflict.user_id} into ${currentUser.user_id}`);
+                // Transfer useful data from conflicting account if current user is missing it
+                if (!currentUser.first_name && emailConflict.first_name) currentUser.first_name = emailConflict.first_name;
+                if (!currentUser.last_name && emailConflict.last_name) currentUser.last_name = emailConflict.last_name;
+                if (!currentUser.phone_number && emailConflict.phone_number) currentUser.phone_number = emailConflict.phone_number;
+                await emailConflict.destroy();
+            }
+        }
+
+        // ─ Check phone conflict ──────────────────────────────────────────────
+        const allUsersWithPhone = await User.findAll({
+            where: { phone_number: { [Op.ne]: null } }
+        });
+        const phoneConflict = allUsersWithPhone.find(u => {
+            if (u.user_id === currentUser.user_id) return false;
+            try {
+                const p = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
+                return p && p.code === phone_number.code && p.number === phone_number.number;
+            } catch { return false; }
+        });
+
+        if (phoneConflict) {
+            const conflictIsComplete = !!(phoneConflict.first_name && phoneConflict.email && phoneConflict.phone_number);
+            if (conflictIsComplete) {
+                return res.status(400).json({
+                    field: 'phone',
+                    msg: 'This phone number belongs to another account. Please use a different number.'
+                });
+            }
+            // Merge: absorb partial phone-conflict user and delete it
+            console.log(`[complete-profile] Merging phone-conflict user ${phoneConflict.user_id} into ${currentUser.user_id}`);
+            if (!currentUser.first_name && phoneConflict.first_name) currentUser.first_name = phoneConflict.first_name;
+            if (!currentUser.last_name && phoneConflict.last_name) currentUser.last_name = phoneConflict.last_name;
+            if (!currentUser.email && phoneConflict.email) currentUser.email = phoneConflict.email;
+            await phoneConflict.destroy();
+        }
+
+        // ─ Apply updates to current user ─────────────────────────────────────────
+        currentUser.first_name = first_name;
+        currentUser.last_name = last_name || currentUser.last_name || null;
+        currentUser.email = email;
+        currentUser.email_verified = true; // They verified via OTP already
+        currentUser.phone_number = phone_number;
+        await currentUser.save();
+
+        console.log(`[complete-profile] Profile completed for user ${currentUser.user_id}`);
+
+        res.json({
+            success: true,
+            msg: 'Profile completed successfully!',
+            user: {
+                id: currentUser.user_id,
+                email: currentUser.email,
+                role: currentUser.role,
+                first_name: currentUser.first_name,
+                last_name: currentUser.last_name,
+                phone: currentUser.phone_number,
+                name: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim()
+            }
+        });
+
+    } catch (err) {
+        console.error('[Auth] complete-profile error:', err.message);
+        res.status(500).json({ msg: 'Failed to save profile. Please try again.' });
+    }
+});
+
 
 // POST /api/auth/check-availability
 // Validates email + phone availability WITHOUT creating any user.
@@ -467,7 +578,7 @@ router.get('/verify', authMiddleware, async (req, res) => {
             };
         } else {
             const user = await User.findByPk(req.user.id, {
-                attributes: ['user_id', 'email', 'role', 'first_name', 'last_name', 'phone_number', 'profile_picture']
+                attributes: ['user_id', 'email', 'role', 'first_name', 'last_name', 'phone_number', 'profile_picture', 'password_hash']
             });
             if (!user) return res.status(404).json({ msg: 'User not found' });
             userData = {
@@ -476,9 +587,10 @@ router.get('/verify', authMiddleware, async (req, res) => {
                 role: user.role,
                 first_name: user.first_name,
                 last_name: user.last_name,
-                phone: user.phone_number,
+                phone_number: user.phone_number,
                 profile_picture: user.profile_picture || null,
-                name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+                hasPassword: !!user.password_hash
             };
         }
 
@@ -486,6 +598,141 @@ router.get('/verify', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
+    }
+});
+
+// ─── PUT /api/auth/complete-profile ────────────────────────────────────────────
+// Called by ProfileCompleteModal after OTP login. Applies smart merge:
+//  - If a partial account (same email/phone, no other identifier) exists, merge it.
+//  - Conflicts with full accounts (both email + phone present) are rejected.
+router.put('/complete-profile', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { first_name, last_name, email, phone_number } = req.body;
+
+        if (!first_name || !email || !phone_number) {
+            return res.status(400).json({ msg: 'First name, email, and phone are required.' });
+        }
+
+        const phoneStr = typeof phone_number === 'object' ? JSON.stringify(phone_number) : phone_number;
+        const phoneSearch = typeof phone_number === 'object'
+            ? { [Op.or]: [{ phone_number: phoneStr }, { phone_number: JSON.stringify(phone_number) }] }
+            : { phone_number: phoneStr };
+
+        // Check for conflict: another user already has this email with a full profile
+        const emailConflict = await User.findOne({
+            where: { email, user_id: { [Op.ne]: userId } }
+        });
+        if (emailConflict) {
+            const fullProfile = emailConflict.first_name && emailConflict.phone_number;
+            if (fullProfile) {
+                return res.status(409).json({ field: 'email', msg: 'This email is already linked to another account.' });
+            }
+            // Merge: this partial account can be absorbed
+            await User.destroy({ where: { user_id: emailConflict.user_id } });
+        }
+
+        // Check for conflict: another user already has this phone with a full profile
+        const phoneConflict = await User.findOne({
+            where: { ...phoneSearch, user_id: { [Op.ne]: userId } }
+        });
+        if (phoneConflict) {
+            const fullProfile = phoneConflict.first_name && phoneConflict.email;
+            if (fullProfile) {
+                return res.status(409).json({ field: 'phone', msg: 'This phone number is already linked to another account.' });
+            }
+            // Merge: absorb partial account
+            await User.destroy({ where: { user_id: phoneConflict.user_id } });
+        }
+
+        // Update current user
+        await User.update(
+            { first_name, last_name: last_name || null, email, phone_number: phoneStr },
+            { where: { user_id: userId } }
+        );
+
+        const updated = await User.findByPk(userId, {
+            attributes: ['user_id', 'email', 'first_name', 'last_name', 'phone_number', 'role', 'profile_picture']
+        });
+
+        return res.json({
+            msg: 'Profile complete!',
+            user: {
+                id: updated.user_id,
+                email: updated.email,
+                first_name: updated.first_name,
+                last_name: updated.last_name,
+                phone_number: updated.phone_number,
+                role: updated.role,
+                profile_picture: updated.profile_picture || null,
+                name: `${updated.first_name || ''} ${updated.last_name || ''}`.trim()
+            }
+        });
+    } catch (err) {
+        console.error('[complete-profile] error:', err);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// ─── PUT /api/auth/update-profile ──────────────────────────────────────────────
+// Settings page: update name, email (verified by OTP), or phone (verified by Firebase)
+router.put('/update-profile', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { first_name, last_name, email, phone_number } = req.body;
+
+        const updates = {};
+        if (first_name !== undefined) updates.first_name = first_name;
+        if (last_name !== undefined) updates.last_name = last_name;
+
+        // Email change: check for conflicts
+        if (email !== undefined) {
+            const conflict = await User.findOne({ where: { email, user_id: { [Op.ne]: userId } } });
+            if (conflict) {
+                if (conflict.first_name && conflict.phone_number) {
+                    return res.status(409).json({ msg: 'This email is already linked to another account.' });
+                }
+                // Merge partial account
+                await User.destroy({ where: { user_id: conflict.user_id } });
+            }
+            updates.email = email;
+        }
+
+        // Phone change: check for conflicts
+        if (phone_number !== undefined) {
+            const phoneStr = typeof phone_number === 'object' ? JSON.stringify(phone_number) : phone_number;
+            const conflict = await User.findOne({ where: { phone_number: phoneStr, user_id: { [Op.ne]: userId } } });
+            if (conflict) {
+                if (conflict.first_name && conflict.email) {
+                    return res.status(409).json({ msg: 'This phone number is already linked to another account.' });
+                }
+                await User.destroy({ where: { user_id: conflict.user_id } });
+            }
+            updates.phone_number = phoneStr;
+        }
+
+        await User.update(updates, { where: { user_id: userId } });
+
+        const updated = await User.findByPk(userId, {
+            attributes: ['user_id', 'email', 'first_name', 'last_name', 'phone_number', 'role', 'profile_picture']
+        });
+
+        return res.json({
+            msg: 'Profile updated!',
+            user: {
+                id: updated.user_id,
+                email: updated.email,
+                first_name: updated.first_name,
+                last_name: updated.last_name,
+                phone_number: updated.phone_number,
+                role: updated.role,
+                profile_picture: updated.profile_picture || null,
+                name: `${updated.first_name || ''} ${updated.last_name || ''}`.trim()
+            }
+        });
+    } catch (err) {
+        console.error('[update-profile] error:', err);
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 

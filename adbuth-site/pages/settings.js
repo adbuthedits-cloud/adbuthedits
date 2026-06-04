@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
@@ -11,8 +12,9 @@ import useSeo from '../hooks/useSeo';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function Settings() {
+    const router = useRouter();
     const { seoData } = useSeo('settings');
-    const { user, login } = useAuth(); // We might need to update user context after profile change
+    const { user, loading: authLoading, isProfileComplete, openProfileModal, refreshUser } = useAuth(); // We might need to update user context after profile change
     const [activeTab, setActiveTab] = useState('profile');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
@@ -30,22 +32,44 @@ export default function Settings() {
         confirmPassword: ''
     });
 
-    // Password change method: 'password' | 'email' | 'phone'
+    // Password change method: 'password' | 'otp'
     const [changeMethod, setChangeMethod] = useState('password');
+    const [otpVerifyMethod, setOtpVerifyMethod] = useState(''); // 'email' | 'phone'
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
     const [emailOtp, setEmailOtp] = useState('');
     const [phoneOtp, setPhoneOtp] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
+    const [firebaseIdToken, setFirebaseIdToken] = useState('');
     const [otpTimer, setOtpTimer] = useState(0);
     const [confirmationResult, setConfirmationResult] = useState(null);
+    const [otpVerifying, setOtpVerifying] = useState(false);
     const recaptchaContainerRef = useRef(null);
     const recaptchaVerifierRef = useRef(null);
 
+    // Email change state
+    const [showEmailChange, setShowEmailChange] = useState(false);
+    const [newEmail, setNewEmail] = useState('');
+    const [emailChangeOtp, setEmailChangeOtp] = useState('');
+    const [emailChangeStep, setEmailChangeStep] = useState('input'); // 'input' | 'verify'
+    const [emailChangeTimer, setEmailChangeTimer] = useState(0);
+
+    // Phone change state
+    const [showPhoneChange, setShowPhoneChange] = useState(false);
+    const [newPhoneCode, setNewPhoneCode] = useState('+91');
+    const [newPhoneNum, setNewPhoneNum] = useState('');
+    const [phoneChangeOtp, setPhoneChangeOtp] = useState('');
+    const [phoneChangeStep, setPhoneChangeStep] = useState('input'); // 'input' | 'verify'
+    const [phoneChangeConfirmResult, setPhoneChangeConfirmResult] = useState(null);
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            localStorage.setItem('intendedDestination', '/settings');
+            router.replace('/login');
+        }
+    }, [user, authLoading, router]);
+
     useEffect(() => {
         if (user) {
-            // Split name if first/last aren't separate in context (depends on auth provider implementation)
-            // Assuming user object might just have 'name'. If it has first_name etc use that.
-            // Adjusting based on common patterns; ideally we fetch fresh user data here.
-            // For now, let's use what we have or empty defaults.
             const names = user.name ? user.name.split(' ') : ['', ''];
             setProfileData({
                 first_name: user.first_name || names[0] || '',
@@ -92,17 +116,6 @@ export default function Settings() {
         }
     };
 
-    // OTP Timer countdown
-    useEffect(() => {
-        let interval;
-        if (otpTimer > 0) {
-            interval = setInterval(() => {
-                setOtpTimer(prev => prev - 1);
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [otpTimer]);
-
     const cleanupRecaptcha = () => {
         try {
             if (recaptchaVerifierRef.current) {
@@ -112,103 +125,11 @@ export default function Settings() {
         } catch (e) { /* ignore */ }
     };
 
-    const setupRecaptcha = async () => {
-        try {
-            if (recaptchaVerifierRef.current) return recaptchaVerifierRef.current;
-
-            const { RecaptchaVerifier } = await import('firebase/auth');
-            const { auth } = await import('../lib/firebase');
-
-            const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                size: 'invisible',
-                callback: () => { /* reCAPTCHA solved */ },
-                'expired-callback': () => {
-                    setMessage({ text: 'reCAPTCHA expired. Please try again.', type: 'error' });
-                    cleanupRecaptcha();
-                }
-            });
-
-            await verifier.render();
-            recaptchaVerifierRef.current = verifier;
-            return verifier;
-        } catch (err) {
-            console.error('[reCAPTCHA] Setup error:', err);
-            throw new Error('reCAPTCHA setup failed. Please refresh the page.');
-        }
-    };
-
     useEffect(() => {
         return () => {
             cleanupRecaptcha();
         };
     }, []);
-
-    const handleSendEmailOtp = async () => {
-        if (!user || !user.email) {
-            setMessage({ text: 'No registered email found on your account.', type: 'error' });
-            return;
-        }
-        setLoading(true);
-        setMessage({ text: '', type: '' });
-        try {
-            const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: user.email, purpose: 'change_password_settings' })
-            });
-            const text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (err) {
-                throw new Error(`Server returned invalid response (Status ${res.status}).`);
-            }
-            if (!res.ok) throw new Error(data.msg || 'Failed to send OTP');
-            setOtpSent(true);
-            setOtpTimer(600);
-            setEmailOtp('');
-            setMessage({ text: 'OTP sent to your registered email!', type: 'success' });
-        } catch (err) {
-            setMessage({ text: err.message, type: 'error' });
-        }
-        setLoading(false);
-    };
-
-    const handleSendPhoneOtp = async () => {
-        if (!user || !user.phone_number) {
-            setMessage({ text: 'No registered phone number found on your account.', type: 'error' });
-            return;
-        }
-        setLoading(true);
-        setMessage({ text: '', type: '' });
-        try {
-            const { signInWithPhoneNumber } = await import('firebase/auth');
-            const { auth } = await import('../lib/firebase');
-
-            const appVerifier = await setupRecaptcha();
-            const phoneObj = typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number;
-            const fullPhone = `${phoneObj.code}${phoneObj.number.replace(/[\s\-()]/g, '')}`;
-
-            const result = await signInWithPhoneNumber(auth, fullPhone, appVerifier);
-            setConfirmationResult(result);
-            setOtpSent(true);
-            setOtpTimer(120);
-            setPhoneOtp('');
-            setMessage({ text: `SMS OTP code sent to ${fullPhone}`, type: 'success' });
-        } catch (err) {
-            console.error('[Firebase Settings Phone] Send error:', err);
-            cleanupRecaptcha();
-            const fbErrors = {
-                'auth/invalid-phone-number': 'Invalid phone number format.',
-                'auth/too-many-requests': 'Too many attempts. Please wait.',
-                'auth/quota-exceeded': 'SMS quota exceeded.',
-                'auth/network-request-failed': 'Network error.',
-                'auth/internal-error': 'Phone authentication is not configured yet.',
-            };
-            setMessage({ text: fbErrors[err.code] || err.message || 'Failed to send SMS. Try again.', type: 'error' });
-        }
-        setLoading(false);
-    };
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
@@ -225,29 +146,8 @@ export default function Settings() {
             const token = localStorage.getItem('token');
             let payload = { newPassword: passwordData.newPassword };
 
-            if (changeMethod === 'password') {
+            if (user?.hasPassword !== false) {
                 payload.currentPassword = passwordData.currentPassword;
-            } else if (changeMethod === 'email') {
-                if (emailOtp.length < 6) {
-                    setMessage({ text: 'Please enter the complete 6-digit email OTP.', type: 'error' });
-                    setLoading(false);
-                    return;
-                }
-                payload.otp = emailOtp;
-            } else if (changeMethod === 'phone') {
-                if (phoneOtp.length < 6) {
-                    setMessage({ text: 'Please enter the complete 6-digit SMS OTP.', type: 'error' });
-                    setLoading(false);
-                    return;
-                }
-                if (!confirmationResult) {
-                    setMessage({ text: 'SMS session expired. Please resend.', type: 'error' });
-                    setLoading(false);
-                    return;
-                }
-                const firebaseResult = await confirmationResult.confirm(phoneOtp);
-                const idToken = await firebaseResult.user.getIdToken();
-                payload.idToken = idToken;
             }
 
             const res = await fetch(`${API_URL}/api/auth/change-password`, {
@@ -268,27 +168,29 @@ export default function Settings() {
             }
 
             if (res.ok) {
-                setMessage({ text: 'Password changed successfully', type: 'success' });
+                setMessage({ text: user?.hasPassword ? 'Password changed successfully' : 'Password set successfully', type: 'success' });
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                setEmailOtp('');
-                setPhoneOtp('');
-                setOtpSent(false);
-                setOtpTimer(0);
-                setConfirmationResult(null);
+                // Refresh user state so context gets hasPassword updated
+                await refreshUser();
             } else {
                 setMessage({ text: data.msg || 'Change failed', type: 'error' });
             }
         } catch (error) {
             console.error('[Settings Change Password] Error:', error);
-            const fbErrors = {
-                'auth/invalid-verification-code': 'Incorrect SMS OTP. Please try again.',
-                'auth/code-expired': 'SMS OTP has expired. Please resend.',
-            };
-            setMessage({ text: fbErrors[error.code] || error.message || 'Something went wrong', type: 'error' });
+            setMessage({ text: error.message || 'Something went wrong', type: 'error' });
         } finally {
             setLoading(false);
         }
     };
+
+    if (authLoading || !user) {
+        return (
+            <div className="min-h-screen bg-[#F5F5F7] flex flex-col justify-center items-center">
+                <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
+                <p className="mt-4 text-gray-500 text-sm font-medium">Loading settings...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
@@ -335,55 +237,300 @@ export default function Settings() {
                                 )}
 
                                 {activeTab === 'profile' ? (
-                                    <motion.form
+                                    <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        onSubmit={handleProfileUpdate}
                                         className="space-y-6"
                                     >
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl">
-                                                <FontAwesomeIcon icon={faUser} />
+                                        {/* Incomplete profile alert */}
+                                        {user && !isProfileComplete(user) && (
+                                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                                                <span className="text-amber-500 text-lg mt-0.5">⚠</span>
+                                                <div className="flex-1">
+                                                    <p className="text-amber-800 font-bold text-sm">Profile Incomplete</p>
+                                                    <p className="text-amber-600 text-xs mt-0.5">Complete your profile to place orders. Missing:
+                                                        {!user.first_name && ' Name,'}
+                                                        {!user.email && ' Email,'}
+                                                        {!user.phone_number && ' Phone'}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => openProfileModal({})}
+                                                        className="mt-2 text-xs text-amber-700 font-bold underline hover:text-amber-900"
+                                                    >
+                                                        Complete Now →
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h2 className="text-xl font-bold text-gray-900">Personal Information</h2>
-                                                <p className="text-gray-500 text-sm">Update your personal details here.</p>
+                                        )}
+
+                                        <form onSubmit={handleProfileUpdate} className="space-y-6">
+                                            <div className="flex items-center gap-4 mb-6">
+                                                <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl">
+                                                    <FontAwesomeIcon icon={faUser} />
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl font-bold text-gray-900">Personal Information</h2>
+                                                    <p className="text-gray-500 text-sm">Update your personal details here.</p>
+                                                </div>
                                             </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={profileData.first_name}
+                                                        onChange={e => setProfileData({ ...profileData, first_name: e.target.value })}
+                                                        className="w-full px-4 py-3 text-black rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
+                                                        placeholder="John"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={profileData.last_name}
+                                                        onChange={e => setProfileData({ ...profileData, last_name: e.target.value })}
+                                                        className="w-full px-4 py-3 text-black rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
+                                                        placeholder="Doe"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-4 flex justify-end">
+                                                <button
+                                                    type="submit"
+                                                    disabled={loading}
+                                                    className="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
+                                                >
+                                                    {loading ? 'Saving...' : <><FontAwesomeIcon icon={faSave} /> Save Name</>}
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        {/* ─── EMAIL SECTION ─────────────────────────────── */}
+                                        <div className="border-t border-gray-100 pt-6">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                                        <FontAwesomeIcon icon={faEnvelope} className="text-purple-500" />
+                                                        Email Address
+                                                    </label>
+                                                    <p className="text-gray-500 text-sm mt-1">{user?.email || <span className="text-amber-600">Not set</span>}</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setShowEmailChange(v => !v); setEmailChangeStep('input'); setEmailChangeOtp(''); setMessage({ text: '', type: '' }); }}
+                                                    className="text-sm text-purple-600 font-semibold hover:text-purple-800 underline"
+                                                >
+                                                    {user?.email ? 'Change Email' : 'Add Email'}
+                                                </button>
+                                            </div>
+                                            {showEmailChange && (
+                                                <div className="bg-purple-50 rounded-xl p-4 space-y-3">
+                                                    {emailChangeStep === 'input' && (
+                                                        <>
+                                                            <input
+                                                                type="email"
+                                                                placeholder="Enter new email address"
+                                                                value={newEmail}
+                                                                onChange={e => setNewEmail(e.target.value)}
+                                                                className="w-full px-4 py-3 text-black rounded-xl bg-white border border-purple-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 outline-none text-sm"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                disabled={loading || !newEmail}
+                                                                onClick={async () => {
+                                                                    setLoading(true); setMessage({ text: '', type: '' });
+                                                                    try {
+                                                                        const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
+                                                                            method: 'POST',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ email: newEmail, purpose: 'email_verify' })
+                                                                        });
+                                                                        const d = await res.json();
+                                                                        if (!res.ok) throw new Error(d.msg);
+                                                                        setEmailChangeStep('verify'); setEmailChangeTimer(600);
+                                                                        setMessage({ text: 'OTP sent to ' + newEmail, type: 'success' });
+                                                                    } catch (e) { setMessage({ text: e.message, type: 'error' }); }
+                                                                    setLoading(false);
+                                                                }}
+                                                                className="w-full bg-purple-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-purple-700 disabled:opacity-50"
+                                                            >
+                                                                {loading ? 'Sending OTP...' : 'Send Verification OTP'}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {emailChangeStep === 'verify' && (
+                                                        <>
+                                                            <p className="text-sm text-purple-700">Enter OTP sent to <strong>{newEmail}</strong></p>
+                                                            <input
+                                                                type="text"
+                                                                maxLength={6}
+                                                                placeholder="000000"
+                                                                value={emailChangeOtp}
+                                                                onChange={e => setEmailChangeOtp(e.target.value.replace(/\D/g, ''))}
+                                                                className="w-full px-4 text-black py-3 rounded-xl bg-white border border-purple-200 focus:border-purple-500 outline-none text-center font-mono text-xl tracking-widest"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                disabled={loading || emailChangeOtp.length < 6}
+                                                                onClick={async () => {
+                                                                    setLoading(true); setMessage({ text: '', type: '' });
+                                                                    try {
+                                                                        const token = localStorage.getItem('token');
+                                                                        // Verify OTP then update profile
+                                                                        const verifyRes = await fetch(`${API_URL}/api/otp/verify-email-otp`, {
+                                                                            method: 'POST',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ email: newEmail, otp: emailChangeOtp, purpose: 'email_verify' })
+                                                                        });
+                                                                        const vd = await verifyRes.json();
+                                                                        if (!verifyRes.ok) throw new Error(vd.msg);
+                                                                        // Update profile with new email
+                                                                        const updateRes = await fetch(`${API_URL}/api/auth/update-profile`, {
+                                                                            method: 'PUT',
+                                                                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                                                            body: JSON.stringify({ first_name: profileData.first_name, last_name: profileData.last_name, email: newEmail })
+                                                                        });
+                                                                        const ud = await updateRes.json();
+                                                                        if (!updateRes.ok) throw new Error(ud.msg);
+                                                                        setMessage({ text: 'Email updated successfully!', type: 'success' });
+                                                                        setShowEmailChange(false); setEmailChangeStep('input'); setNewEmail('');
+                                                                    } catch (e) { setMessage({ text: e.message, type: 'error' }); }
+                                                                    setLoading(false);
+                                                                }}
+                                                                className="w-full bg-purple-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-purple-700 disabled:opacity-50"
+                                                            >
+                                                                {loading ? 'Verifying...' : 'Verify & Update Email'}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={profileData.first_name}
-                                                    onChange={e => setProfileData({ ...profileData, first_name: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
-                                                    placeholder="John"
-                                                />
+                                        {/* ─── PHONE SECTION ─────────────────────────────── */}
+                                        <div className="border-t border-gray-100 pt-6">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                                        <FontAwesomeIcon icon={faPhone} className="text-purple-500" />
+                                                        Phone Number
+                                                    </label>
+                                                    <p className="text-gray-500 text-sm mt-1">
+                                                        {user?.phone_number
+                                                            ? (() => { try { const p = typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number; return `${p.code} ${p.number}`; } catch { return 'Phone set'; } })()
+                                                            : <span className="text-amber-600">Not set</span>
+                                                        }
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setShowPhoneChange(v => !v); setPhoneChangeStep('input'); setMessage({ text: '', type: '' }); }}
+                                                    className="text-sm text-purple-600 font-semibold hover:text-purple-800 underline"
+                                                >
+                                                    {user?.phone_number ? 'Change Phone' : 'Add Phone'}
+                                                </button>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={profileData.last_name}
-                                                    onChange={e => setProfileData({ ...profileData, last_name: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
-                                                    placeholder="Doe"
-                                                />
-                                            </div>
+                                            {showPhoneChange && (
+                                                <div className="bg-purple-50 rounded-xl p-4 space-y-3">
+                                                    {/* Recaptcha */}
+                                                    <div id="recaptcha-container-settings" />
+                                                    {phoneChangeStep === 'input' && (
+                                                        <>
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={newPhoneCode}
+                                                                    onChange={e => setNewPhoneCode(e.target.value)}
+                                                                    className="bg-white text-black border border-purple-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-purple-500 min-w-[90px] [&>option]:text-black"
+                                                                >
+                                                                    {['+91', '+1', '+44', '+61', '+971', '+65', '+49', '+33', '+81', '+86', '+7', '+55', '+27', '+92', '+880', '+60', '+62', '+63', '+66', '+84', '+90', '+966', '+52', '+94', '+977'].map(c => (
+                                                                        <option key={c} value={c}>{c}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <input
+                                                                    type="tel"
+                                                                    placeholder="New phone number"
+                                                                    value={newPhoneNum}
+                                                                    onChange={e => setNewPhoneNum(e.target.value)}
+                                                                    className="flex-1 text-black px-4 py-3 rounded-xl bg-white border border-purple-200 focus:border-purple-500 outline-none text-sm"
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                disabled={loading || !newPhoneNum}
+                                                                onClick={async () => {
+                                                                    setLoading(true); setMessage({ text: '', type: '' });
+                                                                    try {
+                                                                        const { signInWithPhoneNumber, RecaptchaVerifier } = await import('firebase/auth');
+                                                                        const { auth } = await import('../lib/firebase');
+                                                                        let verifier;
+                                                                        if (!recaptchaVerifierRef.current) {
+                                                                            verifier = new RecaptchaVerifier(auth, 'recaptcha-container-settings', { size: 'invisible' });
+                                                                            await verifier.render();
+                                                                            recaptchaVerifierRef.current = verifier;
+                                                                        } else {
+                                                                            verifier = recaptchaVerifierRef.current;
+                                                                        }
+                                                                        const full = `${newPhoneCode}${newPhoneNum.replace(/[\s\-()]/g, '')}`;
+                                                                        const result = await signInWithPhoneNumber(auth, full, verifier);
+                                                                        setPhoneChangeConfirmResult(result);
+                                                                        setPhoneChangeStep('verify');
+                                                                        setMessage({ text: 'SMS sent to ' + full, type: 'success' });
+                                                                    } catch (e) { setMessage({ text: e.message || 'Failed to send SMS', type: 'error' }); cleanupRecaptcha(); }
+                                                                    setLoading(false);
+                                                                }}
+                                                                className="w-full bg-purple-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-purple-700 disabled:opacity-50"
+                                                            >
+                                                                {loading ? 'Sending SMS...' : 'Send SMS OTP'}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {phoneChangeStep === 'verify' && (
+                                                        <>
+                                                            <p className="text-sm text-purple-700">Enter OTP sent via SMS</p>
+                                                            <input
+                                                                type="text"
+                                                                maxLength={6}
+                                                                placeholder="000000"
+                                                                value={phoneChangeOtp}
+                                                                onChange={e => setPhoneChangeOtp(e.target.value.replace(/\D/g, ''))}
+                                                                className="w-full text-black px-4 py-3 rounded-xl bg-white border border-purple-200 focus:border-purple-500 outline-none text-center font-mono text-xl tracking-widest"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                disabled={loading || phoneChangeOtp.length < 6}
+                                                                onClick={async () => {
+                                                                    setLoading(true); setMessage({ text: '', type: '' });
+                                                                    try {
+                                                                        if (!phoneChangeConfirmResult) throw new Error('Session expired. Resend OTP.');
+                                                                        await phoneChangeConfirmResult.confirm(phoneChangeOtp);
+                                                                        // Update phone via complete-profile endpoint
+                                                                        const token = localStorage.getItem('token');
+                                                                        const updateRes = await fetch(`${API_URL}/api/auth/update-profile`, {
+                                                                            method: 'PUT',
+                                                                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                                                            body: JSON.stringify({ first_name: profileData.first_name, last_name: profileData.last_name, phone_number: { code: newPhoneCode, number: newPhoneNum.replace(/[\s\-()]/g, '') } })
+                                                                        });
+                                                                        const ud = await updateRes.json();
+                                                                        if (!updateRes.ok) throw new Error(ud.msg);
+                                                                        setMessage({ text: 'Phone updated successfully!', type: 'success' });
+                                                                        setShowPhoneChange(false); setPhoneChangeStep('input'); setNewPhoneNum('');
+                                                                    } catch (e) { setMessage({ text: e.message, type: 'error' }); }
+                                                                    setLoading(false);
+                                                                }}
+                                                                className="w-full bg-purple-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-purple-700 disabled:opacity-50"
+                                                            >
+                                                                {loading ? 'Updating...' : 'Verify & Update Phone'}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <div className="pt-4 flex justify-end">
-                                            <button
-                                                type="submit"
-                                                disabled={loading}
-                                                className="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
-                                            >
-                                                {loading ? 'Saving...' : <><FontAwesomeIcon icon={faSave} /> Save Changes</>}
-                                            </button>
-                                        </div>
-                                    </motion.form>
+                                    </motion.div>
                                 ) : (
                                     <motion.form
                                         initial={{ opacity: 0, y: 10 }}
@@ -401,154 +548,108 @@ export default function Settings() {
                                             </div>
                                         </div>
 
-                                        <div className="mb-6">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Verification Method</label>
-                                            <div className="flex flex-wrap gap-2 p-1 bg-gray-100 rounded-xl border border-gray-200/50 max-w-md">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setChangeMethod('password'); setOtpSent(false); setMessage({ text: '', type: '' }); }}
-                                                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${changeMethod === 'password' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                                                >
-                                                    <FontAwesomeIcon icon={faLock} className="mr-1.5" /> Password
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setChangeMethod('email'); setOtpSent(false); setMessage({ text: '', type: '' }); }}
-                                                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${changeMethod === 'email' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                                                >
-                                                    <FontAwesomeIcon icon={faEnvelope} className="mr-1.5" /> Email OTP
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setChangeMethod('phone'); setOtpSent(false); setMessage({ text: '', type: '' }); }}
-                                                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${changeMethod === 'phone' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                                                >
-                                                    <FontAwesomeIcon icon={faPhone} className="mr-1.5" /> Phone OTP
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {changeMethod === 'password' && (
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                                                <input
-                                                    type="password"
-                                                    value={passwordData.currentPassword}
-                                                    onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
-                                                    placeholder="Enter current password"
-                                                />
-                                            </div>
-                                        )}
-
-                                        {changeMethod === 'email' && (
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Registered Email Address</label>
-                                                    <div className="flex gap-4">
-                                                        <input
-                                                            type="email"
-                                                            value={user?.email || ''}
-                                                            disabled
-                                                            className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-transparent text-gray-500 outline-none"
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleSendEmailOtp}
-                                                            disabled={loading || (otpSent && otpTimer > 0)}
-                                                            className="px-5 py-3 bg-purple-600 text-white rounded-xl font-semibold text-sm hover:bg-purple-700 transition-colors disabled:opacity-50"
-                                                        >
-                                                            {otpSent && otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Send OTP'}
-                                                        </button>
+                                        {user?.hasPassword === false ? (
+                                            /* --- CASE A: NO PASSWORD SET YET (OTP/Google signup) --- */
+                                            <div className="space-y-6">
+                                                <div className="bg-purple-50 border border-purple-200 rounded-2xl p-5">
+                                                    <div className="flex gap-3">
+                                                        <FontAwesomeIcon icon={faShieldAlt} className="text-purple-600 text-lg mt-0.5" />
+                                                        <div>
+                                                            <h4 className="text-purple-900 font-bold text-sm">Set Account Password</h4>
+                                                            <p className="text-purple-700 text-xs mt-1 leading-relaxed">
+                                                                You signed in via Google or OTP and haven't created a password for this account yet. 
+                                                                Setting a password allows you to log in using either your email/phone or a password in the future.
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                {otpSent && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Enter 6-Digit Email OTP</label>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                                                         <input
-                                                            type="text"
-                                                            maxLength={6}
-                                                            value={emailOtp}
-                                                            onChange={e => setEmailOtp(e.target.value.replace(/\D/g, ''))}
-                                                            className="w-full max-w-xs px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none text-center font-mono text-xl tracking-widest"
-                                                            placeholder="000000"
+                                                            type="password"
+                                                            value={passwordData.newPassword}
+                                                            onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                                            className="w-full text-black px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
+                                                            placeholder="Minimum 6 characters"
+                                                            required
                                                         />
                                                     </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {changeMethod === 'phone' && (
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Registered Phone Number</label>
-                                                    <div className="flex gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
                                                         <input
-                                                            type="text"
-                                                            value={user?.phone_number ? `${(typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number).code} ${(typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number).number}` : ''}
-                                                            disabled
-                                                            className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-transparent text-gray-500 outline-none"
+                                                            type="password"
+                                                            value={passwordData.confirmPassword}
+                                                            onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                                            className="w-full text-black px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
+                                                            placeholder="Confirm new password"
+                                                            required
                                                         />
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleSendPhoneOtp}
-                                                            disabled={loading || (otpSent && otpTimer > 0)}
-                                                            className="px-5 py-3 bg-purple-600 text-white rounded-xl font-semibold text-sm hover:bg-purple-700 transition-colors disabled:opacity-50"
-                                                        >
-                                                            {otpSent && otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Send SMS'}
-                                                        </button>
                                                     </div>
                                                 </div>
 
-                                                {otpSent && (
+                                                <div className="pt-4 flex justify-end">
+                                                    <button
+                                                        type="submit"
+                                                        disabled={loading}
+                                                        className="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
+                                                    >
+                                                        {loading ? 'Setting...' : <><FontAwesomeIcon icon={faLock} /> Set Password</>}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            /* --- CASE B: USER HAS PASSWORD SET (Traditional password change) --- */
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                                    <input
+                                                        type="password"
+                                                        value={passwordData.currentPassword}
+                                                        onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                                        className="w-full px-4 py-3 text-black rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
+                                                        placeholder="Enter current password"
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Enter 6-Digit SMS OTP</label>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                                                         <input
-                                                            type="text"
-                                                            maxLength={6}
-                                                            value={phoneOtp}
-                                                            onChange={e => setPhoneOtp(e.target.value.replace(/\D/g, ''))}
-                                                            className="w-full max-w-xs px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none text-center font-mono text-xl tracking-widest"
-                                                            placeholder="000000"
+                                                            type="password"
+                                                            value={passwordData.newPassword}
+                                                            onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                                            className="w-full text-black px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
+                                                            placeholder="Minimum 6 characters"
+                                                            required
                                                         />
                                                     </div>
-                                                )}
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                                        <input
+                                                            type="password"
+                                                            value={passwordData.confirmPassword}
+                                                            onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                                            className="w-full text-black px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
+                                                            placeholder="Confirm new password"
+                                                            required
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-4 flex justify-end">
+                                                    <button
+                                                        type="submit"
+                                                        disabled={loading}
+                                                        className="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
+                                                    >
+                                                        {loading ? 'Updating...' : <><FontAwesomeIcon icon={faLock} /> Update Password</>}
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                                                <input
-                                                    type="password"
-                                                    value={passwordData.newPassword}
-                                                    onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
-                                                    placeholder="Minimum 6 characters"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                                                <input
-                                                    type="password"
-                                                    value={passwordData.confirmPassword}
-                                                    onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
-                                                    placeholder="Confirm new password"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-4 flex justify-end">
-                                            <button
-                                                type="submit"
-                                                disabled={loading}
-                                                className="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
-                                            >
-                                                {loading ? 'Updating...' : <><FontAwesomeIcon icon={faLock} /> Update Password</>}
-                                            </button>
-                                        </div>
                                     </motion.form>
                                 )}
                             </div>

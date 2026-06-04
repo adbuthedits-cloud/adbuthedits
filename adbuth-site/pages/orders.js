@@ -7,8 +7,10 @@ import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBoxOpen, faCheckCircle, faClock, faDownload, faShoppingBag,
-    faChevronRight, faSpinner, faCircleExclamation
+    faChevronRight, faSpinner, faCircleExclamation, faTimes, faStar
 } from '@fortawesome/free-solid-svg-icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import ReviewForm from '../components/ReviewForm';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
 import { cdnImage } from '../utils/cdn';
@@ -66,6 +68,34 @@ export default function Orders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+
+    const [selectedOrderForReview, setSelectedOrderForReview] = useState(null);
+    const [activeProductForReview, setActiveProductForReview] = useState(null);
+
+    // Trigger review modal when new_order_id query param is present
+    useEffect(() => {
+        if (router.query.new_order_id && orders.length > 0) {
+            const foundOrder = orders.find(o => o.order_id === router.query.new_order_id);
+            if (foundOrder) {
+                setSelectedOrderForReview(foundOrder);
+                // If there's only 1 item in the order, auto-select it for review
+                if (foundOrder.items && foundOrder.items.length === 1) {
+                    setActiveProductForReview(foundOrder.items[0].product);
+                }
+            }
+        }
+    }, [router.query.new_order_id, orders]);
+
+    const handleCloseReviewModal = () => {
+        setSelectedOrderForReview(null);
+        setActiveProductForReview(null);
+        // Clean URL query params cleanly
+        const { new_order_id, ...restQuery } = router.query;
+        router.replace({
+            pathname: router.pathname,
+            query: restQuery
+        }, undefined, { shallow: true });
+    };
 
     useEffect(() => {
         if (authLoading) return;
@@ -222,6 +252,108 @@ export default function Orders() {
             <Navbar isdark={false} />
             <main className="flex-grow pt-32 pb-12">{renderContent()}</main>
             <Footer />
+
+            {/* Review Prompt Modal */}
+            <AnimatePresence>
+                {selectedOrderForReview && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+                        onClick={handleCloseReviewModal}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 20 }}
+                            transition={{ type: "spring", duration: 0.5 }}
+                            className="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative shadow-2xl flex flex-col no-scrollbar"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={handleCloseReviewModal}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors z-50"
+                            >
+                                <FontAwesomeIcon icon={faTimes} />
+                            </button>
+
+                            {/* Header (only on selection screen) */}
+                            {!activeProductForReview && (
+                                <div className="text-center mb-6">
+                                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-2">Share Your Thoughts!</h3>
+                                    <p className="text-sm text-gray-500">Thank you for your purchase. We would love to hear your feedback on the product.</p>
+                                </div>
+                            )}
+
+                            {/* Product Selection (if multiple) */}
+                            {!activeProductForReview && selectedOrderForReview.items && selectedOrderForReview.items.length > 0 && (
+                                <div className="space-y-3">
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select a product to review</p>
+                                    {selectedOrderForReview.items.map(item => (
+                                        <button
+                                            key={item.order_item_id}
+                                            onClick={() => setActiveProductForReview(item.product)}
+                                            className="w-full flex items-center gap-4 p-3 rounded-2xl border border-gray-100 hover:border-purple-300 hover:bg-purple-50/20 text-left transition-all group"
+                                        >
+                                            <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-200 overflow-hidden shrink-0">
+                                                {(item.product?.thumbnail || item.product?.images?.[0]) && (
+                                                    <img src={cdnImage(item.product.thumbnail || item.product.images[0])} alt={item.product.title} className="w-full h-full object-cover" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-gray-800 truncate group-hover:text-purple-700 transition-colors">{item.product?.title}</p>
+                                                <p className="text-xs text-purple-600 font-semibold flex items-center gap-1 mt-0.5">
+                                                    Write Review <FontAwesomeIcon icon={faChevronRight} className="text-[8px] transform group-hover:translate-x-0.5 transition-transform" />
+                                                </p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Review Form */}
+                            {activeProductForReview && (
+                                <div className="flex-1 flex flex-col min-h-0">
+                                    {/* Back to selection button if multiple items */}
+                                    {selectedOrderForReview.items && selectedOrderForReview.items.length > 1 && (
+                                        <button
+                                            onClick={() => setActiveProductForReview(null)}
+                                            className="text-xs font-bold text-purple-600 hover:text-purple-800 mb-4 flex items-center gap-1 hover:underline self-start"
+                                        >
+                                            &larr; Back to items
+                                        </button>
+                                    )}
+
+                                    {/* Product Details Header */}
+                                    <div className="flex items-center gap-3 pb-4 mb-4 border-b border-gray-100">
+                                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-200 overflow-hidden shrink-0">
+                                            {(activeProductForReview.thumbnail || activeProductForReview.images?.[0]) && (
+                                                <img src={cdnImage(activeProductForReview.thumbnail || activeProductForReview.images[0])} alt={activeProductForReview.title} className="w-full h-full object-cover" />
+                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-gray-400 font-medium">Reviewing</p>
+                                            <p className="text-sm font-bold text-gray-800 truncate">{activeProductForReview.title}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Review form component */}
+                                    <div className="flex-1 min-h-0">
+                                        <ReviewForm
+                                            products_id={activeProductForReview.products_id}
+                                            onReviewSubmitted={() => {
+                                                handleCloseReviewModal();
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

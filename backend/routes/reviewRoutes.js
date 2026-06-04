@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Review, User, Product, ReviewSetting, ReviewVote } = require('../models');
+const { Review, User, Product, ReviewSetting, ReviewVote, Order, OrderItem } = require('../models');
 const authMiddleware = require('../middleware/authMiddleware');
 const optionalAuth = require('../middleware/optionalAuth');
 const { Op, fn, col, literal } = require('sequelize');
@@ -55,6 +55,25 @@ router.post('/', authMiddleware, upload.fields([
             return res.status(400).json({ error: 'Product ID and Rating are required' });
         }
 
+        // Verify user has purchased this product
+        const purchase = await Order.findOne({
+            where: {
+                user_id,
+                status: {
+                    [Op.in]: ['paid', 'placed', 'inprocessing', 'delivered']
+                }
+            },
+            include: [{
+                model: OrderItem,
+                as: 'items',
+                where: { product_id: products_id }
+            }]
+        });
+
+        if (!purchase) {
+            return res.status(403).json({ error: 'You can only review products you have purchased.' });
+        }
+
         // Build public URLs from R2 keys
         const images = req.files['images']
             ? req.files['images'].map(f => publicUrl(f.key))
@@ -71,6 +90,29 @@ router.post('/', authMiddleware, upload.fields([
             images,
             videos
         });
+
+        // --- SEND THANK YOU EMAIL TO CUSTOMER ---
+        const triggerThankYouEmail = async () => {
+            try {
+                const user = await User.findByPk(user_id);
+                const product = await Product.findByPk(products_id);
+                if (user && user.email && product) {
+                    const { transporter, senders } = require('../utils/emailService');
+                    const { getReviewThankYouTemplate } = require('../utils/emailTemplates');
+                    
+                    await transporter.sendMail({
+                        from: `"Adbuth Support" <${senders.support}>`,
+                        to: user.email,
+                        subject: `Thank you for reviewing ${product.title}!`,
+                        html: getReviewThankYouTemplate(user.first_name, product.title)
+                    });
+                    console.log(`[Review Email] Thank you mail sent to ${user.email}`);
+                }
+            } catch (mailErr) {
+                console.error('[Review Email] Failed to send thank you mail:', mailErr.message);
+            }
+        };
+        triggerThankYouEmail();
 
         // --- AUTOMATED REPLY LOGIC ---
         // We do this asynchronously after the response is sent
@@ -340,6 +382,24 @@ router.get('/product/:productId', optionalAuth, async (req, res) => {
 
         const totalPages = overallTotalReviews <= 2 ? 1 : 1 + Math.ceil((overallTotalReviews - 2) / 10);
 
+        let hasPurchased = false;
+        if (req.user) {
+            const purchase = await Order.findOne({
+                where: {
+                    user_id: req.user.id,
+                    status: {
+                        [Op.in]: ['paid', 'placed', 'inprocessing', 'delivered']
+                    }
+                },
+                include: [{
+                    model: OrderItem,
+                    as: 'items',
+                    where: { product_id: productId }
+                }]
+            });
+            if (purchase) hasPurchased = true;
+        }
+
         res.json({
             success: true,
             averageRating: parseFloat(averageRating),
@@ -348,7 +408,8 @@ router.get('/product/:productId', optionalAuth, async (req, res) => {
             totalPages,
             currentPage: page,
             starCounts,
-            reviews
+            reviews,
+            hasPurchased
         });
     } catch (err) {
         console.error('[Review] Error fetching reviews:', err);

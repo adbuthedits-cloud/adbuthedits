@@ -18,7 +18,8 @@ export default function ReviewSection({ products_id }) {
         currentPage: 1,
         starCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         averageRating: 0,
-        totalReviews: 0
+        totalReviews: 0,
+        hasPurchased: false
     });
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // 'all', 1-5, or 'media'
@@ -295,30 +296,16 @@ export default function ReviewSection({ products_id }) {
                                     ))}
                                 </div>
 
-                                <div className="mt-4 sm:mt-8 pt-4 sm:pt-8 border-t border-gray-100">
-                                    {user ? (
+                                {user && reviewsData?.hasPurchased && (
+                                    <div className="mt-4 sm:mt-8 pt-4 sm:pt-8 border-t border-gray-100">
                                         <button
                                             onClick={() => setShowForm(!showForm)}
                                             className="w-full bg-black text-white py-3 sm:py-4 rounded-xl font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
                                         >
                                             {showForm ? 'Cancel Review' : 'Write a Review'}
                                         </button>
-                                    ) : (
-                                        <div className="text-center p-4 bg-purple-50 rounded-xl">
-                                            <p className="text-sm text-purple-700 font-medium mb-2">Please log in to share your experience</p>
-                                            <button
-                                                onClick={() => {
-                                                    const currentPath = window.location.pathname + window.location.search;
-                                                    localStorage.setItem('intendedDestination', currentPath);
-                                                    router.push('/login');
-                                                }}
-                                                className="text-sm font-bold text-purple-600 hover:underline bg-transparent border-none cursor-pointer"
-                                            >
-                                                Sign In Now
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

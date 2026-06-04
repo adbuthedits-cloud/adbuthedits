@@ -20,7 +20,7 @@ const upload = multer({
         metadata: (req, file, cb) => cb(null, { fieldName: file.fieldname }),
         key: (req, file, cb) => cb(null, `enquiry/${Date.now()}_${path.basename(file.originalname)}`)
     }),
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 // ============================================================
@@ -33,16 +33,32 @@ router.post('/', upload.array('attachments', 5), async (req, res) => {
         const {
             fullName, firstName, lastName, email, phone, companyName, city,
             service, subService, requirementType, requirementDesc, timeline,
-            message, source
+            message, source, driveLink, customService, customRequirementType
         } = req.body;
 
         const name = fullName || `${firstName || ''} ${lastName || ''}`.trim() || 'Unknown';
+
+        const dbService = service === 'other' ? (customService ? `Other: ${customService}` : 'Other') : service;
+        const dbSubService = service === 'other' ? 'N/A' : subService;
+        const dbRequirementType = requirementType === 'Others' ? (customRequirementType ? `Other: ${customRequirementType}` : 'Others') : requirementType;
 
         const attachmentUrls = (req.files || []).map(file => ({
             name: file.originalname,
             url: file.location,
             key: file.key
         }));
+
+        if (driveLink && driveLink.trim()) {
+            let normalizedLink = driveLink.trim();
+            if (!/^https?:\/\//i.test(normalizedLink)) {
+                normalizedLink = `https://${normalizedLink}`;
+            }
+            attachmentUrls.push({
+                name: 'Shared Drive Link',
+                url: normalizedLink,
+                key: null
+            });
+        }
 
         const enquiry = await Enquiry.create({
             source: source || 'enquiry_form',
@@ -51,9 +67,9 @@ router.post('/', upload.array('attachments', 5), async (req, res) => {
             phone: phone || null,
             company_name: companyName || null,
             city: city || null,
-            service: service || null,
-            sub_service: subService || null,
-            requirement_type: requirementType || null,
+            service: dbService || null,
+            sub_service: dbSubService || null,
+            requirement_type: dbRequirementType || null,
             requirement_desc: requirementDesc || message || null,
             expected_timeline: timeline || null,
             attachments: attachmentUrls,

@@ -50,9 +50,9 @@ const CardDesktop = ({ i, title, description, image, progress, total, color, ico
 
     const y = useTransform(activeIndex, (current) => {
         const diff = i - current;
-        if (diff <= 0) return `${diff * 800}px`; // Exit
+        if (diff <= 0) return `${diff * 550}px`; // Exit
         if (current < 0.1) return `${diff * -35}px`; // Stack
-        return `${diff * 800}px`; // Feed
+        return `${diff * 550}px`; // Feed
     });
 
     const scale = useTransform(activeIndex, (current) => {
@@ -192,7 +192,7 @@ const WhatWeDoDesktop = () => {
                             </div>
                         </div>
                         <div className="relative h-full flex items-center justify-start  pt-20">
-                            <div className="relative w-full h-[500px] flex justify-center">
+                            <div className="relative w-full h-[450px] flex justify-center">
                                 {services.map((service, i) => (
                                     <CardDesktop key={i} i={i} {...service} progress={scrollYProgress} total={services.length} />
                                 ))}

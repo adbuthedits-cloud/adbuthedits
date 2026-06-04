@@ -11,7 +11,7 @@ export default function Document() {
           rel="preload"
           as="image"
           href="https://assets.adbuthverse.com/website-assets/pages/home/hero-section.webp"
-          fetchPriority="high"
+          fetchpriority="high"
         />
 
         {/* ── Preconnect to CDN origins for faster image/video loading ── */}

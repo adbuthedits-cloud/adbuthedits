@@ -18,7 +18,13 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
   const [designingOpen, setDesigningOpen] = useState(false)
   const [learningOpen, setLearningOpen] = useState(false)
 
-  const { user, logout } = useAuth()
+  const { user, logout, isProfileComplete, openProfileModal } = useAuth()
+
+  const [imageError, setImageError] = useState(false)
+
+  useEffect(() => {
+    setImageError(false)
+  }, [user])
 
   const handleLoginClick = () => {
     // router.asPath sometimes lags or is inconsistent during transitions
@@ -298,12 +304,13 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                 aria-expanded={profileOpen}
                 className={`${highlight === 'profile' ? 'ring-2 ring-purple-400' : ''} w-10 h-10 rounded-full border-2 border-purple-700 overflow-hidden flex items-center justify-center transition-all duration-300`}
               >
-                {user.profile_picture ? (
+                {user.profile_picture && !imageError ? (
                   <img
                     src={user.profile_picture}
                     alt={user.name || 'Profile picture'}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
+                    onError={() => setImageError(true)}
                   />
                 ) : (
                   <div className="w-full h-full bg-purple-700 hover:bg-transparent hover:text-purple-700 flex items-center justify-center text-white text-sm font-bold transition-all duration-300" aria-hidden="true">
@@ -331,10 +338,25 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                       className="absolute top-full right-0 mt-2 w-48 bg-white text-black rounded-md shadow-xl overflow-visible z-[60]"
                     >
                       <div className="py-2 flex flex-col text-sm">
-                        {/* User Email */}
+                        {/* User Email/Phone + Incomplete Profile Badge */}
                         <div className="px-4 py-2 border-b border-gray-100 mb-1">
                           <p className="text-xs text-gray-400 font-medium">Signed in as</p>
-                          <p className="text-[10px] font-bold text-gray-900 truncate" title={user?.email}>{user?.email}</p>
+                          <p className="text-[10px] font-bold text-gray-900 truncate" title={user?.email || ''}>
+                            {user?.email
+                              ? user.email
+                              : user?.phone_number
+                              ? (() => { try { const p = typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number; return `${p.code} ${p.number}`; } catch { return 'Phone User'; } })()
+                              : 'User'
+                            }
+                          </p>
+                          {!isProfileComplete(user) && (
+                            <button
+                              onClick={() => { openProfileModal({}); }}
+                              className="mt-1 text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full hover:bg-amber-100 transition-colors flex items-center gap-1 w-full justify-center"
+                            >
+                              ⚠ Complete Profile
+                            </button>
+                          )}
                         </div>
                         <motion.div variants={dropdownItemVariants}>
                           <Link href="/wishlist" className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
@@ -583,12 +605,13 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                     <div className="flex items-center gap-2 cursor-pointer">
                       {/* Smart Avatar (Mobile) */}
                       <div className="w-8 h-8 rounded-full border border-purple-700 overflow-hidden flex items-center justify-center">
-                        {user.profile_picture ? (
+                        {user.profile_picture && !imageError ? (
                           <img
                             src={user.profile_picture}
                             alt={user.name || 'Profile'}
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
+                            onError={() => setImageError(true)}
                           />
                         ) : (
                           <div className="w-full h-full bg-purple-700 flex items-center justify-center text-white text-xs font-bold">

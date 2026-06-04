@@ -116,7 +116,7 @@ export default function ContactUs() {
                         {/* Text Content */}
                         <div className="lg:mb-20">
                             <h2 className="text-3xl lg:text-4xl font-bold text-black mb-6 leading-tight w-96">
-                                You are one step closer<br /> to build your perfect product
+                                You are one step closer<br /> to build your perfect stories
                             </h2>
                             <p className="text-xl font-bold text-black">Just send a Message</p>
                         </div>

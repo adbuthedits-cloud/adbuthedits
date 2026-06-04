@@ -260,7 +260,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                         transition={{ delay: 0.2 }}
                         className="flex flex-col sm:flex-row items-center md:items-start  justify-start gap-4"
                     >
-                        <Link href="#browse" className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+                        <Link href="/shop" className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
                             Explore Templates
                         </Link>
                     </motion.div>

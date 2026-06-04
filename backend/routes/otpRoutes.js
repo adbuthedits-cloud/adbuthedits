@@ -289,8 +289,37 @@ router.post('/send-email-otp', async (req, res) => {
 
         let user = await User.findOne({ where: { email } });
 
-        // For login / forgot_password / change_password_settings — user must exist
-        if ((purpose === 'email_login' || purpose === 'forgot_password' || purpose === 'change_password_settings') && !user) {
+        // ── NEW USER PATH for email_login ──────────────────────────────────────
+        // If no account found and purpose is email_login → allow new user registration
+        // via a short-lived pendingToken (no DB write until OTP verified)
+        if (purpose === 'email_login' && !user) {
+            const otp = generateOtp();
+            const expires = otpExpiry();
+
+            const pendingToken = jwt.sign(
+                {
+                    type: 'pending_email_login',
+                    email,
+                    otp_code: otp,
+                    otp_expires_at: expires.toISOString(),
+                },
+                process.env.JWT_SECRET || 'secretkey',
+                { expiresIn: '15m' }
+            );
+
+            await sendOtpEmail({ to: email, otp, purpose: 'email_login' });
+
+            return res.json({
+                success: true,
+                isNewUser: true,
+                pendingToken,
+                msg: 'OTP sent! This email is not registered yet. Verify OTP to create your account.'
+            });
+        }
+        // ──────────────────────────────────────────────────────────────────────
+
+        // For forgot_password / change_password_settings — user must exist
+        if ((purpose === 'forgot_password' || purpose === 'change_password_settings') && !user) {
             return res.status(404).json({ msg: 'No account found with this email.' });
         }
 
@@ -324,7 +353,63 @@ router.post('/send-email-otp', async (req, res) => {
  */
 router.post('/verify-email-otp', async (req, res) => {
     try {
-        const { email, otp, purpose } = req.body;
+        const { email, otp, purpose, pendingToken } = req.body;
+
+        // ── NEW USER PATH: pendingToken present (email not in DB, new registration via login page) ──
+        if (pendingToken) {
+            let pending;
+            try {
+                pending = jwt.verify(pendingToken, process.env.JWT_SECRET || 'secretkey');
+            } catch (e) {
+                return res.status(400).json({ msg: 'Session expired. Please request a new OTP.' });
+            }
+
+            if (pending.type !== 'pending_email_login') {
+                return res.status(400).json({ msg: 'Invalid session token.' });
+            }
+
+            // Verify OTP from token
+            if (!pending.otp_expires_at || new Date() > new Date(pending.otp_expires_at)) {
+                return res.status(400).json({ msg: 'OTP has expired. Please request a new one.' });
+            }
+            if (pending.otp_code !== String(otp).trim()) {
+                return res.status(400).json({ msg: 'Incorrect OTP. Please try again.' });
+            }
+
+            // Double-check email not taken now (race condition)
+            const existing = await User.findOne({ where: { email: pending.email } });
+            if (existing && existing.email_verified) {
+                return res.status(400).json({ field: 'email', msg: 'An account with this email was just created. Please log in.' });
+            }
+            if (existing && !existing.email_verified) {
+                await existing.destroy();
+            }
+
+            // Create minimal user (profile incomplete — will need completion)
+            const newUser = await User.create({
+                email: pending.email,
+                email_verified: true,
+                auth_provider: 'local',
+            });
+
+            console.log(`[Email Login] New user created via OTP login: ${newUser.email} (ID: ${newUser.user_id})`);
+
+            const payload = { user: { id: newUser.user_id, role: newUser.role, type: 'customer' } };
+            const token = await new Promise((resolve, reject) => {
+                jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, t) => {
+                    if (err) reject(err); else resolve(t);
+                });
+            });
+
+            return res.json({
+                success: true,
+                isNewUser: true,
+                token,
+                user: { id: newUser.user_id, email: newUser.email, role: newUser.role, email_verified: true },
+                msg: 'Logged in! Please complete your profile to continue.'
+            });
+        }
+        // ─────────────────────────────────────────────────────────────────────────
 
         if (!email || !otp || !purpose) {
             return res.status(400).json({ msg: 'Email, OTP, and purpose are required.' });
@@ -359,7 +444,7 @@ router.post('/verify-email-otp', async (req, res) => {
 
         await user.update(updates);
 
-        // For forgot_password — don't issue full JWT, issue a short-lived reset token
+        // For forgot_password — issue short-lived reset token
         if (purpose === 'forgot_password') {
             const resetToken = jwt.sign(
                 { userId: user.user_id, purpose: 'password_reset' },
@@ -369,10 +454,13 @@ router.post('/verify-email-otp', async (req, res) => {
             return res.json({ success: true, resetToken, msg: 'OTP verified. You may now reset your password.' });
         }
 
-        // For change_password_settings — just return success (will be verified directly in update password request)
+        // For change_password_settings — just return success
         if (purpose === 'change_password_settings') {
             return res.json({ success: true, msg: 'OTP verified successfully.' });
         }
+
+        // Check if profile is complete (existing user)
+        const profileComplete = !!(user.first_name && user.email && user.phone_number);
 
         // For email_login or email_verify — issue full auth JWT
         const payload = { user: { id: user.user_id, role: user.role, type: 'customer' } };
@@ -384,6 +472,7 @@ router.post('/verify-email-otp', async (req, res) => {
 
         res.json({
             success: true,
+            isNewUser: !profileComplete,
             token,
             user: { id: user.user_id, email: user.email, role: user.role, email_verified: true },
             msg: purpose === 'email_verify' ? 'Email verified successfully!' : 'Logged in successfully!'
@@ -699,12 +788,17 @@ router.post('/firebase-phone-verify', async (req, res) => {
             });
         });
 
+        // Determine if this user needs to complete their profile
+        const isNewUser = !user.first_name || !user.email || !user.phone_number;
+
         res.json({
             success: true,
+            isNewUser,
             token,
             user: {
                 id: user.user_id,
                 email: user.email || null,
+                phone_number: user.phone_number || null,
                 role: user.role,
                 phone_verified: true,
             },

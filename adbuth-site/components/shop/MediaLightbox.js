@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Play, Image as ImageIcon } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Image as ImageIcon, Volume2, VolumeX } from 'lucide-react';
 
 export default function MediaLightbox({ media = [], initialIndex = 0, onClose }) {
     const [index, setIndex] = useState(initialIndex);
+    const [isMuted, setIsMuted] = useState(true);
     const videoRef = useRef(null);
     const touchStartX = useRef(null);
 
@@ -19,6 +20,13 @@ export default function MediaLightbox({ media = [], initialIndex = 0, onClose })
             videoRef.current.play().catch(() => { });
         }
     }, [index]);
+
+    // Sync volume/muted state with ref
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.muted = isMuted;
+        }
+    }, [isMuted, index]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -119,15 +127,29 @@ export default function MediaLightbox({ media = [], initialIndex = 0, onClose })
                                 }}
                             >
                                 {current?.type === 'video' ? (
-                                    <video
-                                        ref={videoRef}
-                                        src={current.src}
-                                        className="h-[70vh] w-auto max-w-full object-contain mx-auto"
-                                        controls
-                                        autoPlay
-                                        playsInline
-                                        loop
-                                    />
+                                    <>
+                                        <video
+                                            ref={videoRef}
+                                            src={current.src}
+                                            className="h-[70vh] w-auto max-w-full object-contain mx-auto"
+                                            controls
+                                            autoPlay
+                                            muted={isMuted}
+                                            playsInline
+                                            loop
+                                        />
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsMuted(!isMuted);
+                                            }}
+                                            className="absolute top-4 right-4 z-40 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all border border-white/10 hover:scale-105 active:scale-95 flex items-center justify-center pointer-events-auto shadow-lg outline-none"
+                                            aria-label={isMuted ? "Unmute video" : "Mute video"}
+                                            title={isMuted ? "Unmute" : "Mute"}
+                                        >
+                                            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                                        </button>
+                                    </>
                                 ) : (
                                     <img
                                         src={current?.src}

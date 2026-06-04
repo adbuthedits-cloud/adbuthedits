@@ -1,78 +1,168 @@
+import { Lock, Database, FileText, Trash2, Share2, Cookie, Mail } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
 
+const SECTIONS = [
+    {
+        id: "intro",
+        title: "1. Introduction",
+        content: "Welcome to Adbuth Verse. We respect your privacy and are committed to safeguarding your personal data. This Privacy Policy details how we handle and protect your information when you use our website, services, and associated social media logins.",
+        icon: Lock
+    },
+    {
+        id: "collect",
+        title: "2. Information We Collect",
+        content: (
+            <div className="space-y-3">
+                <p>We collect personal information directly provided by you, automatically when visiting our site, or via linked third-party authentication services:</p>
+                <ul className="list-disc ml-5 space-y-1.5">
+                    <li><strong className="text-slate-900">Account profile credentials:</strong> First name, last name, email address, phone contact details, and brand name preferences.</li>
+                    <li><strong className="text-slate-900">Social Login Authentication Data:</strong> If you connect via Facebook, Google, or X (Twitter) logins, we receive your public profile name, verified email, and profile avatar as authorized by your platform permissions.</li>
+                    <li><strong className="text-slate-900">Customization Briefs:</strong> Form answers, text details, and uploaded media attachments (photos/videos) that you submit to customize templates.</li>
+                </ul>
+            </div>
+        ),
+        icon: Database
+    },
+    {
+        id: "use",
+        title: "3. How We Use Your Information",
+        content: (
+            <div className="space-y-3">
+                <p>Adbuth Verse uses your collected data for the following essential business purposes:</p>
+                <ul className="list-disc ml-5 space-y-1.5">
+                    <li>To create, verify, and manage user accounts securely.</li>
+                    <li>To process transactions, complete customizations, and render template orders.</li>
+                    <li>To send automated notifications (such as sign-up OTP codes, order updates, and receipts).</li>
+                    <li>To improve website performance, monitor page loading times, and prevent bot abuse.</li>
+                </ul>
+            </div>
+        ),
+        icon: FileText
+    },
+    {
+        id: "deletion",
+        title: "4. Data Deletion (Your Rights)",
+        content: (
+            <div className="space-y-4">
+                <p>In strict compliance with Facebook, Google, and global privacy standards, you have the absolute right to request the permanent deletion of your account and all associated profile, transaction, and customization files from our servers.</p>
+                <div className="bg-purple-50 border border-purple-200 p-5 sm:p-6 rounded-xl mt-2">
+                    <p className="font-bold text-purple-700 mb-2 flex items-center gap-2">
+                        <Trash2 size={16} /> How to Request Permanent Data Deletion:
+                    </p>
+                    <ol className="list-decimal ml-5 space-y-2 text-sm sm:text-base">
+                        <li>Send an email to <strong className="text-slate-900 font-medium">adbuthedits@gmail.com</strong> with the subject line <strong className="text-slate-900 font-mono font-medium">"Data Deletion Request"</strong>.</li>
+                        <li>Include your registered email address or account username in the email body.</li>
+                        <li>Our system administrators will process your request and permanently delete all your data and account records within <strong className="text-purple-700">48 to 72 hours</strong>. We will send a final email confirmation once complete.</li>
+                    </ol>
+                </div>
+            </div>
+        ),
+        icon: Trash2
+    },
+    {
+        id: "sharing",
+        title: "5. Data Sharing",
+        content: "We do not sell, rent, or trade your personal data to marketing brokers or third parties. We share information only with trusted service providers necessary to run our platform operations (such as Razorpay for secure payments, Firebase for mobile authentication, and AWS for transactional email delivery).",
+        icon: Share2
+    },
+    {
+        id: "cookies",
+        title: "6. Cookies",
+        content: "We use essential functional cookies and local session storage keys to keep you logged in, preserve your active shopping cart state, and remember your dashboard settings. You can manage, disable, or delete cookies via your browser preferences, though doing so may limit your ability to access secure areas of our website.",
+        icon: Cookie
+    },
+    {
+        id: "contact",
+        title: "7. Contact Us",
+        content: (
+            <div>
+                <p>If you have any questions, compliance concerns, or general comments regarding this Privacy Policy or data storage practices, please reach out to our privacy officer:</p>
+                <p className="mt-4 font-bold text-slate-900 flex items-center gap-2">
+                    <Mail size={16} className="text-purple-700" /> Email: adbuthedits@gmail.com
+                </p>
+            </div>
+        ),
+        icon: Mail
+    }
+];
+
 export default function Privacy() {
     const { seoData } = useSeo('privacy');
     return (
-        <div className="bg-white min-h-screen font-sans pt-24">
+        <div className="bg-slate-50 min-h-screen text-slate-800 font-sans antialiased selection:bg-purple-100 selection:text-purple-900">
             <SeoHead
                 title={seoData?.meta_title || seoData?.title || "Privacy Policy | Adbuth"}
                 description={seoData?.meta_description || seoData?.description || "Privacy Policy for Adbuth Verse."}
                 data={seoData}
             />
-            <Navbar isdark={false} />
+            
+            <Navbar isdark={false} highlight="" />
 
-            <div className="max-w-4xl mx-auto px-6 py-20 text-gray-800">
-                <h1 className="text-4xl font-bold mb-8 text-[#7D287E]">Privacy Policy</h1>
-                <p className="mb-4 text-sm text-gray-500">Last updated: {new Date().toLocaleDateString()}</p>
+            {/* Header */}
+            <div className="bg-white border-b border-slate-200 pt-32 pb-16">
+                <div className="max-w-6xl mx-auto px-6">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 mb-3 uppercase tracking-wider">
+                        Data Protection
+                    </span>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                        Privacy Policy
+                    </h1>
+                    <p className="mt-2 text-slate-500 max-w-2xl text-sm sm:text-base leading-relaxed">
+                        We value your privacy and are committed to protecting your personal data. This policy outlines how we handle and delete your information.
+                    </p>
+                </div>
+            </div>
 
-                <div className="space-y-8 leading-relaxed text-gray-700">
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">1. Introduction</h2>
-                        <p>Welcome to Adbuth Verse. We value your privacy and are committed to protecting your personal data. This policy outlines how we handle your information when you use our website and services, including Social Login features.</p>
-                    </section>
+            {/* Main Content Grid */}
+            <div className="max-w-6xl mx-auto px-6 py-12">
+                <div className="flex flex-col lg:flex-row gap-10">
+                    {/* Sticky Sidebar Nav (Desktop) */}
+                    <aside className="hidden lg:block sticky top-28 self-start w-56 shrink-0">
+                        <nav className="space-y-1">
+                            {SECTIONS.map((sec) => (
+                                <a
+                                    key={sec.id}
+                                    href={`#${sec.id}`}
+                                    className="block px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:text-slate-950 hover:bg-slate-100 transition-colors"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        document.getElementById(sec.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }}
+                                >
+                                    {sec.title}
+                                </a>
+                            ))}
+                        </nav>
+                    </aside>
 
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">2. Information We Collect</h2>
-                        <p>We collect information that you provide directly to us or via third-party services:</p>
-                        <ul className="list-disc ml-6 mt-2 space-y-2">
-                            <li><strong>Account Information:</strong> Name, email address, and profile details.</li>
-                            <li><strong>Social Media Data:</strong> If you choose to log in via Facebook, Google, or X (Twitter), we receive your public profile information and email address as permitted by your privacy settings on those platforms.</li>
-                            <li><strong>Usage Data:</strong> Information about how you interact with our site.</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">3. How We Use Your Information</h2>
-                        <p>We use your data to:</p>
-                        <ul className="list-disc ml-6 mt-2 space-y-2">
-                            <li>Create and manage your user account.</li>
-                            <li>Provide customer support and process transactions.</li>
-                            <li>Improve our website performance and user experience.</li>
-                            <li>Communicate updates, promotions, and service-related notices.</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">4. Data Deletion (Your Rights)</h2>
-                        <p>In compliance with Facebook and other platform requirements, we provide a clear way for you to request the deletion of your data:</p>
-                        <div className="bg-purple-50 p-6 rounded-xl border border-purple-100 mt-4">
-                            <p className="font-semibold text-[#7D287E]">To delete your account and associated data:</p>
-                            <ol className="list-decimal ml-6 mt-2 space-y-2">
-                                <li>Send an email to <strong>adbuthedits@gmail.com</strong> with the subject "Data Deletion Request".</li>
-                                <li>Include your registered email address or Username.</li>
-                                <li>We will process your request and permanently delete your data within 48-72 hours.</li>
-                            </ol>
-                        </div>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">5. Data Sharing</h2>
-                        <p>We do NOT sell your personal data to third parties. We only share information with service providers (like payment processors or authentication services) necessary to operate our business.</p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">6. Cookies</h2>
-                        <p>We use cookies to keep you logged in and remember your preferences. You can disable cookies in your browser settings, but some features may stop working.</p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">7. Contact Us</h2>
-                        <p>If you have any questions about this Privacy Policy or your data, please contact us at:</p>
-                        <p className="mt-2 font-semibold">Email: adbuthedits@gmail.com</p>
-                    </section>
+                    {/* Content Section */}
+                    <div className="flex-1 min-w-0 space-y-8">
+                        {SECTIONS.map((sec) => {
+                            const IconComponent = sec.icon;
+                            return (
+                                <div
+                                    key={sec.id}
+                                    id={sec.id}
+                                    className="scroll-mt-28 bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-sm transition-shadow hover:shadow-md duration-300"
+                                >
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+                                            <IconComponent size={20} />
+                                        </div>
+                                        <h2 className="text-xl font-bold text-slate-950">
+                                            {sec.title}
+                                        </h2>
+                                    </div>
+                                    <div className="text-slate-600 leading-relaxed text-sm sm:text-base">
+                                        {sec.content}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 

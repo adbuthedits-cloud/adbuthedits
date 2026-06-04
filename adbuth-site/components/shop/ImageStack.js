@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Volume2, VolumeX } from 'lucide-react';
 
 // `media` prop: array of { src: string, type: 'image' | 'video' }
 // `images` prop: legacy string array (backwards compat)
@@ -16,6 +16,7 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
     const videoRef = useRef(null);
     const touchStartX = useRef(null);
     const [index, setIndex] = useState(0);
+    const [isMuted, setIsMuted] = useState(true);
 
     const nextCard = () => setIndex((prev) => (prev + 1) % mediaItems.length);
     const prevCard = () => setIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length);
@@ -26,6 +27,13 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
             videoRef.current.play().catch(() => { });
         }
     }, [index]);
+
+    // Sync volume/muted state with ref
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.muted = isMuted;
+        }
+    }, [isMuted, index]);
 
     // Mouse wheel navigation (desktop)
     useEffect(() => {
@@ -128,16 +136,31 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                             className={`absolute rounded-2xl sm:rounded-3xl overflow-hidden  bg-black border border-gray-100 ${isCenter ? 'cursor-zoom-in' : 'cursor-pointer'}`}
                         >
                             {item.type === 'video' ? (
-                                <video
-                                    ref={isCenter ? videoRef : null}
-                                    src={item.src}
-                                    className="w-full h-full object-cover pointer-events-none"
-                                    autoPlay={isCenter}
-                                    muted
-                                    loop
-                                    playsInline
-                                    preload="metadata"
-                                />
+                                <>
+                                    <video
+                                        ref={isCenter ? videoRef : null}
+                                        src={item.src}
+                                        className="w-full h-full object-cover pointer-events-none"
+                                        autoPlay={isCenter}
+                                        muted={isMuted}
+                                        loop
+                                        playsInline
+                                        preload="metadata"
+                                    />
+                                    {isCenter && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsMuted(!isMuted);
+                                            }}
+                                            className="absolute top-4 right-4 z-40 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all border border-white/10 hover:scale-105 active:scale-95 flex items-center justify-center pointer-events-auto shadow-lg"
+                                            aria-label={isMuted ? "Unmute video" : "Mute video"}
+                                            title={isMuted ? "Unmute" : "Mute"}
+                                        >
+                                            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                                        </button>
+                                    )}
+                                </>
                             ) : (
                                 <img
                                     src={item.src}

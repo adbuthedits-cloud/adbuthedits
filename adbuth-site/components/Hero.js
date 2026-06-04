@@ -16,7 +16,7 @@ export default function Hero() {
           alt="Hero Background"
           fill
           priority
-          fetchPriority="high"
+          fetchpriority="high"
           quality={80}
           sizes="100vw"
           className="object-cover"

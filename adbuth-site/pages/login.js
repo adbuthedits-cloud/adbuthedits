@@ -127,7 +127,7 @@ function Countdown({ seconds, onExpire }) {
 export default function Login() {
     const { seoData } = useSeo('login');
     const router = useRouter();
-    const { login, user, loading: authLoading } = useAuth();
+    const { login, user, loading: authLoading, openProfileModal, refreshUser } = useAuth();
     const isLoginAction = useRef(false);
 
     // Tabs: 'password' | 'email_otp' | 'phone_otp'
@@ -147,6 +147,8 @@ export default function Login() {
     const [newPassword, setNewPassword] = useState('');
     const [showNewPwd, setShowNewPwd] = useState(false);
     const [otpTimer, setOtpTimer] = useState(0);
+    const [emailPendingToken, setEmailPendingToken] = useState(null); // for new user email OTP flow
+    const [isNewEmailUser, setIsNewEmailUser] = useState(false);
 
     // ── Firebase Phone OTP state
     const [countryCode, setCountryCode] = useState('+91');
@@ -253,6 +255,7 @@ export default function Login() {
         e?.preventDefault();
         if (!otpEmail) return setError('Please enter your email address.');
         setError(''); setIsSubmitting(true);
+        setEmailPendingToken(null); setIsNewEmailUser(false);
         try {
             const purpose = forgotMode ? 'forgot_password' : 'email_login';
             const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
@@ -268,8 +271,16 @@ export default function Login() {
                 throw new Error(`Server returned invalid response (Status ${res.status}).`);
             }
             if (!res.ok) throw new Error(data.msg || 'Failed to send OTP');
+
+            // New user path: backend returned a pendingToken
+            if (data.isNewUser && data.pendingToken) {
+                setEmailPendingToken(data.pendingToken);
+                setIsNewEmailUser(true);
+                setSuccess('OTP sent! This will create a new account for ' + otpEmail);
+            } else {
+                setSuccess('OTP sent! Check your email.');
+            }
             setOtpStep('verify'); setEmailOtpValue(''); setOtpTimer(600);
-            setSuccess('OTP sent! Check your email.');
         } catch (err) { setError(err.message); }
         setIsSubmitting(false);
     };
@@ -281,10 +292,14 @@ export default function Login() {
         setError(''); setIsSubmitting(true);
         try {
             const purpose = forgotMode ? 'forgot_password' : 'email_login';
+            const body = { email: otpEmail, otp: emailOtpValue, purpose };
+            // Pass pendingToken if this is a new user
+            if (emailPendingToken) body.pendingToken = emailPendingToken;
+
             const res = await fetch(`${API_URL}/api/otp/verify-email-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: otpEmail, otp: emailOtpValue, purpose }),
+                body: JSON.stringify(body),
             });
             const text = await res.text();
             let data;
@@ -294,14 +309,31 @@ export default function Login() {
                 throw new Error(`Server returned invalid response (Status ${res.status}).`);
             }
             if (!res.ok) throw new Error(data.msg || 'Verification failed');
+
             if (forgotMode) {
                 setResetToken(data.resetToken);
                 setOtpStep('reset');
                 setSuccess('OTP verified! Set your new password.');
             } else {
                 localStorage.setItem('token', data.token);
-                setSuccess('Logged in successfully!');
-                setTimeout(() => { window.location.href = '/'; }, 800);
+                isLoginAction.current = true;
+                // Refresh full user data
+                const freshUser = await refreshUser();
+
+                if (data.isNewUser) {
+                    // Show profile completion popup with email pre-filled
+                    openProfileModal({ email: otpEmail });
+                    setSuccess('Welcome! Please complete your profile.');
+                } else {
+                    setSuccess('Logged in successfully!');
+                    const intended = localStorage.getItem('intendedDestination');
+                    if (intended) {
+                        localStorage.removeItem('intendedDestination');
+                        setTimeout(() => { window.location.href = intended; }, 600);
+                    } else {
+                        setTimeout(() => { window.location.href = '/'; }, 800);
+                    }
+                }
             }
         } catch (err) { setError(err.message); }
         setIsSubmitting(false);
@@ -409,8 +441,26 @@ export default function Login() {
                 setSuccess('Phone verified! Set your new password.');
             } else {
                 localStorage.setItem('token', data.token);
-                setSuccess('Logged in successfully!');
-                setTimeout(() => { window.location.href = '/'; }, 800);
+                isLoginAction.current = true;
+                // Refresh full user data
+                await refreshUser();
+
+                if (data.isNewUser) {
+                    // Show profile completion popup with phone pre-filled
+                    openProfileModal({
+                        phone: { code: countryCode, number: phoneNumber.replace(/[\s\-()]/g, '') }
+                    });
+                    setSuccess('Welcome! Please complete your profile.');
+                } else {
+                    setSuccess('Logged in successfully!');
+                    const intended = localStorage.getItem('intendedDestination');
+                    if (intended) {
+                        localStorage.removeItem('intendedDestination');
+                        setTimeout(() => { window.location.href = intended; }, 600);
+                    } else {
+                        setTimeout(() => { window.location.href = '/'; }, 800);
+                    }
+                }
             }
 
         } catch (err) {
