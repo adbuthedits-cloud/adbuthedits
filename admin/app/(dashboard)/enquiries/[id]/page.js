@@ -11,6 +11,7 @@ import {
 import { getAuthToken, getAuthUser } from '../../../../utils/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import withPermission from '../../../../components/withPermission';
 
 const STATUS_CONFIG = {
     pending:     { label: 'Pending',    bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',  dot: 'bg-amber-400' },
@@ -68,7 +69,7 @@ function renderFormattedMessage(text) {
     });
 }
 
-export default function EnquiryDetailPage() {
+function EnquiryDetailPage() {
     const router = useRouter();
     const params = useParams();
     const id = params?.id;
@@ -452,3 +453,6 @@ function DetailRow({ icon, label, value }) {
         </div>
     );
 }
+
+export default withPermission(EnquiryDetailPage, 'enquiries');
+

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import AccessDenied from "../../../components/AccessDenied";
+import withPermission from "../../../components/withPermission";
 import { getAuthToken, getAuthUser, hasPermission } from "../../../utils/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -22,6 +23,7 @@ const ALL_MODULES = [
     { key: "blog_categories", label: "Blog Categories",  actions: ["view", "edit", "delete"] },
     { key: "reviews",         label: "Reviews",          actions: ["view", "edit", "delete"] },
     { key: "payments",        label: "Payments",         actions: ["view"] },
+    { key: "enquiries",       label: "Enquiries",        actions: ["view", "edit"] },
     { key: "marketing",       label: "Coupons & Promo",  actions: ["view", "edit", "delete"] },
     { key: "users",           label: "Customers",        actions: ["view", "edit", "delete"] },
     { key: "staff",           label: "Staff Members",    actions: ["view", "edit", "delete"] },
@@ -215,7 +217,7 @@ function RolesPage() {
     const canEdit = hasPermission(user, "staff", "edit") && isSuperAdmin;
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <div className="flex items-center gap-3 mb-1">
@@ -410,4 +412,4 @@ function RolesPage() {
     );
 }
 
-export default RolesPage;
+export default withPermission(RolesPage, 'staff');

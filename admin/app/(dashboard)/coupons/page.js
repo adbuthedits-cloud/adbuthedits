@@ -259,7 +259,7 @@ function Coupons() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Coupons & Promo Codes</h1>

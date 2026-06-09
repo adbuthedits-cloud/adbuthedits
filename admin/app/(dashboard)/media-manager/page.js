@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import AccessDenied from "../../../components/AccessDenied";
+import withPermission from "../../../components/withPermission";
 import { getAuthToken, getAuthUser, hasPermission } from "../../../utils/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -224,7 +225,7 @@ function UploadZone({ onUpload, uploading, prefix }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export default function MediaManagerPage() {
+function MediaManagerPage() {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [isClient, setIsClient] = useState(false);
@@ -492,7 +493,7 @@ export default function MediaManagerPage() {
     const filteredFiles = files.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
 
             {/* ── Header ─────────────────────────────────────────────────── */}
             <div className="flex items-center justify-between mb-6">
@@ -893,3 +894,6 @@ export default function MediaManagerPage() {
         </div>
     );
 }
+
+export default withPermission(MediaManagerPage, 'media_manager');
+

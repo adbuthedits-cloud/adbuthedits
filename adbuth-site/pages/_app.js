@@ -69,7 +69,7 @@ function MyApp({ Component, pageProps }) {
           />
           {loadDelayed && (
             <>
-              <PromoPopup />
+              {router.pathname !== '/login' && <PromoPopup />}
               <ZohoSalesIQ />
             </>
           )}

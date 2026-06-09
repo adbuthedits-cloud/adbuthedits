@@ -241,8 +241,12 @@ export default function AdminLayout({ children }) {
                     if (res.data && res.data.user) {
                         const updatedUser = res.data.user;
                         localStorage.setItem('admin_user', JSON.stringify(updatedUser)); // Keep global state synced
-                        if (JSON.stringify(initialUser?.permissions) !== JSON.stringify(updatedUser.permissions)) {
-                            setUserContext(updatedUser); // Force layout re-render for new sidebar links
+                        
+                        // Dispatch event to inform child pages (like the Dashboard) that the user details have refreshed
+                        window.dispatchEvent(new CustomEvent('adminUserUpdated', { detail: updatedUser }));
+
+                        if (JSON.stringify(initialUser) !== JSON.stringify(updatedUser)) {
+                            setUserContext(updatedUser); // Force layout re-render for new sidebar links or profile details
                         }
                     }
                 } catch (e) {

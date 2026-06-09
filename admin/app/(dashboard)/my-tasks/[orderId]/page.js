@@ -249,6 +249,23 @@ function TaskDetailPage() {
         if (token) fetchOrder();
     }, [token, refreshKey, fetchOrder]);
 
+    const [pickingUp, setPickingUp] = useState(false);
+
+    const handlePickup = async () => {
+        if (!token || !orderId) return;
+        setPickingUp(true);
+        try {
+            await axios.post(`${apiUrl}/api/admin/orders/${orderId}/pickup`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setRefreshKey(k => k + 1);
+        } catch (err) {
+            alert(err.response?.data?.error || "Failed to accept order.");
+        } finally {
+            setPickingUp(false);
+        }
+    };
+
     const handleStageSubmit = async () => {
         if (!stage) return;
         setSubmittingStage(true);
@@ -294,7 +311,7 @@ function TaskDetailPage() {
     const canDeliver = hasPermission(user, "orders", "edit") || isSuperAdmin;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="w-full space-y-6">
             {/* Breadcrumb + Actions */}
             <div className="flex items-center justify-between">
                 <Link href="/my-tasks" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
@@ -325,10 +342,26 @@ function TaskDetailPage() {
                         </div>
                         <p className="text-gray-500 text-sm">Assigned: {formatTime(order.assigned_at)} · Picked up: {formatTime(order.picked_up_at)}</p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-gray-500 text-xs mb-1">Order Total</p>
-                        <p className="text-white font-bold text-xl">₹{order.total_amount?.toLocaleString()}</p>
-                        {order.discount_amount > 0 && <p className="text-green-400 text-xs">-₹{order.discount_amount?.toLocaleString()} discount</p>}
+                    <div className="flex items-center gap-4">
+                        {order.working_status === "assigned" && (
+                            <button
+                                onClick={handlePickup}
+                                disabled={pickingUp}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-[#1a1025] font-bold rounded-xl text-sm shadow-lg shadow-amber-500/20 disabled:opacity-50 transition-all shrink-0"
+                            >
+                                {pickingUp ? (
+                                    <FontAwesomeIcon icon={faSpinner} spin />
+                                ) : (
+                                    <FontAwesomeIcon icon={faClipboardCheck} />
+                                )}
+                                Accept Order
+                            </button>
+                        )}
+                        <div className="text-right">
+                            <p className="text-gray-500 text-xs mb-1">Order Total</p>
+                            <p className="text-white font-bold text-xl">₹{order.total_amount?.toLocaleString()}</p>
+                            {order.discount_amount > 0 && <p className="text-green-400 text-xs">-₹{order.discount_amount?.toLocaleString()} discount</p>}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -380,7 +413,7 @@ function TaskDetailPage() {
                                                 <p className="text-white font-semibold text-sm">{item.product?.title || `Item #${idx + 1}`}</p>
                                                 {item.product?.products_id && (
                                                     <Link
-                                                        href={`/products/${item.product.products_id}`}
+                                                        href={`/products/view/${item.product.products_id}`}
                                                         target="_blank"
                                                         className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 bg-[#a78bfa]/10 text-[#a78bfa] border border-[#a78bfa]/20 rounded-full hover:bg-[#a78bfa]/20 transition-all"
                                                     >
@@ -388,6 +421,9 @@ function TaskDetailPage() {
                                                     </Link>
                                                 )}
                                             </div>
+                                            {item.product?.internal_sku && (
+                                                <p className="text-xs text-purple-400 font-mono mt-0.5">SKU: {item.product.internal_sku}</p>
+                                            )}
                                             <p className="text-gray-500 text-xs mt-0.5 flex items-center gap-2">
                                                 <span>Qty: {item.quantity} · ₹{item.price_at_purchase?.toLocaleString()}</span>
                                                 {countMediaFiles(item.customization) > 0 && (
@@ -407,19 +443,28 @@ function TaskDetailPage() {
                                     </div>
 
                                     {/* Customization */}
-                                    {item.customization && Object.keys(item.customization).length > 0 && (
-                                        <div className="p-4 border-t border-[#2d1b4e]">
-                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Customer Form Data</p>
-                                            <div className="space-y-3">
-                                                {Object.entries(item.customization).map(([key, val]) => (
-                                                    <div key={key} className="bg-[#130C1C] rounded-lg p-3">
-                                                        <p className="text-gray-500 text-xs capitalize mb-1">{key.replace(/_/g, " ")}</p>
-                                                        <CustomizationValue val={val} label={key} />
-                                                    </div>
-                                                ))}
+                                    {(() => {
+                                        const rawCust = item.customization;
+                                        let parsedCust = rawCust;
+                                        if (typeof rawCust === "string") {
+                                            try { parsedCust = JSON.parse(rawCust); } catch(e) {}
+                                        }
+                                        const cust = parsedCust && typeof parsedCust === "object" ? parsedCust : null;
+                                        if (!cust || Object.keys(cust).length === 0) return null;
+                                        return (
+                                            <div className="p-4 border-t border-[#2d1b4e]">
+                                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Customer Form Data</p>
+                                                <div className="space-y-3">
+                                                    {Object.entries(cust).map(([key, val]) => (
+                                                        <div key={key} className="bg-[#130C1C] rounded-lg p-3">
+                                                            <p className="text-gray-500 text-xs capitalize mb-1">{key.replace(/_/g, " ")}</p>
+                                                            <CustomizationValue val={val} label={key} />
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
 
                                     {/* Delivery Panel */}
                                     {canDeliver && (

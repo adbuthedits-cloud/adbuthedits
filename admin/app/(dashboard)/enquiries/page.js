@@ -10,6 +10,7 @@ import {
 import { getAuthToken, getAuthUser } from '../../../utils/auth';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import withPermission from '../../../components/withPermission';
 
 const STATUS_CONFIG = {
     pending:     { label: 'Pending',   color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
@@ -24,6 +25,8 @@ const SOURCE_CONFIG = {
     elearning_coming_soon: { label: 'E-Learning Coming Soon', color: 'text-pink-400' },
 };
 
+const TH_STYLE = "py-3 px-4 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-[#a78bfa] transition-colors select-none whitespace-nowrap";
+
 function SortIcon({ col, cfg }) {
     if (cfg.key !== col) return <FontAwesomeIcon icon={faSort} className="ml-1 opacity-25 text-[10px]" />;
     return cfg.dir === 'asc'
@@ -31,25 +34,11 @@ function SortIcon({ col, cfg }) {
         : <FontAwesomeIcon icon={faSortDown} className="ml-1 text-[#a78bfa] text-[10px]" />;
 }
 
-export default function EnquiriesPage() {
-    const router = useRouter();
-    const [allowed, setAllowed] = useState(null);
-
-    useEffect(() => {
-        const user = getAuthUser();
-        if (!user) { router.push('/login'); return; }
-        // Super admin always allowed; any admin with a token is allowed for enquiries
-        setAllowed(true);
-    }, []);
-
-    if (allowed === null) return (
-        <div className="flex items-center justify-center h-[60vh]">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#a78bfa]" />
-        </div>
-    );
-
+function EnquiriesPage() {
     return <EnquiriesContent />;
 }
+
+export default withPermission(EnquiriesPage, 'enquiries');
 
 function EnquiriesContent() {
     const router = useRouter();

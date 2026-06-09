@@ -62,7 +62,7 @@ export default function ComingSoon() {
           className="flex justify-center"
         >
           <a
-            href="mailto:adbuthedits@gmail.com"
+            href="mailto:contact@adbuthverse.com"
             className="group flex items-center justify-center gap-3 px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 text-white rounded-full font-medium transition-all duration-500 backdrop-blur-sm"
           >
             <FontAwesomeIcon icon={faEnvelope} className="text-purple-500 group-hover:scale-110 transition-transform duration-300" />

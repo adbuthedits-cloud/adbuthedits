@@ -354,8 +354,8 @@ If you need direct assistance, custom project estimations, or support for an act
 **How to Reach Us:**
 * **General Enquiries:** Submit a message on our Contact Page at https://adbuthverse.com/contact-us.
 * **Detailed Project Scope:** Fill out our comprehensive project planner and Enquiry Form at https://adbuthverse.com/enquiry-form.
-* **Email Support:** Send an email directly to adbuthedits@gmail.com.
-* **Phone/WhatsApp:** Connect with us at +91 91826 83055.
+* **Email Support:** Send an email directly to contact@adbuthverse.com.
+* **Phone/WhatsApp:** Connect with us at +91 88866 89789.
 * **Business Hours:** Monday through Saturday, 10:00 AM to 6:00 PM (IST). We respond to all emails and enquiries within 24 business hours.
 
 ---

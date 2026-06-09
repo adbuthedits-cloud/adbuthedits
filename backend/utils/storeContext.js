@@ -17,7 +17,7 @@ const STATIC_CONTEXT = `
 - *Services:* Video Editing (Wedding, Reels, Highlights, Corporate), Color Grading, Sound Design, Visual Effects (VFX).
 
 **POLICIES & CONTACT:**
-- **Email:** adbuthedits@gmail.com
+- **Email:** contact@adbuthverse.com
 - **Policies:** 
     - No refunds on digital products (Templates/Presets) once downloaded. 
     - Revisions are allowed for custom editing services as per agreement.

@@ -94,7 +94,7 @@ function BlogCategories() {
     };
 
     return (
-        <div className="max-w-5xl">
+        <div className="w-full">
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h1 className="text-[26px] font-bold text-white tracking-tight">Blog Categories</h1>

@@ -1021,7 +1021,7 @@ function MasterDataPage() {
 
     return (
         <div className="pb-20">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="w-full px-4 sm:px-6">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-white">Master Data Management</h1>
                     <p className="text-gray-400 mt-1">Manage naming convention codes for templates. Structure: <span className="font-mono text-purple-300 text-xs">JAP-[Type]-[Variant]-[Cat]-[SubCat]-[Ori]-[Serial]</span></p>

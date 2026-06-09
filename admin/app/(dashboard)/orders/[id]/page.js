@@ -392,6 +392,9 @@ function OrderDetails() {
                                                 <div className="flex items-start justify-between gap-2">
                                                     <div>
                                                         <h3 className="font-bold text-white text-sm">{item.product?.title || <span className="text-red-400 italic">Deleted Product / Unknown</span>}</h3>
+                                                        {item.product?.internal_sku && (
+                                                            <p className="text-xs text-purple-400 font-mono mt-0.5">SKU: {item.product.internal_sku}</p>
+                                                        )}
                                                         <p className="text-xs text-gray-500 mt-0.5">₹{item.price_at_purchase?.toLocaleString()} × {item.quantity}</p>
                                                     </div>
                                                     <div className="text-right flex-shrink-0">

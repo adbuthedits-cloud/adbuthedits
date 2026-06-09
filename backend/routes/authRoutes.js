@@ -282,19 +282,22 @@ router.post('/check-availability', async (req, res) => {
     try {
         const { email, phone_number } = req.body;
 
-        if (!email) {
-            return res.status(400).json({ msg: 'Email is required.' });
+        if (!email && !phone_number) {
+            return res.status(400).json({ msg: 'Email or phone number is required.' });
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ msg: 'Invalid email address.' });
-        }
+        let existingEmail = null;
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({ field: 'email', msg: 'Invalid email address.' });
+            }
 
-        // Check if email is taken by a verified account
-        const existingEmail = await User.findOne({ where: { email } });
-        if (existingEmail && existingEmail.email_verified) {
-            return res.status(400).json({ field: 'email', msg: 'An account with this email already exists.' });
+            // Check if email is taken by a verified account
+            existingEmail = await User.findOne({ where: { email } });
+            if (existingEmail && existingEmail.email_verified) {
+                return res.status(400).json({ field: 'email', msg: 'An account with this email already exists.' });
+            }
         }
 
         // Check if phone is taken by a verified account
@@ -681,34 +684,50 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
         const userId = req.user.id;
         const { first_name, last_name, email, phone_number } = req.body;
 
+        const currentUser = await User.findByPk(userId);
+        if (!currentUser) {
+            return res.status(404).json({ msg: 'Account not found' });
+        }
+
         const updates = {};
         if (first_name !== undefined) updates.first_name = first_name;
         if (last_name !== undefined) updates.last_name = last_name;
 
-        // Email change: check for conflicts
+        // Email change: verify it's different and check for conflicts
         if (email !== undefined) {
+            if (email.toLowerCase().trim() === currentUser.email.toLowerCase().trim()) {
+                return res.status(400).json({ msg: 'New email address must be different from current email address.' });
+            }
+
             const conflict = await User.findOne({ where: { email, user_id: { [Op.ne]: userId } } });
             if (conflict) {
-                if (conflict.first_name && conflict.phone_number) {
-                    return res.status(409).json({ msg: 'This email is already linked to another account.' });
-                }
-                // Merge partial account
-                await User.destroy({ where: { user_id: conflict.user_id } });
+                return res.status(409).json({ msg: 'This email is already registered with another account.' });
             }
             updates.email = email;
         }
 
-        // Phone change: check for conflicts
+        // Phone change: verify it's different and check for conflicts
         if (phone_number !== undefined) {
-            const phoneStr = typeof phone_number === 'object' ? JSON.stringify(phone_number) : phone_number;
-            const conflict = await User.findOne({ where: { phone_number: phoneStr, user_id: { [Op.ne]: userId } } });
-            if (conflict) {
-                if (conflict.first_name && conflict.email) {
-                    return res.status(409).json({ msg: 'This phone number is already linked to another account.' });
+            const newPhone = typeof phone_number === 'string' ? JSON.parse(phone_number) : phone_number;
+            const currentPhone = currentUser.phone_number ? (typeof currentUser.phone_number === 'string' ? JSON.parse(currentUser.phone_number) : currentUser.phone_number) : null;
+            
+            const isPhoneDifferent = !currentPhone || currentPhone.code !== newPhone.code || currentPhone.number !== newPhone.number;
+            
+            if (isPhoneDifferent) {
+                const allUsersWithPhone = await User.findAll({
+                    where: { phone_number: { [Op.ne]: null }, user_id: { [Op.ne]: userId } }
+                });
+                const phoneConflict = allUsersWithPhone.find(u => {
+                    try {
+                        const p = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
+                        return p && p.code === newPhone.code && p.number === newPhone.number;
+                    } catch { return false; }
+                });
+                if (phoneConflict) {
+                    return res.status(409).json({ msg: 'This phone number is already registered with another account.' });
                 }
-                await User.destroy({ where: { user_id: conflict.user_id } });
+                updates.phone_number = JSON.stringify(newPhone);
             }
-            updates.phone_number = phoneStr;
         }
 
         await User.update(updates, { where: { user_id: userId } });

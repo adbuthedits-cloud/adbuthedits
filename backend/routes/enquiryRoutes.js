@@ -9,6 +9,7 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const path = require('path');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
+const { checkPermission } = require('../middleware/permissionMiddleware');
 const { sendReply } = require('../utils/emailService');
 
 // --- Multer for R2 Private Bucket ---
@@ -222,7 +223,7 @@ router.post('/incoming-webhook', async (req, res) => {
 // ============================================================
 
 // GET /api/enquiry — List all enquiries
-router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/', authMiddleware, adminMiddleware, checkPermission('enquiries', 'view'), async (req, res) => {
     try {
         const { status, search, source } = req.query;
         const where = {};
@@ -256,7 +257,7 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // GET /api/enquiry/:id — Get single enquiry with full reply history
-router.get('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/:id', authMiddleware, adminMiddleware, checkPermission('enquiries', 'view'), async (req, res) => {
     try {
         const enquiry = await Enquiry.findByPk(req.params.id, {
             include: [{
@@ -275,7 +276,7 @@ router.get('/:id', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // PUT /api/enquiry/:id/status — Update status
-router.put('/:id/status', authMiddleware, adminMiddleware, async (req, res) => {
+router.put('/:id/status', authMiddleware, adminMiddleware, checkPermission('enquiries', 'edit'), async (req, res) => {
     try {
         const { status } = req.body;
         const valid = ['pending', 'in-review', 'resolved'];
@@ -292,7 +293,7 @@ router.put('/:id/status', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // POST /api/enquiry/:id/reply — Send email + save to reply history
-router.post('/:id/reply', authMiddleware, adminMiddleware, async (req, res) => {
+router.post('/:id/reply', authMiddleware, adminMiddleware, checkPermission('enquiries', 'edit'), async (req, res) => {
     try {
         const { subject, message, channel = 'email' } = req.body;
         if (!message?.trim()) return res.status(400).json({ error: 'Message is required' });
@@ -341,7 +342,7 @@ router.post('/:id/reply', authMiddleware, adminMiddleware, async (req, res) => {
                         </p>
                         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
                         <p style="color: #bbb; font-size: 11px; text-align: center; margin: 0;">
-                            support@adbuthverse.com · +91 91826 83055
+                            contact@adbuthverse.com · +91 88866 89789
                         </p>
                     </div>
                 </div>`;
@@ -366,7 +367,7 @@ router.post('/:id/reply', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // GET /api/enquiry/:id/attachment-url?key=... — Presigned URL for private file
-router.get('/:id/attachment-url', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/:id/attachment-url', authMiddleware, adminMiddleware, checkPermission('enquiries', 'view'), async (req, res) => {
     try {
         const { key } = req.query;
         if (!key) return res.status(400).json({ error: 'File key is required' });

@@ -53,7 +53,7 @@ const SECTIONS = [
                         <Trash2 size={16} /> How to Request Permanent Data Deletion:
                     </p>
                     <ol className="list-decimal ml-5 space-y-2 text-sm sm:text-base">
-                        <li>Send an email to <strong className="text-slate-900 font-medium">adbuthedits@gmail.com</strong> with the subject line <strong className="text-slate-900 font-mono font-medium">"Data Deletion Request"</strong>.</li>
+                        <li>Send an email to <strong className="text-slate-900 font-medium">contact@adbuthverse.com</strong> with the subject line <strong className="text-slate-900 font-mono font-medium">"Data Deletion Request"</strong>.</li>
                         <li>Include your registered email address or account username in the email body.</li>
                         <li>Our system administrators will process your request and permanently delete all your data and account records within <strong className="text-purple-700">48 to 72 hours</strong>. We will send a final email confirmation once complete.</li>
                     </ol>
@@ -81,7 +81,7 @@ const SECTIONS = [
             <div>
                 <p>If you have any questions, compliance concerns, or general comments regarding this Privacy Policy or data storage practices, please reach out to our privacy officer:</p>
                 <p className="mt-4 font-bold text-slate-900 flex items-center gap-2">
-                    <Mail size={16} className="text-purple-700" /> Email: adbuthedits@gmail.com
+                    <Mail size={16} className="text-purple-700" /> Email: contact@adbuthverse.com
                 </p>
             </div>
         ),

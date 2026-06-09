@@ -165,7 +165,7 @@ function StaffPage() {
     }));
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
             {/* Header */}
             <div className="flex justify-between items-end mb-8">
                 <div>

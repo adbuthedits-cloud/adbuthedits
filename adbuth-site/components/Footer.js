@@ -46,8 +46,8 @@ export default function Footer() {
               <h6 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Get in touch</h6>
               <div className="space-y-2 text-xs text-gray-600 font-medium">
                 {/* Fixed: removed square brackets from email href */}
-                <p><a href="mailto:adbuthedits@gmail.com">adbuthedits@gmail.com</a></p>
-                <p><a href="tel:+919182683055">+91 91826 83055</a></p>
+                <p><a href="mailto:contact@adbuthverse.com">contact@adbuthverse.com</a></p>
+                <p><a href="tel:+918886689789">+91 88866 89789</a></p>
               </div>
 
               {/* Social links — fixed: aria-label on each, aria-hidden on icons, rel=noopener */}

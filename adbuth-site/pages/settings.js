@@ -343,9 +343,25 @@ export default function Settings() {
                                                                 onClick={async () => {
                                                                     setLoading(true); setMessage({ text: '', type: '' });
                                                                     try {
-                                                                        const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
+                                                                        if (newEmail.toLowerCase().trim() === user?.email?.toLowerCase().trim()) {
+                                                                            throw new Error('New email address must be different from current email address.');
+                                                                        }
+                                                                        // Check email availability
+                                                                        const checkRes = await fetch(`${API_URL}/api/auth/check-availability`, {
                                                                             method: 'POST',
                                                                             headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ email: newEmail })
+                                                                        });
+                                                                        const checkData = await checkRes.json();
+                                                                        if (!checkRes.ok) throw new Error(checkData.msg || 'This email is already registered.');
+
+                                                                        const token = localStorage.getItem('token');
+                                                                        const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
+                                                                            method: 'POST',
+                                                                            headers: { 
+                                                                                'Content-Type': 'application/json',
+                                                                                'Authorization': `Bearer ${token}`
+                                                                            },
                                                                             body: JSON.stringify({ email: newEmail, purpose: 'email_verify' })
                                                                         });
                                                                         const d = await res.json();
@@ -382,7 +398,10 @@ export default function Settings() {
                                                                         // Verify OTP then update profile
                                                                         const verifyRes = await fetch(`${API_URL}/api/otp/verify-email-otp`, {
                                                                             method: 'POST',
-                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            headers: { 
+                                                                                'Content-Type': 'application/json',
+                                                                                'Authorization': `Bearer ${token}`
+                                                                            },
                                                                             body: JSON.stringify({ email: newEmail, otp: emailChangeOtp, purpose: 'email_verify' })
                                                                         });
                                                                         const vd = await verifyRes.json();
@@ -397,6 +416,7 @@ export default function Settings() {
                                                                         if (!updateRes.ok) throw new Error(ud.msg);
                                                                         setMessage({ text: 'Email updated successfully!', type: 'success' });
                                                                         setShowEmailChange(false); setEmailChangeStep('input'); setNewEmail('');
+                                                                        await refreshUser();
                                                                     } catch (e) { setMessage({ text: e.message, type: 'error' }); }
                                                                     setLoading(false);
                                                                 }}
@@ -463,6 +483,25 @@ export default function Settings() {
                                                                 onClick={async () => {
                                                                     setLoading(true); setMessage({ text: '', type: '' });
                                                                     try {
+                                                                        const cleanNum = newPhoneNum.replace(/[\s\-()]/g, '');
+                                                                        // Check if identical to current phone
+                                                                        let currentPhone = null;
+                                                                        if (user?.phone_number) {
+                                                                            currentPhone = typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number;
+                                                                        }
+                                                                        if (currentPhone && currentPhone.code === newPhoneCode && currentPhone.number === cleanNum) {
+                                                                            throw new Error('New phone number must be different from current phone number.');
+                                                                        }
+
+                                                                        // Check availability first
+                                                                        const checkRes = await fetch(`${API_URL}/api/auth/check-availability`, {
+                                                                            method: 'POST',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ phone_number: { code: newPhoneCode, number: cleanNum } })
+                                                                        });
+                                                                        const checkData = await checkRes.json();
+                                                                        if (!checkRes.ok) throw new Error(checkData.msg || 'This phone number is already registered.');
+
                                                                         const { signInWithPhoneNumber, RecaptchaVerifier } = await import('firebase/auth');
                                                                         const { auth } = await import('../lib/firebase');
                                                                         let verifier;
@@ -473,7 +512,7 @@ export default function Settings() {
                                                                         } else {
                                                                             verifier = recaptchaVerifierRef.current;
                                                                         }
-                                                                        const full = `${newPhoneCode}${newPhoneNum.replace(/[\s\-()]/g, '')}`;
+                                                                        const full = `${newPhoneCode}${cleanNum}`;
                                                                         const result = await signInWithPhoneNumber(auth, full, verifier);
                                                                         setPhoneChangeConfirmResult(result);
                                                                         setPhoneChangeStep('verify');
@@ -506,7 +545,7 @@ export default function Settings() {
                                                                     try {
                                                                         if (!phoneChangeConfirmResult) throw new Error('Session expired. Resend OTP.');
                                                                         await phoneChangeConfirmResult.confirm(phoneChangeOtp);
-                                                                        // Update phone via complete-profile endpoint
+                                                                        // Update phone via update-profile endpoint
                                                                         const token = localStorage.getItem('token');
                                                                         const updateRes = await fetch(`${API_URL}/api/auth/update-profile`, {
                                                                             method: 'PUT',
@@ -517,6 +556,7 @@ export default function Settings() {
                                                                         if (!updateRes.ok) throw new Error(ud.msg);
                                                                         setMessage({ text: 'Phone updated successfully!', type: 'success' });
                                                                         setShowPhoneChange(false); setPhoneChangeStep('input'); setNewPhoneNum('');
+                                                                        await refreshUser();
                                                                     } catch (e) { setMessage({ text: e.message, type: 'error' }); }
                                                                     setLoading(false);
                                                                 }}

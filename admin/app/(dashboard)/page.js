@@ -106,7 +106,9 @@ export default function Dashboard() {
     });
     const [loading, setLoading] = useState(true);
     const [recentOrders, setRecentOrders] = useState([]);
+    const [myTasks, setMyTasks] = useState([]);
     const [error, setError] = useState(null);
+    const [user, setUser] = useState(null);
     const { items: sortedOrders, requestSort, sortConfig } = useSortableData(recentOrders);
 
     const fetchDashboardData = async () => {
@@ -125,6 +127,7 @@ export default function Dashboard() {
             });
             setStats(res.data.stats || {});
             setRecentOrders(res.data.recentOrders || []);
+            setMyTasks(res.data.myTasks || []);
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
             if (err.response && (err.response.status === 401 || err.response.status === 403)) {
@@ -141,7 +144,16 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
+        setUser(getAuthUser());
         fetchDashboardData();
+
+        const handleUserUpdate = (e) => {
+            if (e.detail) {
+                setUser(e.detail);
+            }
+        };
+        window.addEventListener('adminUserUpdated', handleUserUpdate);
+        return () => window.removeEventListener('adminUserUpdated', handleUserUpdate);
     }, []);
 
     // Get order status badge classes and formatted text
@@ -326,11 +338,308 @@ export default function Dashboard() {
         );
     }
 
-    const u = getAuthUser();
-    const isSuperAdmin = u?.is_super_admin === true;
+    const isSuperAdmin = user ? user.is_super_admin === true : false;
+    const u = user;
+
+    const getTaskStatusStyle = (status) => {
+        const s = status?.toLowerCase() || '';
+        if (s === 'assigned') {
+            return {
+                bg: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+                dot: 'bg-blue-400',
+                text: 'Awaiting Pickup'
+            };
+        } else if (s === 'in_progress') {
+            return {
+                bg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+                dot: 'bg-amber-400',
+                text: 'In Progress'
+            };
+        } else if (s === 'delivered') {
+            return {
+                bg: 'bg-green-500/10 border-green-500/20 text-green-400',
+                dot: 'bg-green-400',
+                text: 'Delivered'
+            };
+        } else if (s === 'completed') {
+            return {
+                bg: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+                dot: 'bg-purple-400',
+                text: 'Completed'
+            };
+        } else {
+            return {
+                bg: 'bg-gray-500/10 border-gray-500/20 text-gray-400',
+                dot: 'bg-gray-400',
+                text: status || 'Unassigned'
+            };
+        }
+    };
+
+    if (!isSuperAdmin) {
+        return (
+            <div className="space-y-8 w-full pb-12">
+                {/* Employee Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-[#1a1025] to-[#130c1c] p-6 rounded-2xl border border-[#2d1b4e]/80">
+                    <div>
+                        <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1.5">
+                            <Activity size={14} className="text-[#a78bfa] animate-pulse" />
+                            <span>System Status: Online</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-ping"></span>
+                        </div>
+                        <h1 className="text-3xl font-black text-white tracking-tight">
+                            Welcome Back, {u?.first_name || 'Team Member'}
+                        </h1>
+                        <p className="text-sm text-gray-400 mt-1">Workspace summary · Track and deliver your assigned tasks.</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={fetchDashboardData}
+                            className="px-4 py-2 text-xs font-bold rounded-lg border border-[#2d1b4e] bg-[#1e1628] hover:bg-[#2d1b4e] text-gray-300 hover:text-white transition-all flex items-center gap-1.5"
+                        >
+                            <Activity size={14} />
+                            Sync Workspace
+                        </button>
+                        <Link
+                            href="/my-tasks"
+                            className="px-4 py-2 text-xs font-bold rounded-lg bg-[#a78bfa] text-[#130c1c] hover:bg-[#bba7f5] transition-all flex items-center gap-1"
+                        >
+                            <FileText size={14} strokeWidth={2.5} />
+                            My Tasks
+                        </Link>
+                    </div>
+                </div>
+
+                {error && (
+                    <div className="bg-red-500/10 text-red-400 p-4 rounded-xl border border-red-500/20 flex items-center gap-3 text-sm">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                {/* Employee Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Active Tasks Card */}
+                    <StatCard
+                        title="Active Tasks"
+                        value={stats.myActiveTasks || 0}
+                        icon={Activity}
+                        trend={null}
+                        colorClass="bg-amber-500/10 border-amber-500/20 text-amber-400"
+                    />
+
+                    {/* Pending Tasks Card */}
+                    <StatCard
+                        title="Pending Tasks"
+                        value={stats.myPendingTasks || 0}
+                        icon={Clock}
+                        trend={null}
+                        colorClass="bg-blue-500/10 border-blue-500/20 text-blue-400"
+                    />
+
+                    {/* Completed Tasks Card */}
+                    <StatCard
+                        title="Completed Tasks"
+                        value={stats.myCompletedTasks || 0}
+                        icon={Package}
+                        trend={null}
+                        colorClass="bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                    />
+
+                    {/* Enquiries Card (Conditional on access) or Total Assigned */}
+                    {hasPermission(u, 'enquiries', 'view') ? (
+                        <StatCard
+                            title="Open Enquiries"
+                            value={stats.openEnquiries || 0}
+                            icon={MessageSquare}
+                            trend={null}
+                            colorClass="bg-rose-500/10 border-rose-500/20 text-rose-400"
+                        />
+                    ) : (
+                        <StatCard
+                            title="Total Assigned Tasks"
+                            value={stats.myTasksCount || 0}
+                            icon={ShoppingCart}
+                            trend={null}
+                            colorClass="bg-[#a78bfa]/10 border-[#a78bfa]/20 text-[#a78bfa]"
+                        />
+                    )}
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* Left: My Tasks List */}
+                    <div className="lg:col-span-2 bg-[#1e1628] rounded-2xl border border-[#2d1b4e] p-6 shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 className="font-bold text-base text-white">My Tasks</h3>
+                                    <p className="text-xs text-gray-400">Recently assigned or in-progress orders</p>
+                                </div>
+                                <Link href="/my-tasks" className="text-xs font-bold text-[#a78bfa] hover:text-[#bba7f5] transition-all flex items-center gap-0.5">
+                                    View All Tasks
+                                    <ChevronRight size={14} />
+                                </Link>
+                            </div>
+
+                            <div className="overflow-x-auto custom-scroll -mx-6 px-6">
+                                <table className="w-full text-left border-collapse min-w-[500px]">
+                                    <thead>
+                                        <tr className="border-b border-[#2d1b4e]/80 text-gray-400 text-[11px] uppercase tracking-wider">
+                                            <th className="pb-3 font-bold">Order ID</th>
+                                            <th className="pb-3 font-bold">Customer</th>
+                                            <th className="pb-3 font-bold">Assigned Date</th>
+                                            <th className="pb-3 font-bold">Amount</th>
+                                            <th className="pb-3 font-bold">Status</th>
+                                            <th className="pb-3 font-bold">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-xs divide-y divide-[#2d1b4e]/40">
+                                        {myTasks.length > 0 ? (
+                                            myTasks.map((task) => {
+                                                const statusInfo = getTaskStatusStyle(task.working_status);
+                                                const name = task.user?.first_name || 'Guest';
+                                                const initials = name.slice(0, 2).toUpperCase();
+                                                return (
+                                                    <tr key={task.order_id} className="hover:bg-[#2d1b4e]/10 transition-colors group">
+                                                        <td className="py-4 font-bold text-white group-hover:text-[#a78bfa] transition-all">
+                                                            #{task.order_id.slice(0, 8).toUpperCase()}
+                                                        </td>
+                                                        <td className="py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-full bg-[#2d1b4e] flex items-center justify-center text-xs font-black text-[#a78bfa] border border-[#3b2a5f] shadow-inner">
+                                                                    {initials}
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-gray-200 font-bold">{name}</span>
+                                                                    <span className="text-[10px] text-gray-500 font-normal">{task.user?.email || 'Guest checkout'}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-4 text-gray-400 font-medium">
+                                                            {new Date(task.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        </td>
+                                                        <td className="py-4 font-black text-white">₹{task.total_amount.toLocaleString()}</td>
+                                                        <td className="py-4">
+                                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1.5 border uppercase tracking-wider ${statusInfo.bg}`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`}></span>
+                                                                {statusInfo.text}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-4">
+                                                            <Link href={`/my-tasks/${task.order_id}`} className="text-xs font-bold text-[#a78bfa] hover:text-[#bba7f5] hover:underline">
+                                                                View Task
+                                                            </Link>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="6" className="py-12 text-center text-gray-400">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="w-12 h-12 bg-[#2d1b4e]/50 rounded-full flex items-center justify-center text-gray-500 border border-[#3b2a5f]">
+                                                            <Package size={20} />
+                                                        </div>
+                                                        <p className="text-xs font-semibold">No tasks currently assigned to you.</p>
+                                                        <Link href="/my-tasks" className="text-xs text-[#a78bfa] hover:underline font-bold">Go to My Tasks</Link>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right: Quick shortcuts & general actions */}
+                    <div className="space-y-6">
+                        {/* Quick Shortcuts */}
+                        <div className="bg-[#1e1628] rounded-2xl border border-[#2d1b4e] p-6 shadow-xl">
+                            <h3 className="font-bold text-base text-white mb-4">Quick Shortcuts</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Link 
+                                    href="/my-tasks" 
+                                    className="p-4 bg-[#2d1b4e]/40 border border-[#2d1b4e] hover:border-[#a78bfa]/40 hover:bg-[#2d1b4e]/70 rounded-xl flex flex-col items-center justify-center text-center gap-2 group transition-all"
+                                >
+                                    <Clock size={20} className="text-[#a78bfa] group-hover:scale-110 transition-transform" />
+                                    <span className="text-xs font-bold text-gray-200">My Tasks</span>
+                                </Link>
+
+                                {hasPermission(u, 'products', 'view') && (
+                                    <Link 
+                                        href="/products" 
+                                        className="p-4 bg-[#2d1b4e]/40 border border-[#2d1b4e] hover:border-[#a78bfa]/40 hover:bg-[#2d1b4e]/70 rounded-xl flex flex-col items-center justify-center text-center gap-2 group transition-all"
+                                    >
+                                        <Package size={20} className="text-[#a78bfa] group-hover:scale-110 transition-transform" />
+                                        <span className="text-xs font-bold text-gray-200">Products</span>
+                                    </Link>
+                                )}
+
+                                {hasPermission(u, 'enquiries', 'view') && (
+                                    <Link 
+                                        href="/enquiries" 
+                                        className="p-4 bg-[#2d1b4e]/40 border border-[#2d1b4e] hover:border-[#a78bfa]/40 hover:bg-[#2d1b4e]/70 rounded-xl flex flex-col items-center justify-center text-center gap-2 group transition-all"
+                                    >
+                                        <MessageSquare size={20} className="text-[#a78bfa] group-hover:scale-110 transition-transform" />
+                                        <span className="text-xs font-bold text-gray-200">Enquiries</span>
+                                    </Link>
+                                )}
+
+                                {hasPermission(u, 'media_manager', 'view') && (
+                                    <Link 
+                                        href="/media-manager" 
+                                        className="p-4 bg-[#2d1b4e]/40 border border-[#2d1b4e] hover:border-[#a78bfa]/40 hover:bg-[#2d1b4e]/70 rounded-xl flex flex-col items-center justify-center text-center gap-2 group transition-all"
+                                    >
+                                        <Upload size={20} className="text-[#a78bfa] group-hover:scale-110 transition-transform" />
+                                        <span className="text-xs font-bold text-gray-200">Media</span>
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Recent Orders Queue to Claim (Awaiting Pickup) */}
+                        {hasPermission(u, 'orders', 'view') && (
+                            <div className="bg-[#1e1628] rounded-2xl border border-[#2d1b4e] p-6 shadow-xl space-y-4">
+                                <h3 className="font-bold text-base text-white">Recent Orders</h3>
+                                <p className="text-xs text-gray-400">Recent customer checkouts in the system</p>
+                                <div className="space-y-3">
+                                    {recentOrders.length > 0 ? (
+                                        recentOrders.map((order) => {
+                                            const name = order.user?.first_name || 'Guest';
+                                            return (
+                                                <div key={order.order_id} className="p-3 bg-[#2d1b4e]/30 border border-[#2d1b4e] rounded-xl flex items-center justify-between gap-3 hover:border-[#a78bfa]/40 transition-colors">
+                                                    <div className="min-w-0">
+                                                        <p className="font-bold text-gray-200 text-xs">#{order.order_id.slice(0, 8).toUpperCase()}</p>
+                                                        <p className="text-gray-500 text-[11px] truncate">{name} · ₹{order.total_amount.toLocaleString()}</p>
+                                                    </div>
+                                                    <Link 
+                                                        href={order.assigned_to === (u.admin_id || u.id) ? `/my-tasks/${order.order_id}` : `/orders/${order.order_id}`}
+                                                        className="px-2.5 py-1 bg-[#2d1b4e] hover:bg-[#a78bfa] text-gray-300 hover:text-[#1a1025] border border-[#3b2a5f] hover:border-transparent rounded-lg text-[10px] font-bold transition-all shrink-0"
+                                                    >
+                                                        View
+                                                    </Link>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-gray-500 text-xs">No orders in pool.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-8 max-w-7xl mx-auto pb-12">
+        <div className="space-y-8 w-full pb-12">
             
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-[#1a1025] to-[#130c1c] p-6 rounded-2xl border border-[#2d1b4e]/80">

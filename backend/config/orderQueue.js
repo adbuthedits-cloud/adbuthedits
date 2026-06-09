@@ -149,7 +149,8 @@ async function startWorkers() {
                     }, { transaction: t });
                 });
 
-                // Queue customer "In Progress" email
+                // Queue customer "In Progress" email (Disabled per user request)
+                /*
                 const order = await Order.findByPk(orderId, {
                     include: [{ model: User, as: 'user' }]
                 });
@@ -161,6 +162,7 @@ async function startWorkers() {
                         orderRef: orderId.substring(0, 8).toUpperCase(),
                     });
                 }
+                */
                 break;
             }
 

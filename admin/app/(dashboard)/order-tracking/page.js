@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { getAuthToken, getAuthUser, hasPermission } from "../../../utils/auth";
@@ -268,15 +268,24 @@ function OrderTrackingPage() {
     }, []);
 
     const fetchData = useCallback(async () => {
-        if (!token) return;
+        if (!token || !user) return;
         const headers = { Authorization: `Bearer ${token}` };
         setLoading(true);
         setError("");
         try {
-            const [ordersRes, staffRes] = await Promise.all([
-                axios.get(`${apiUrl}/api/admin/orders`, { headers }),
-                axios.get(`${apiUrl}/api/admin/staff`, { headers }),
-            ]);
+            const canAssignOrders = hasPermission(user, "orders", "assign") || user.is_super_admin === true;
+            let ordersRes, staffRes;
+            if (canAssignOrders) {
+                const [oRes, sRes] = await Promise.all([
+                    axios.get(`${apiUrl}/api/admin/orders`, { headers }),
+                    axios.get(`${apiUrl}/api/admin/staff`, { headers }),
+                ]);
+                ordersRes = oRes;
+                staffRes = sRes;
+            } else {
+                ordersRes = await axios.get(`${apiUrl}/api/admin/orders`, { headers });
+                staffRes = { data: [] };
+            }
             setOrders(ordersRes.data || []);
             setStaff(staffRes.data || []);
         } catch (err) {
@@ -284,11 +293,11 @@ function OrderTrackingPage() {
         } finally {
             setLoading(false);
         }
-    }, [token, apiUrl]);
+    }, [token, user, apiUrl]);
 
     useEffect(() => {
-        if (token) fetchData();
-    }, [token, refreshKey, fetchData]);
+        if (token && user) fetchData();
+    }, [token, user, refreshKey, fetchData]);
 
     if (!isClient) return null;
     if (!user) return null;
@@ -320,7 +329,7 @@ function OrderTrackingPage() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>

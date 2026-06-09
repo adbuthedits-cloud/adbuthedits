@@ -75,7 +75,7 @@ function ViewBlog({ user }) {
     if (!blog) return null;
 
     return (
-        <div className="max-w-5xl mx-auto pb-12">
+        <div className="w-full pb-12">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-white mb-2">Blog Details</h1>
                 <p className="text-gray-400">Viewing read-only details for "{blog.title}"</p>

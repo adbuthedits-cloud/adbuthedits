@@ -85,11 +85,11 @@ function HeroCard() {
           <Link href="/services/videos" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
             I want to edit a video
           </Link>
-          <Link href="/services/designing" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
-            I want to design a 'Save the Date' card
+          <Link href="/services/designing/adbuth-e-invitations" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
+            I want to design a Digital Invitations
           </Link>
-          <Link href="/services/videos/adbuth-ads" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
-            Let's talk commercials & ads
+          <Link href="/contact-us" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
+            Connect with our team
           </Link>
           <Link href="/contact-us" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
             Message Adi

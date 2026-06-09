@@ -115,6 +115,13 @@ const featuredRow2 = [
 
 const DigitalInvitations = ({ masterData, initialProducts }) => {
     const [activeOccasion, setActiveOccasion] = useState(0);
+    const [duration, setDuration] = useState(35);
+
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+            setDuration(16); // Speed up cards on mobile (16 seconds instead of 35)
+        }
+    }, []);
 
     const defaultOccasions = [
         {
@@ -258,11 +265,15 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="flex flex-col sm:flex-row items-center md:items-start  justify-start gap-4"
+                        className="flex flex-col items-center md:items-start justify-start gap-3"
                     >
-                        <Link href="/shop" className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+                        <Link href="/shop" className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors whitespace-nowrap">
                             Explore Templates
                         </Link>
+                        <div className="flex items-center gap-2 text-gray-200 text-lg md:text-2xl font-bold mt-1 select-none">
+
+                            <span>2K+ Happy Customers</span>
+                        </div>
                     </motion.div>
                 </div>
             </div>
@@ -381,17 +392,17 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                         <motion.div
                             animate={{ x: ["0%", "-50%"] }}
                             transition={{
-                                duration: 35,
+                                duration: duration,
                                 repeat: Infinity,
                                 ease: "linear"
                             }}
-                            className="flex gap-6 whitespace-nowrap min-w-full"
+                            className="flex gap-4 md:gap-6 whitespace-nowrap min-w-full"
                         >
                             {[...featuredRow1, ...featuredRow1].map((item, i) => (
                                 <Link
                                     key={`row1-${i}`}
                                     href={item.url}
-                                    className="w-[300px] h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
+                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
                                 >
                                     <img
                                         src={item.image}
@@ -399,10 +410,10 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         loading="lazy"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 md:p-6">
                                         <div className="text-white">
-                                            <p className="text-xs uppercase tracking-widest text-[#E188E2] mb-1 font-semibold">Template</p>
-                                            <h4 className="text-lg font-bold whitespace-normal leading-tight">{item.title}</h4>
+                                            <p className="text-[10px] md:text-xs uppercase tracking-widest text-[#E188E2] mb-1 font-semibold">Template</p>
+                                            <h4 className="text-sm md:text-lg font-bold whitespace-normal leading-tight">{item.title}</h4>
                                         </div>
                                     </div>
                                 </Link>
@@ -415,17 +426,17 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                         <motion.div
                             animate={{ x: ["-50%", "0%"] }}
                             transition={{
-                                duration: 35,
+                                duration: duration,
                                 repeat: Infinity,
                                 ease: "linear"
                             }}
-                            className="flex gap-6 whitespace-nowrap min-w-full"
+                            className="flex gap-4 md:gap-6 whitespace-nowrap min-w-full"
                         >
                             {[...featuredRow2, ...featuredRow2].map((item, i) => (
                                 <Link
                                     key={`row2-${i}`}
                                     href={item.url}
-                                    className="w-[300px] h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
+                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
                                 >
                                     <img
                                         src={item.image}
@@ -433,10 +444,10 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         loading="lazy"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 md:p-6">
                                         <div className="text-white">
-                                            <p className="text-xs uppercase tracking-widest text-[#E188E2] mb-1 font-semibold">Template</p>
-                                            <h4 className="text-lg font-bold whitespace-normal leading-tight">{item.title}</h4>
+                                            <p className="text-[10px] md:text-xs uppercase tracking-widest text-[#E188E2] mb-1 font-semibold">Template</p>
+                                            <h4 className="text-sm md:text-lg font-bold whitespace-normal leading-tight">{item.title}</h4>
                                         </div>
                                     </div>
                                 </Link>
@@ -453,7 +464,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                     <p className="text-gray-700 text-lg">Templates for Every Emotion</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12 lg:gap-8">
                     {[
                         { title: "Templates for Every Emotion", icon: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/every-emotion.svg" },
                         { title: "Instant Customization", icon: "https://assets.adbuthverse.com/website-assets/pages/services/designing/adbuth-e-invitations/instant-customization.svg" },
@@ -464,10 +475,10 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                             key={idx}
                             className="flex flex-col items-center text-center group"
                         >
-                            <div className="w-24 h-24 mb-6 flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
+                            <div className="w-16 h-16 md:w-24 md:h-24 mb-4 md:mb-6 flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
                                 <img src={feature.icon} alt={feature.title} className="w-full h-full object-contain" />
                             </div>
-                            <h3 className="text-lg font-medium text-gray-800 max-w-[160px] leading-snug">
+                            <h3 className="text-sm md:text-lg font-medium text-gray-800 max-w-[160px] leading-snug">
                                 {feature.title}
                             </h3>
                         </div>

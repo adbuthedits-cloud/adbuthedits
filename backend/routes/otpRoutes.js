@@ -287,6 +287,36 @@ router.post('/send-email-otp', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid email address.' });
         }
 
+        // Check for authenticated profile settings email change
+        const authHeader = req.headers['authorization'];
+        const jwtToken = authHeader && authHeader.replace('Bearer ', '');
+        if (jwtToken && purpose === 'email_verify') {
+            try {
+                const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET || 'secretkey');
+                const loggedInUser = await User.findByPk(decoded.user.id);
+                if (loggedInUser) {
+                    if (email.toLowerCase().trim() === loggedInUser.email.toLowerCase().trim()) {
+                        return res.status(400).json({ msg: 'New email address must be different from current email address.' });
+                    }
+                    const conflict = await User.findOne({ where: { email } });
+                    if (conflict) {
+                        return res.status(400).json({ msg: 'This email is already registered with another account.' });
+                    }
+                    const otp = generateOtp();
+                    const expires = otpExpiry();
+                    await loggedInUser.update({
+                        otp_code: otp,
+                        otp_expires_at: expires,
+                        otp_type: purpose,
+                    });
+                    await sendOtpEmail({ to: email, otp, purpose });
+                    return res.json({ success: true, msg: 'OTP sent to your new email address.' });
+                }
+            } catch (jwtErr) {
+                return res.status(401).json({ msg: 'Authorization token is not valid.' });
+            }
+        }
+
         let user = await User.findOne({ where: { email } });
 
         // ── NEW USER PATH for email_login ──────────────────────────────────────
@@ -354,6 +384,35 @@ router.post('/send-email-otp', async (req, res) => {
 router.post('/verify-email-otp', async (req, res) => {
     try {
         const { email, otp, purpose, pendingToken } = req.body;
+
+        // Check for authenticated profile settings email change verification
+        const authHeader = req.headers['authorization'];
+        const jwtToken = authHeader && authHeader.replace('Bearer ', '');
+        if (jwtToken && purpose === 'email_verify') {
+            try {
+                const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET || 'secretkey');
+                const loggedInUser = await User.findByPk(decoded.user.id);
+                if (loggedInUser) {
+                    if (loggedInUser.otp_type !== purpose) {
+                        return res.status(400).json({ msg: 'Invalid OTP request.' });
+                    }
+                    if (!loggedInUser.otp_expires_at || new Date() > new Date(loggedInUser.otp_expires_at)) {
+                        return res.status(400).json({ msg: 'OTP has expired. Please request a new one.' });
+                    }
+                    if (loggedInUser.otp_code !== String(otp).trim()) {
+                        return res.status(400).json({ msg: 'Incorrect OTP. Please try again.' });
+                    }
+                    await loggedInUser.update({
+                        otp_code: null,
+                        otp_expires_at: null,
+                        otp_type: null
+                    });
+                    return res.json({ success: true, msg: 'Email verified successfully!' });
+                }
+            } catch (jwtErr) {
+                return res.status(401).json({ msg: 'Authorization token is not valid.' });
+            }
+        }
 
         // ── NEW USER PATH: pendingToken present (email not in DB, new registration via login page) ──
         if (pendingToken) {

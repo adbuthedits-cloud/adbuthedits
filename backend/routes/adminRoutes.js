@@ -456,9 +456,46 @@ router.get('/dashboard', checkPermission('dashboard', 'view'), async (req, res) 
             stats.recentInquiriesCount = await Enquiry.count({ where: { status: { [Op.ne]: 'closed' } } });
         }
 
+        // Employee dashboard statistics
+        if (!isSuperAdmin) {
+            const adminId = req.user.admin_id || req.user.id;
+            
+            // Stats counts for the employee
+            stats.myTasksCount = await Order.count({
+                where: { assigned_to: adminId }
+            });
+            stats.myPendingTasks = await Order.count({
+                where: { assigned_to: adminId, working_status: 'assigned' }
+            });
+            stats.myActiveTasks = await Order.count({
+                where: { assigned_to: adminId, working_status: 'in_progress' }
+            });
+            stats.myCompletedTasks = await Order.count({
+                where: { assigned_to: adminId, working_status: { [Op.in]: ['delivered', 'completed'] } }
+            });
+            
+            // Enquiries check
+            if (can('enquiries')) {
+                stats.openEnquiries = await Enquiry.count({
+                    where: { status: { [Op.in]: ['pending', 'in-review'] } }
+                });
+            } else {
+                stats.openEnquiries = 0;
+            }
+
+            // My Tasks list (detailed)
+            const myTasksRaw = await Order.findAll({
+                where: { assigned_to: adminId },
+                limit: 5,
+                order: [['createdAt', 'DESC']],
+                include: [{ model: User, as: 'user', attributes: ['first_name', 'email'] }]
+            });
+            responseData.myTasks = myTasksRaw;
+        }
+
         responseData.stats = stats;
 
-                // Recent Orders (Recent activity)
+        // Recent Orders (Recent activity)
         const recentOrdersRaw = await Order.findAll({
             limit: 5,
             order: [['createdAt', 'DESC']],
@@ -1823,7 +1860,7 @@ router.get('/orders/:id/task-detail', async (req, res) => {
                 { model: User, as: 'user', attributes: ['first_name', 'last_name', 'email', 'phone_number'] },
                 {
                     model: OrderItem, as: 'items',
-                    include: [{ model: Product, as: 'product', attributes: ['products_id', 'title', 'thumbnail', 'slug', 'images'] }]
+                    include: [{ model: Product, as: 'product', attributes: ['products_id', 'title', 'thumbnail', 'slug', 'images', 'internal_sku'] }]
                 },
                 { model: Payment, as: 'payment', attributes: ['amount', 'status', 'mode', 'razorpay_payment_id'], required: false },
                 { model: Admin, as: 'assignedEmployee', attributes: ['admin_id', 'first_name', 'last_name', 'role'], required: false },
@@ -2455,7 +2492,12 @@ router.get('/users', checkPermission('users', 'view'), async (req, res) => {
 router.get('/users/:id', checkPermission('users', 'view'), async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id, {
-            attributes: { exclude: ['password_hash'] }
+            attributes: { exclude: ['password_hash'] },
+            include: [{
+                model: Order,
+                as: 'orders',
+                attributes: ['order_id', 'total_amount', 'status', 'createdAt']
+            }]
         });
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);
@@ -3484,7 +3526,7 @@ router.post('/roles/seed', async (req, res) => {
                     dashboard: ['view'], seo: ['view', 'edit'], orders: ['view', 'edit', 'delete', 'assign', 'pickup'],
                     products: ['view', 'edit', 'delete'], master_data: ['view', 'edit', 'delete'],
                     blogs: ['view', 'edit', 'delete'], blog_categories: ['view', 'edit', 'delete'],
-                    reviews: ['view', 'edit', 'delete'], payments: ['view'],
+                    reviews: ['view', 'edit', 'delete'], payments: ['view'], enquiries: ['view', 'edit'],
                     marketing: ['view', 'edit', 'delete'], users: ['view', 'edit', 'delete'],
                     staff: ['view', 'edit', 'delete'], settings: ['view', 'edit'],
                     order_tracking: ['view'], my_tasks: ['view']
@@ -3516,7 +3558,8 @@ router.post('/roles/seed', async (req, res) => {
                 is_system: false,
                 permissions: {
                     dashboard: ['view'], orders: ['view'],
-                    reviews: ['view', 'edit'], users: ['view']
+                    reviews: ['view', 'edit'], users: ['view'],
+                    enquiries: ['view', 'edit']
                 }
             },
             {
@@ -3527,7 +3570,8 @@ router.post('/roles/seed', async (req, res) => {
                     dashboard: ['view'], orders: ['view', 'edit', 'assign', 'pickup'],
                     products: ['view'], blogs: ['view'], reviews: ['view'],
                     payments: ['view'], users: ['view'], staff: ['view'],
-                    order_tracking: ['view'], my_tasks: ['view']
+                    order_tracking: ['view'], my_tasks: ['view'],
+                    enquiries: ['view', 'edit']
                 }
             }
         ];

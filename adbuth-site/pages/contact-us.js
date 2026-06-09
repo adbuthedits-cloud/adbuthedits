@@ -210,7 +210,7 @@ export default function ContactUs() {
                                     </button>
 
                                     <p className="text-center text-black font-bold lg:text-sm  text-[10px] mt-4">
-                                        If you need more information contact us here @gmail.com
+                                        If you need more information contact us here contact@adbuthverse.com
                                     </p>
                                 </form>
                             </div>
@@ -226,11 +226,11 @@ export default function ContactUs() {
                                 <div className="flex flex-col lg:flex-row lg:justify-between justify-around lg:items-center items-start h-32">
                                     <div className="flex flex-col mb-5">
                                         <span className="text-base">Mobile number</span>
-                                        <a href="tel:+919182683055">+91 91826 83055</a>
+                                        <a href="tel:+918886689789">+91 88866 89789</a>
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-base">Mail Us on</span>
-                                        <a href="mailto:[adbuthedits@gmail.com]">adbuthedits@gmail.com</a>
+                                        <a href="mailto:contact@adbuthverse.com">contact@adbuthverse.com</a>
                                     </div>
                                 </div>
                             </div>
@@ -247,11 +247,11 @@ export default function ContactUs() {
                     <div className="flex flex-row justify-between items-center ">
                         <div className="mb-4 flex flex-col">
                             <span className="text-lg mr-20 mb-2">Mobile number </span>
-                            <a href="tel:+919182683055">+91 91826 83055</a>
+                            <a href="tel:+918886689789">+91 88866 89789</a>
                         </div>
                         <div className="mb-4 flex flex-col">
                             <span className="text-lg mr-20 mb-2">Mail Us on</span>
-                            <a href="mailto:[adbuthedits@gmail.com]">adbuthedits@gmail.com</a>
+                            <a href="mailto:contact@adbuthverse.com">contact@adbuthverse.com</a>
                         </div>
                     </div>
                 </div>
