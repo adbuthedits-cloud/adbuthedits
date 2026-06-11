@@ -12,7 +12,7 @@ const SECTIONS = [
             <div className="space-y-4">
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Delivery Timelines</h3>
-                    <p>Delivery timelines displayed on the Website are estimates only. Actual timelines may vary due to: Order volume; Project complexity; Revision requirements; Customer delays; Technical issues. Delivery estimates are not guarantees.</p>
+                    <p>Delivery timelines displayed on the Website are estimates only. Actual timelines may vary due to: Order volume, Project complexity, Revision requirements, Customer delays, Technical issues. Delivery estimates are not guarantees.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Download Availability</h3>
@@ -28,7 +28,7 @@ const SECTIONS = [
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Delivery Completion</h3>
-                    <p>Delivery shall be deemed complete when: Files are emailed; Download links are provided; Customer access is granted. Customer failure to download files shall not invalidate delivery.</p>
+                    <p>Delivery shall be deemed complete when: Files are emailed, Download links are provided, Customer access is granted. Customer failure to download files shall not invalidate delivery.</p>
                 </div>
             </div>
         ),

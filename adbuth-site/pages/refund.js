@@ -16,19 +16,19 @@ const SECTIONS = [
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Instant Download Products</h3>
-                    <p>Once a digital product has been: Downloaded; Accessed; Delivered; Made available; it becomes non-refundable.</p>
+                    <p>Once a digital product has been: Downloaded, Accessed, Delivered, Made available, it becomes non-refundable.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Customized Products</h3>
-                    <p>A customized order becomes non-refundable once: Production begins; Design work commences; Resources are allocated; Draft creation starts.</p>
+                    <p>A customized order becomes non-refundable once: Production begins, Design work commences, Resources are allocated, Draft creation starts.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Before Work Begins</h3>
-                    <p>If cancellation is requested before work begins, Adbuthverse may issue a refund at its sole discretion after deducting: Gateway fees; Administrative costs; Processing charges.</p>
+                    <p>If cancellation is requested before work begins, Adbuthverse may issue a refund at its sole discretion after deducting: Gateway fees, Administrative costs, Processing charges.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">After Draft Creation</h3>
-                    <p>No refunds shall be provided after: Draft creation; Preview delivery; Creative development; Design execution.</p>
+                    <p>No refunds shall be provided after: Draft creation, Preview delivery, Creative development, Design execution.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">After Approval</h3>
@@ -40,7 +40,7 @@ const SECTIONS = [
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Technical Defect Exception</h3>
-                    <p>If a delivered file is: Corrupted; Unreadable; Inaccessible; and Adbuthverse cannot provide a functional replacement within a reasonable period, we may: Repair the file; Replace the file; Re-deliver the file. Refunds shall remain at Adbuthverse's discretion.</p>
+                    <p>If a delivered file is: Corrupted, Unreadable, Inaccessible, and Adbuthverse cannot provide a functional replacement within a reasonable period, we may: Repair the file, Replace the file, Re-deliver the file. Refunds shall remain at Adbuthverse's discretion.</p>
                 </div>
             </div>
         ),
@@ -51,9 +51,9 @@ const SECTIONS = [
         title: "2. CHARGEBACK POLICY",
         content: (
             <div className="space-y-3">
-                <p>Customers agree to contact Adbuthverse before initiating: Chargebacks; Payment disputes; Banking disputes; Payment gateway complaints.</p>
-                <p>We reserve the right to submit evidence including: Order records; Communications; Draft approvals; Delivery records; Download logs; Customer acknowledgements.</p>
-                <p>Fraudulent chargebacks may result in: Account suspension; Legal recovery efforts; Collection actions where legally permitted.</p>
+                <p>Customers agree to contact Adbuthverse before initiating: Chargebacks, Payment disputes, Banking disputes, Payment gateway complaints.</p>
+                <p>We reserve the right to submit evidence including: Order records, Communications, Draft approvals, Delivery records, Download logs, Customer acknowledgements.</p>
+                <p>Fraudulent chargebacks may result in: Account suspension, Legal recovery efforts, Collection actions where legally permitted.</p>
             </div>
         ),
         icon: ShieldAlert

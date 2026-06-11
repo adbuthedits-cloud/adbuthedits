@@ -13,14 +13,14 @@ const SECTIONS = [
                 <p>At Adbuthverse, we respect and protect your privacy.</p>
                 <p>This Privacy Policy explains:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>What information we collect;</li>
-                    <li>How we collect it;</li>
-                    <li>Why we collect it;</li>
-                    <li>How we use it;</li>
-                    <li>How we protect it;</li>
+                    <li>What information we collect,</li>
+                    <li>How we collect it,</li>
+                    <li>Why we collect it,</li>
+                    <li>How we use it,</li>
+                    <li>How we protect it,</li>
                     <li>Your rights regarding your personal information.</li>
                 </ul>
-                <p>This Privacy Policy applies to: Website visitors; Customers; Prospective customers; Business partners; Service users worldwide.</p>
+                <p>This Privacy Policy applies to: Website visitors, Customers, Prospective customers, Business partners, Service users worldwide.</p>
                 <p>By using our Website or Services, you acknowledge that you have read and understood this Privacy Policy.</p>
             </div>
         ),
@@ -44,23 +44,23 @@ const SECTIONS = [
             <div className="space-y-4">
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">A. Information You Provide</h3>
-                    <p>We may collect: Full name; Email address; Phone number; Billing address; Event information; Customer preferences; Uploaded photographs; Uploaded videos; Uploaded graphics; Uploaded logos; Uploaded design materials; Communication records; Support requests.</p>
+                    <p>We may collect: Full name, Email address, Phone number, Billing address, Event information, Customer preferences, Uploaded photographs, Uploaded videos, Uploaded graphics, Uploaded logos, Uploaded design materials, Communication records, Support requests.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">B. Payment Information</h3>
-                    <p>Payments are processed through third-party payment providers. We generally do not store: Full credit card numbers; Debit card numbers; CVV information. Payment processors may collect information necessary to process transactions.</p>
+                    <p>Payments are processed through third-party payment providers. We generally do not store: Full credit card numbers, Debit card numbers, CVV information. Payment processors may collect information necessary to process transactions.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">C. Account Information</h3>
-                    <p>Where applicable, we may collect: Login credentials; User preferences; Saved settings; Purchase history.</p>
+                    <p>Where applicable, we may collect: Login credentials, User preferences, Saved settings, Purchase history.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">D. Technical Information</h3>
-                    <p>We may automatically collect: IP address; Browser type; Device information; Operating system; Referral URLs; Website activity; Session information; Time zone; Geographic region.</p>
+                    <p>We may automatically collect: IP address, Browser type, Device information, Operating system, Referral URLs, Website activity, Session information, Time zone, Geographic region.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">E. Analytics Information</h3>
-                    <p>We may collect: Website usage statistics; Page views; Click patterns; Conversion data; Marketing performance information.</p>
+                    <p>We may collect: Website usage statistics, Page views, Click patterns, Conversion data, Marketing performance information.</p>
                 </div>
             </div>
         ),
@@ -70,7 +70,7 @@ const SECTIONS = [
         id: "how-collect",
         title: "4. HOW WE COLLECT INFORMATION",
         content: (
-            <p>We collect information when: You visit our Website; You create an account; You place an order; You submit forms; You upload content; You subscribe to newsletters; You contact support; You participate in promotions; You interact with our advertising.</p>
+            <p>We collect information when: You visit our Website, You create an account, You place an order, You submit forms, You upload content, You subscribe to newsletters, You contact support, You participate in promotions, You interact with our advertising.</p>
         ),
         icon: Database
     },
@@ -82,23 +82,23 @@ const SECTIONS = [
                 <p>We process personal information for legitimate business purposes including:</p>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Order Fulfillment</h3>
-                    <p>Processing orders; Delivering digital products; Providing customer support; Managing revisions; Managing downloads.</p>
+                    <p>Processing orders, Delivering digital products, Providing customer support, Managing revisions, Managing downloads.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Communication</h3>
-                    <p>Customer support; Service notifications; Order updates; Security notices; Legal notices.</p>
+                    <p>Customer support, Service notifications, Order updates, Security notices, Legal notices.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Payment Processing</h3>
-                    <p>Transaction verification; Fraud prevention; Billing management; Refund administration.</p>
+                    <p>Transaction verification, Fraud prevention, Billing management, Refund administration.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Website Improvement</h3>
-                    <p>Analytics; User experience optimization; Technical improvements; Error diagnostics.</p>
+                    <p>Analytics, User experience optimization, Technical improvements, Error diagnostics.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Marketing</h3>
-                    <p>Where permitted by law: Promotional emails; Newsletters; Product announcements; Special offers. You may opt out at any time.</p>
+                    <p>Where permitted by law: Promotional emails, Newsletters, Product announcements, Special offers. You may opt out at any time.</p>
                 </div>
             </div>
         ),
@@ -112,19 +112,19 @@ const SECTIONS = [
                 <p>For users located in the European Economic Area (EEA) or United Kingdom, we process personal information based on:</p>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Contract Performance</h3>
-                    <p>To: Deliver purchased products; Process payments; Provide support; Fulfill contractual obligations.</p>
+                    <p>To: Deliver purchased products, Process payments, Provide support, Fulfill contractual obligations.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Legitimate Interests</h3>
-                    <p>To: Improve services; Prevent fraud; Secure systems; Analyze business performance.</p>
+                    <p>To: Improve services, Prevent fraud, Secure systems, Analyze business performance.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Consent</h3>
-                    <p>For: Marketing communications; Optional cookies; Promotional activities.</p>
+                    <p>For: Marketing communications, Optional cookies, Promotional activities.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Legal Obligations</h3>
-                    <p>To: Maintain accounting records; Comply with laws; Respond to lawful requests.</p>
+                    <p>To: Maintain accounting records, Comply with laws, Respond to lawful requests.</p>
                 </div>
             </div>
         ),
@@ -135,8 +135,8 @@ const SECTIONS = [
         title: "7. CUSTOMER CONTENT",
         content: (
             <div className="space-y-3">
-                <p>Customers may upload: Photographs; Videos; Event details; Names; Graphics; Logos; Design assets.</p>
-                <p>Such content is processed solely for: Product creation; Product customization; Product delivery.</p>
+                <p>Customers may upload: Photographs, Videos, Event details, Names, Graphics, Logos, Design assets.</p>
+                <p>Such content is processed solely for: Product creation, Product customization, Product delivery.</p>
                 <p>We do not claim ownership of customer-uploaded content. However, customers grant Adbuthverse a limited license necessary to perform requested services.</p>
             </div>
         ),
@@ -146,7 +146,7 @@ const SECTIONS = [
         id: "third-party",
         title: "8. THIRD-PARTY SERVICE PROVIDERS",
         content: (
-            <p>We may use third-party providers for: Payment processing; Website hosting; Cloud storage; Analytics; Email delivery; Customer support; Security monitoring. These providers may access information only as necessary to provide services.</p>
+            <p>We may use third-party providers for: Payment processing, Website hosting, Cloud storage, Analytics, Email delivery, Customer support, Security monitoring. These providers may access information only as necessary to provide services.</p>
         ),
         icon: Share2
     },
@@ -154,7 +154,7 @@ const SECTIONS = [
         id: "international-transfers",
         title: "9. INTERNATIONAL DATA TRANSFERS",
         content: (
-            <p>Because Adbuthverse serves customers globally, personal information may be transferred to and processed in: India; United States; European Union countries; United Kingdom; Canada; Australia; Other jurisdictions where service providers operate. By using our Services, you acknowledge such transfers. Where legally required, appropriate safeguards will be implemented.</p>
+            <p>Because Adbuthverse serves customers globally, personal information may be transferred to and processed in: India, United States, European Union countries, United Kingdom, Canada, Australia, Other jurisdictions where service providers operate. By using our Services, you acknowledge such transfers. Where legally required, appropriate safeguards will be implemented.</p>
         ),
         icon: Globe
     },
@@ -162,7 +162,7 @@ const SECTIONS = [
         id: "security",
         title: "10. DATA SECURITY",
         content: (
-            <p>We implement commercially reasonable safeguards including: SSL encryption; Secure payment processing; Access controls; Password protections; Firewall protections; Internal confidentiality procedures. No method of transmission or storage can be guaranteed as completely secure.</p>
+            <p>We implement commercially reasonable safeguards including: SSL encryption, Secure payment processing, Access controls, Password protections, Firewall protections, Internal confidentiality procedures. No method of transmission or storage can be guaranteed as completely secure.</p>
         ),
         icon: Lock
     },
@@ -178,7 +178,7 @@ const SECTIONS = [
         id: "marketing",
         title: "12. MARKETING COMMUNICATIONS",
         content: (
-            <p>You may receive marketing communications if: You subscribe voluntarily; Applicable laws permit communication. You may unsubscribe at any time through: Email links; Contact requests; Account settings where available.</p>
+            <p>You may receive marketing communications if: You subscribe voluntarily, Applicable laws permit communication. You may unsubscribe at any time through: Email links, Contact requests, Account settings where available.</p>
         ),
         icon: Mail
     },
@@ -224,7 +224,7 @@ const SECTIONS = [
         id: "gdpr-rights",
         title: "14. GDPR RIGHTS",
         content: (
-            <p>For EEA and UK users: You may request: Access; Rectification; Erasure; Restriction; Portability; Objection. Requests should be directed to: privacy@adbuthverse.com</p>
+            <p>For EEA and UK users: You may request: Access, Rectification, Erasure, Restriction, Portability, Objection. Requests should be directed to: privacy@adbuthverse.com</p>
         ),
         icon: ShieldCheck
     },
@@ -248,7 +248,7 @@ const SECTIONS = [
         id: "what-cookies",
         title: "17. WHAT ARE COOKIES",
         content: (
-            <p>Cookies are small text files stored on your device. They help: Website functionality; Security; Analytics; User preferences.</p>
+            <p>Cookies are small text files stored on your device. They help: Website functionality, Security, Analytics, User preferences.</p>
         ),
         icon: Cookie
     },
@@ -259,19 +259,19 @@ const SECTIONS = [
             <div className="space-y-4">
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Essential Cookies</h3>
-                    <p>Required for: Website operation; Security; Checkout functionality; Session management. These cannot generally be disabled.</p>
+                    <p>Required for: Website operation, Security, Checkout functionality, Session management. These cannot generally be disabled.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Analytics Cookies</h3>
-                    <p>Used to: Measure traffic; Analyze performance; Improve functionality.</p>
+                    <p>Used to: Measure traffic, Analyze performance, Improve functionality.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Functional Cookies</h3>
-                    <p>Used to: Remember preferences; Improve user experience.</p>
+                    <p>Used to: Remember preferences, Improve user experience.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Marketing Cookies</h3>
-                    <p>Used to: Deliver advertisements; Measure campaign performance; Personalize content. Marketing cookies are deployed only where permitted by law.</p>
+                    <p>Used to: Deliver advertisements, Measure campaign performance, Personalize content. Marketing cookies are deployed only where permitted by law.</p>
                 </div>
             </div>
         ),
@@ -281,7 +281,7 @@ const SECTIONS = [
         id: "cookie-consent",
         title: "19. COOKIE CONSENT",
         content: (
-            <p>Where required by applicable laws: Visitors will be provided options to: Accept all cookies; Reject non-essential cookies; Customize preferences. Consent may be withdrawn at any time.</p>
+            <p>Where required by applicable laws: Visitors will be provided options to: Accept all cookies, Reject non-essential cookies, Customize preferences. Consent may be withdrawn at any time.</p>
         ),
         icon: Cookie
     },
@@ -289,7 +289,7 @@ const SECTIONS = [
         id: "third-party-cookies",
         title: "20. THIRD-PARTY COOKIES",
         content: (
-            <p>Third-party services may set cookies including: Analytics providers; Advertising providers; Payment processors; Social media integrations. Such providers maintain their own privacy policies.</p>
+            <p>Third-party services may set cookies including: Analytics providers, Advertising providers, Payment processors, Social media integrations. Such providers maintain their own privacy policies.</p>
         ),
         icon: Cookie
     },
@@ -297,7 +297,7 @@ const SECTIONS = [
         id: "retention-principles",
         title: "21. RETENTION PRINCIPLES",
         content: (
-            <p>We retain information only as long as reasonably necessary for: Service delivery; Legal compliance; Accounting obligations; Security purposes; Business operations.</p>
+            <p>We retain information only as long as reasonably necessary for: Service delivery, Legal compliance, Accounting obligations, Security purposes, Business operations.</p>
         ),
         icon: Clipboard
     },
@@ -320,7 +320,7 @@ const SECTIONS = [
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Marketing Information</h3>
-                    <p>Retained until: Consent withdrawal; Opt-out request; Business necessity ends.</p>
+                    <p>Retained until: Consent withdrawal, Opt-out request, Business necessity ends.</p>
                 </div>
                 <div>
                     <h3 className="font-bold text-slate-900 mb-1">Analytics Information</h3>
@@ -338,7 +338,7 @@ const SECTIONS = [
         id: "deletion-requests",
         title: "23. DATA DELETION REQUESTS",
         content: (
-            <p>Customers may request deletion of personal information. Certain information may be retained where necessary for: Legal compliance; Tax obligations; Fraud prevention; Contract enforcement.</p>
+            <p>Customers may request deletion of personal information. Certain information may be retained where necessary for: Legal compliance, Tax obligations, Fraud prevention, Contract enforcement.</p>
         ),
         icon: Clipboard
     },
@@ -386,7 +386,7 @@ const SECTIONS = [
         id: "us",
         title: "29. UNITED STATES",
         content: (
-            <p>Residents of certain U.S. states may possess additional privacy rights under applicable state laws. Such rights may include: Access requests; Deletion requests; Correction requests; Opt-out rights.</p>
+            <p>Residents of certain U.S. states may possess additional privacy rights under applicable state laws. Such rights may include: Access requests, Deletion requests, Correction requests, Opt-out rights.</p>
         ),
         icon: Globe
     },

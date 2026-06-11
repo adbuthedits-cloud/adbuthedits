@@ -61,9 +61,9 @@ const SECTIONS = [
             <div className="space-y-3">
                 <p>You represent and warrant that:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>You are at least eighteen (18) years of age;</li>
-                    <li>You possess legal capacity to enter into binding agreements;</li>
-                    <li>Any information you provide is accurate and complete;</li>
+                    <li>You are at least eighteen (18) years of age,</li>
+                    <li>You possess legal capacity to enter into binding agreements,</li>
+                    <li>Any information you provide is accurate and complete,</li>
                     <li>You are authorized to make purchases using the selected payment method.</li>
                 </ul>
                 <p>We reserve the right to refuse service, suspend access, or cancel orders if eligibility requirements are not satisfied.</p>
@@ -125,10 +125,10 @@ const SECTIONS = [
                 <p>Submission of an order does not guarantee acceptance.</p>
                 <p>We reserve the right to:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Accept or reject any order;</li>
-                    <li>Cancel suspicious transactions;</li>
-                    <li>Refuse service;</li>
-                    <li>Request identity verification;</li>
+                    <li>Accept or reject any order,</li>
+                    <li>Cancel suspicious transactions,</li>
+                    <li>Refuse service,</li>
+                    <li>Request identity verification,</li>
                     <li>Request additional information.</li>
                 </ul>
                 <p>An order becomes accepted only when payment has been successfully processed and confirmed.</p>
@@ -146,9 +146,9 @@ const SECTIONS = [
                 <p>Applicable taxes, fees, duties, conversion fees, gateway charges, and banking charges may apply depending upon customer location and payment method.</p>
                 <p>Customers are solely responsible for any charges imposed by:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Banks;</li>
-                    <li>Payment gateways;</li>
-                    <li>Card issuers;</li>
+                    <li>Banks,</li>
+                    <li>Payment gateways,</li>
+                    <li>Card issuers,</li>
                     <li>Currency conversion providers.</li>
                 </ul>
                 <p>Failure of payment authorization may result in order cancellation.</p>
@@ -173,10 +173,10 @@ const SECTIONS = [
                 <p>Customers are responsible for providing accurate contact information.</p>
                 <p>We shall not be responsible for delivery issues caused by:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Incorrect email addresses;</li>
-                    <li>Spam filters;</li>
-                    <li>Full inboxes;</li>
-                    <li>Network restrictions;</li>
+                    <li>Incorrect email addresses,</li>
+                    <li>Spam filters,</li>
+                    <li>Full inboxes,</li>
+                    <li>Network restrictions,</li>
                     <li>Customer device limitations.</li>
                 </ul>
             </div>
@@ -191,17 +191,17 @@ const SECTIONS = [
                 <p>For customized orders:</p>
                 <p>Production begins only after:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Payment confirmation;</li>
-                    <li>Submission of required information;</li>
-                    <li>Submission of required content;</li>
+                    <li>Payment confirmation,</li>
+                    <li>Submission of required information,</li>
+                    <li>Submission of required content,</li>
                     <li>Receipt of customer instructions.</li>
                 </ul>
                 <p>Customers must provide:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Correct spelling;</li>
-                    <li>Correct dates;</li>
-                    <li>Accurate event information;</li>
-                    <li>Necessary photographs;</li>
+                    <li>Correct spelling,</li>
+                    <li>Correct dates,</li>
+                    <li>Accurate event information,</li>
+                    <li>Necessary photographs,</li>
                     <li>Other requested materials.</li>
                 </ul>
                 <p>The customer bears full responsibility for the accuracy of submitted information.</p>
@@ -216,10 +216,10 @@ const SECTIONS = [
             <div className="space-y-3">
                 <p>Customers agree to:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Provide accurate information;</li>
-                    <li>Respond promptly to requests;</li>
-                    <li>Review drafts carefully;</li>
-                    <li>Verify spelling, dates, names, and details;</li>
+                    <li>Provide accurate information,</li>
+                    <li>Respond promptly to requests,</li>
+                    <li>Review drafts carefully,</li>
+                    <li>Verify spelling, dates, names, and details,</li>
                     <li>Maintain copies of delivered files.</li>
                 </ul>
                 <p>Failure to review drafts carefully shall not create liability for Adbuthverse.</p>
@@ -235,8 +235,8 @@ const SECTIONS = [
                 <p>Drafts are provided solely for review purposes.</p>
                 <p>Upon approving a draft, the customer confirms that:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>The design direction is acceptable;</li>
-                    <li>All information has been verified;</li>
+                    <li>The design direction is acceptable,</li>
+                    <li>All information has been verified,</li>
                     <li>Required corrections have been communicated.</li>
                 </ul>
                 <p>Draft approval constitutes acceptance of the approved content.</p>
@@ -255,17 +255,17 @@ const SECTIONS = [
                 <p>Up to two (2) minor revisions.</p>
                 <p>Minor revisions may include:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Text corrections;</li>
-                    <li>Date changes;</li>
-                    <li>Minor color adjustments;</li>
+                    <li>Text corrections,</li>
+                    <li>Date changes,</li>
+                    <li>Minor color adjustments,</li>
                     <li>Small layout refinements.</li>
                 </ul>
                 <p>Major revisions include:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Complete redesigns;</li>
-                    <li>New concepts;</li>
-                    <li>Theme changes;</li>
-                    <li>Structural modifications;</li>
+                    <li>Complete redesigns,</li>
+                    <li>New concepts,</li>
+                    <li>Theme changes,</li>
+                    <li>Structural modifications,</li>
                     <li>Additional animation sequences.</li>
                 </ul>
                 <p>Major revisions may incur additional fees.</p>
@@ -282,10 +282,10 @@ const SECTIONS = [
                 <p>Delivery timelines are dependent upon customer cooperation.</p>
                 <p>If the customer delays:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Providing materials;</li>
-                    <li>Approvals;</li>
-                    <li>Feedback;</li>
-                    <li>Required information;</li>
+                    <li>Providing materials,</li>
+                    <li>Approvals,</li>
+                    <li>Feedback,</li>
+                    <li>Required information,</li>
                 </ul>
                 <p>all delivery timelines shall automatically extend by the duration of such delay.</p>
                 <p>Adbuthverse shall not be responsible for resulting scheduling impacts.</p>
@@ -301,8 +301,8 @@ const SECTIONS = [
                 <p>A project may be deemed abandoned if the customer becomes unresponsive for thirty (30) consecutive days.</p>
                 <p>In such cases:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Work may be suspended;</li>
-                    <li>Files may be archived;</li>
+                    <li>Work may be suspended,</li>
+                    <li>Files may be archived,</li>
                     <li>Delivery commitments may be terminated.</li>
                 </ul>
                 <p>No refund shall be issued for abandoned projects.</p>
@@ -319,15 +319,15 @@ const SECTIONS = [
                 <p>Products and services are provided on an "AS IS" and "AS AVAILABLE" basis.</p>
                 <p>To the fullest extent permitted by law, Adbuthverse disclaims all warranties including:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Merchantability;</li>
-                    <li>Fitness for a particular purpose;</li>
-                    <li>Non-infringement;</li>
+                    <li>Merchantability,</li>
+                    <li>Fitness for a particular purpose,</li>
+                    <li>Non-infringement,</li>
                     <li>Continuous availability.</li>
                 </ul>
                 <p>We do not guarantee:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>Uninterrupted service;</li>
-                    <li>Error-free operation;</li>
+                    <li>Uninterrupted service,</li>
+                    <li>Error-free operation,</li>
                     <li>Compatibility with every device or platform.</li>
                 </ul>
             </div>
@@ -343,11 +343,11 @@ const SECTIONS = [
                 <p>Adbuthverse shall not be liable for:</p>
                 <ul className="list-disc ml-5 space-y-1">
                     <li>Indirect damages.</li>
-                    <li>Consequential damages;</li>
-                    <li>Lost profits;</li>
-                    <li>Lost opportunities;</li>
-                    <li>Emotional distress;</li>
-                    <li>Reputational harm;</li>
+                    <li>Consequential damages,</li>
+                    <li>Lost profits,</li>
+                    <li>Lost opportunities,</li>
+                    <li>Emotional distress,</li>
+                    <li>Reputational harm,</li>
                     <li>Business interruption.</li>
                 </ul>
                 <p>Our maximum liability shall never exceed the amount paid by the customer for the specific order giving rise to the claim.</p>
