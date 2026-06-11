@@ -152,6 +152,9 @@ export default function Signup() {
     const recaptchaContainerRef = useRef(null);
     const recaptchaVerifierRef = useRef(null);
 
+    // ── Consent
+    const [emailConsent, setEmailConsent] = useState(false);
+
     // ── UI state
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -248,6 +251,11 @@ export default function Signup() {
         e.preventDefault();
         setError('');
 
+        if (!emailConsent) {
+            setError('Please agree to receive order and account emails to continue.');
+            return;
+        }
+
         if (!firstName.trim() || !lastName.trim()) {
             setError('Please enter your first and last name.');
             return;
@@ -284,7 +292,8 @@ export default function Signup() {
                     last_name: lastName,
                     email,
                     password,
-                    phone_number: { code: countryCode, number: phone }
+                    phone_number: { code: countryCode, number: phone },
+                    email_consent: emailConsent
                 })
             });
             const text = await res.text();
@@ -580,8 +589,39 @@ export default function Signup() {
                                                 </button>
                                             </div>
 
-                                            <button id="signup-submit-btn" type="submit" disabled={isSubmitting}
-                                                className="w-full mt-4 bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-70 shadow-lg flex items-center justify-center gap-2 text-sm">
+                                            {/* Email Consent Checkbox */}
+                                            <div className="mt-4">
+                                                <label id="signup-consent-label" htmlFor="signup-email-consent" className="flex items-start gap-3 cursor-pointer group">
+                                                    <div className="relative mt-0.5 flex-shrink-0">
+                                                        <input
+                                                            id="signup-email-consent"
+                                                            type="checkbox"
+                                                            checked={emailConsent}
+                                                            onChange={e => setEmailConsent(e.target.checked)}
+                                                            className="sr-only"
+                                                        />
+                                                        <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
+                                                            emailConsent
+                                                                ? 'bg-purple-500 border-purple-500'
+                                                                : 'bg-transparent border-white/30 group-hover:border-purple-400'
+                                                        }`}>
+                                                            {emailConsent && (
+                                                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[11px] text-white/40 leading-relaxed group-hover:text-white/60 transition-colors">
+                                                        I agree to receive order confirmations, account alerts, and delivery notifications from Adbuthverse.
+                                                        View our{' '}
+                                                        <Link href="/privacy" className="text-purple-400 underline hover:text-purple-300" target="_blank">Privacy Policy</Link>.
+                                                    </span>
+                                                </label>
+                                            </div>
+
+                                            <button id="signup-submit-btn" type="submit" disabled={isSubmitting || !emailConsent}
+                                                className="w-full mt-4 bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 text-sm">
                                                 {isSubmitting ? (
                                                     <><div className="animate-spin w-4 h-4 border-2 border-black/30 border-t-black rounded-full" /><span>Creating Account...</span></>
                                                 ) : <><FontAwesomeIcon icon={faUser} className="text-xs" /> Create Account</>}

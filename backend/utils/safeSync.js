@@ -82,6 +82,9 @@ const migrations = [
         suppressed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`,
+
+    // --- User Email Consent (AWS SES opt-in compliance) ---
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS email_consent BOOLEAN DEFAULT false`,
 ];
 
 async function runSafeMigrations() {

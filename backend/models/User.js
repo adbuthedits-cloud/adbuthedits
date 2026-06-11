@@ -87,7 +87,12 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING(30),
         allowNull: true,
         // Values: 'email_login', 'phone_login', 'email_verify', 'forgot_password'
-    }
+    },
+    // Whether the user explicitly consented to receive transactional emails at signup
+    email_consent: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
 }, {
     hooks: {
         beforeCreate: async (user) => {
