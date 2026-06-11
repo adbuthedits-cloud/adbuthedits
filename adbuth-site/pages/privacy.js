@@ -13,14 +13,21 @@ const SECTIONS = [
                 <p>At Adbuthverse, we respect and protect your privacy.</p>
                 <p>This Privacy Policy explains:</p>
                 <ul className="list-disc ml-5 space-y-1">
-                    <li>What information we collect,</li>
-                    <li>How we collect it,</li>
-                    <li>Why we collect it,</li>
-                    <li>How we use it,</li>
-                    <li>How we protect it,</li>
-                    <li>Your rights regarding your personal information.</li>
+                    <li>What information we collect</li>
+                    <li>How we collect it</li>
+                    <li>Why we collect it</li>
+                    <li>How we use it</li>
+                    <li>How we protect it</li>
+                    <li>Your rights regarding your personal information</li>
                 </ul>
-                <p>This Privacy Policy applies to: Website visitors, Customers, Prospective customers, Business partners, Service users worldwide.</p>
+                <p>This Privacy Policy applies to:</p>
+                <ul className="list-disc ml-5 space-y-1 mb-3">
+                    <li>Website visitors</li>
+                    <li>Customers</li>
+                    <li>Prospective customers</li>
+                    <li>Business partners</li>
+                    <li>Service users worldwide</li>
+                </ul>
                 <p>By using our Website or Services, you acknowledge that you have read and understood this Privacy Policy.</p>
             </div>
         ),
@@ -419,7 +426,7 @@ export default function Privacy() {
                 description={seoData?.meta_description || seoData?.description || "Privacy Policy for Adbuth Verse."}
                 data={seoData}
             />
-            
+
             <Navbar isdark={false} highlight="" />
 
             {/* Header */}
