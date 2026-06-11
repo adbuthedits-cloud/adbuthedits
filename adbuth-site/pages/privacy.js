@@ -1,4 +1,4 @@
-import { Lock, Database, FileText, Trash2, Share2, Cookie, Mail } from 'lucide-react';
+import { Lock, Database, FileText, Share2, Cookie, Mail, ShieldCheck, Clipboard, Globe } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SeoHead from '../components/SeoHead';
@@ -7,82 +7,403 @@ import useSeo from '../hooks/useSeo';
 const SECTIONS = [
     {
         id: "intro",
-        title: "1. Introduction",
-        content: "Welcome to Adbuth Verse. We respect your privacy and are committed to safeguarding your personal data. This Privacy Policy details how we handle and protect your information when you use our website, services, and associated social media logins.",
+        title: "1. INTRODUCTION",
+        content: (
+            <div className="space-y-3">
+                <p>At Adbuthverse, we respect and protect your privacy.</p>
+                <p>This Privacy Policy explains:</p>
+                <ul className="list-disc ml-5 space-y-1">
+                    <li>What information we collect;</li>
+                    <li>How we collect it;</li>
+                    <li>Why we collect it;</li>
+                    <li>How we use it;</li>
+                    <li>How we protect it;</li>
+                    <li>Your rights regarding your personal information.</li>
+                </ul>
+                <p>This Privacy Policy applies to: Website visitors; Customers; Prospective customers; Business partners; Service users worldwide.</p>
+                <p>By using our Website or Services, you acknowledge that you have read and understood this Privacy Policy.</p>
+            </div>
+        ),
         icon: Lock
     },
     {
-        id: "collect",
-        title: "2. Information We Collect",
+        id: "data-controller",
+        title: "2. DATA CONTROLLER",
         content: (
             <div className="space-y-3">
-                <p>We collect personal information directly provided by you, automatically when visiting our site, or via linked third-party authentication services:</p>
-                <ul className="list-disc ml-5 space-y-1.5">
-                    <li><strong className="text-slate-900">Account profile credentials:</strong> First name, last name, email address, phone contact details, and brand name preferences.</li>
-                    <li><strong className="text-slate-900">Social Login Authentication Data:</strong> If you connect via Facebook, Google, or X (Twitter) logins, we receive your public profile name, verified email, and profile avatar as authorized by your platform permissions.</li>
-                    <li><strong className="text-slate-900">Customization Briefs:</strong> Form answers, text details, and uploaded media attachments (photos/videos) that you submit to customize templates.</li>
-                </ul>
+                <p>For the purposes of applicable privacy laws, the data controller is:</p>
+                <p>Jaya's Adbuth Productions LLP<br />Nellore, Andhra Pradesh, India<br />Email: privacy@adbuthverse.com<br />Support Email: support@adbuthverse.com</p>
+            </div>
+        ),
+        icon: ShieldCheck
+    },
+    {
+        id: "info-collect",
+        title: "3. INFORMATION WE COLLECT",
+        content: (
+            <div className="space-y-4">
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">A. Information You Provide</h3>
+                    <p>We may collect: Full name; Email address; Phone number; Billing address; Event information; Customer preferences; Uploaded photographs; Uploaded videos; Uploaded graphics; Uploaded logos; Uploaded design materials; Communication records; Support requests.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">B. Payment Information</h3>
+                    <p>Payments are processed through third-party payment providers. We generally do not store: Full credit card numbers; Debit card numbers; CVV information. Payment processors may collect information necessary to process transactions.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">C. Account Information</h3>
+                    <p>Where applicable, we may collect: Login credentials; User preferences; Saved settings; Purchase history.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">D. Technical Information</h3>
+                    <p>We may automatically collect: IP address; Browser type; Device information; Operating system; Referral URLs; Website activity; Session information; Time zone; Geographic region.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">E. Analytics Information</h3>
+                    <p>We may collect: Website usage statistics; Page views; Click patterns; Conversion data; Marketing performance information.</p>
+                </div>
             </div>
         ),
         icon: Database
     },
     {
-        id: "use",
-        title: "3. How We Use Your Information",
+        id: "how-collect",
+        title: "4. HOW WE COLLECT INFORMATION",
         content: (
-            <div className="space-y-3">
-                <p>Adbuth Verse uses your collected data for the following essential business purposes:</p>
-                <ul className="list-disc ml-5 space-y-1.5">
-                    <li>To create, verify, and manage user accounts securely.</li>
-                    <li>To process transactions, complete customizations, and render template orders.</li>
-                    <li>To send automated notifications (such as sign-up OTP codes, order updates, and receipts).</li>
-                    <li>To improve website performance, monitor page loading times, and prevent bot abuse.</li>
-                </ul>
+            <p>We collect information when: You visit our Website; You create an account; You place an order; You submit forms; You upload content; You subscribe to newsletters; You contact support; You participate in promotions; You interact with our advertising.</p>
+        ),
+        icon: Database
+    },
+    {
+        id: "purposes",
+        title: "5. PURPOSES OF PROCESSING",
+        content: (
+            <div className="space-y-4">
+                <p>We process personal information for legitimate business purposes including:</p>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Order Fulfillment</h3>
+                    <p>Processing orders; Delivering digital products; Providing customer support; Managing revisions; Managing downloads.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Communication</h3>
+                    <p>Customer support; Service notifications; Order updates; Security notices; Legal notices.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Payment Processing</h3>
+                    <p>Transaction verification; Fraud prevention; Billing management; Refund administration.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Website Improvement</h3>
+                    <p>Analytics; User experience optimization; Technical improvements; Error diagnostics.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Marketing</h3>
+                    <p>Where permitted by law: Promotional emails; Newsletters; Product announcements; Special offers. You may opt out at any time.</p>
+                </div>
             </div>
         ),
         icon: FileText
     },
     {
-        id: "deletion",
-        title: "4. Data Deletion (Your Rights)",
+        id: "legal-basis",
+        title: "6. LEGAL BASIS FOR PROCESSING (GDPR / UK GDPR)",
         content: (
             <div className="space-y-4">
-                <p>In strict compliance with Facebook, Google, and global privacy standards, you have the absolute right to request the permanent deletion of your account and all associated profile, transaction, and customization files from our servers.</p>
-                <div className="bg-purple-50 border border-purple-200 p-5 sm:p-6 rounded-xl mt-2">
-                    <p className="font-bold text-purple-700 mb-2 flex items-center gap-2">
-                        <Trash2 size={16} /> How to Request Permanent Data Deletion:
-                    </p>
-                    <ol className="list-decimal ml-5 space-y-2 text-sm sm:text-base">
-                        <li>Send an email to <strong className="text-slate-900 font-medium">contact@adbuthverse.com</strong> with the subject line <strong className="text-slate-900 font-mono font-medium">"Data Deletion Request"</strong>.</li>
-                        <li>Include your registered email address or account username in the email body.</li>
-                        <li>Our system administrators will process your request and permanently delete all your data and account records within <strong className="text-purple-700">48 to 72 hours</strong>. We will send a final email confirmation once complete.</li>
-                    </ol>
+                <p>For users located in the European Economic Area (EEA) or United Kingdom, we process personal information based on:</p>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Contract Performance</h3>
+                    <p>To: Deliver purchased products; Process payments; Provide support; Fulfill contractual obligations.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Legitimate Interests</h3>
+                    <p>To: Improve services; Prevent fraud; Secure systems; Analyze business performance.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Consent</h3>
+                    <p>For: Marketing communications; Optional cookies; Promotional activities.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Legal Obligations</h3>
+                    <p>To: Maintain accounting records; Comply with laws; Respond to lawful requests.</p>
                 </div>
             </div>
         ),
-        icon: Trash2
+        icon: ShieldCheck
     },
     {
-        id: "sharing",
-        title: "5. Data Sharing",
-        content: "We do not sell, rent, or trade your personal data to marketing brokers or third parties. We share information only with trusted service providers necessary to run our platform operations (such as Razorpay for secure payments, Firebase for mobile authentication, and AWS for transactional email delivery).",
+        id: "customer-content",
+        title: "7. CUSTOMER CONTENT",
+        content: (
+            <div className="space-y-3">
+                <p>Customers may upload: Photographs; Videos; Event details; Names; Graphics; Logos; Design assets.</p>
+                <p>Such content is processed solely for: Product creation; Product customization; Product delivery.</p>
+                <p>We do not claim ownership of customer-uploaded content. However, customers grant Adbuthverse a limited license necessary to perform requested services.</p>
+            </div>
+        ),
+        icon: Clipboard
+    },
+    {
+        id: "third-party",
+        title: "8. THIRD-PARTY SERVICE PROVIDERS",
+        content: (
+            <p>We may use third-party providers for: Payment processing; Website hosting; Cloud storage; Analytics; Email delivery; Customer support; Security monitoring. These providers may access information only as necessary to provide services.</p>
+        ),
         icon: Share2
     },
     {
-        id: "cookies",
-        title: "6. Cookies",
-        content: "We use essential functional cookies and local session storage keys to keep you logged in, preserve your active shopping cart state, and remember your dashboard settings. You can manage, disable, or delete cookies via your browser preferences, though doing so may limit your ability to access secure areas of our website.",
+        id: "international-transfers",
+        title: "9. INTERNATIONAL DATA TRANSFERS",
+        content: (
+            <p>Because Adbuthverse serves customers globally, personal information may be transferred to and processed in: India; United States; European Union countries; United Kingdom; Canada; Australia; Other jurisdictions where service providers operate. By using our Services, you acknowledge such transfers. Where legally required, appropriate safeguards will be implemented.</p>
+        ),
+        icon: Globe
+    },
+    {
+        id: "security",
+        title: "10. DATA SECURITY",
+        content: (
+            <p>We implement commercially reasonable safeguards including: SSL encryption; Secure payment processing; Access controls; Password protections; Firewall protections; Internal confidentiality procedures. No method of transmission or storage can be guaranteed as completely secure.</p>
+        ),
+        icon: Lock
+    },
+    {
+        id: "children",
+        title: "11. CHILDREN'S PRIVACY",
+        content: (
+            <p>Our services are not directed toward individuals under eighteen (18) years of age. We do not knowingly collect personal information from children. If such information is discovered, it will be deleted.</p>
+        ),
+        icon: ShieldCheck
+    },
+    {
+        id: "marketing",
+        title: "12. MARKETING COMMUNICATIONS",
+        content: (
+            <p>You may receive marketing communications if: You subscribe voluntarily; Applicable laws permit communication. You may unsubscribe at any time through: Email links; Contact requests; Account settings where available.</p>
+        ),
+        icon: Mail
+    },
+    {
+        id: "rights",
+        title: "13. YOUR PRIVACY RIGHTS",
+        content: (
+            <div className="space-y-4">
+                <p>Depending upon your jurisdiction, you may have rights including:</p>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Right of Access</h3>
+                    <p>Request access to personal information.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Right of Correction</h3>
+                    <p>Request correction of inaccurate information.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Right of Deletion</h3>
+                    <p>Request deletion of personal information.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Right of Restriction</h3>
+                    <p>Request restricted processing.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Right of Portability</h3>
+                    <p>Request data transfer where applicable.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Right to Object</h3>
+                    <p>Object to certain processing activities.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Right to Withdraw Consent</h3>
+                    <p>Withdraw consent at any time.</p>
+                </div>
+            </div>
+        ),
+        icon: ShieldCheck
+    },
+    {
+        id: "gdpr-rights",
+        title: "14. GDPR RIGHTS",
+        content: (
+            <p>For EEA and UK users: You may request: Access; Rectification; Erasure; Restriction; Portability; Objection. Requests should be directed to: privacy@adbuthverse.com</p>
+        ),
+        icon: ShieldCheck
+    },
+    {
+        id: "response-period",
+        title: "15. RESPONSE PERIOD",
+        content: (
+            <p>We generally respond to privacy requests within: Thirty (30) days, unless additional time is permitted by law.</p>
+        ),
+        icon: Clipboard
+    },
+    {
+        id: "complaints",
+        title: "16. COMPLAINTS",
+        content: (
+            <p>EEA and UK residents may file complaints with their applicable supervisory authority. Nothing in this Policy limits such rights.</p>
+        ),
+        icon: ShieldCheck
+    },
+    {
+        id: "what-cookies",
+        title: "17. WHAT ARE COOKIES",
+        content: (
+            <p>Cookies are small text files stored on your device. They help: Website functionality; Security; Analytics; User preferences.</p>
+        ),
         icon: Cookie
     },
     {
-        id: "contact",
-        title: "7. Contact Us",
+        id: "cookie-types",
+        title: "18. TYPES OF COOKIES WE USE",
         content: (
-            <div>
-                <p>If you have any questions, compliance concerns, or general comments regarding this Privacy Policy or data storage practices, please reach out to our privacy officer:</p>
-                <p className="mt-4 font-bold text-slate-900 flex items-center gap-2">
-                    <Mail size={16} className="text-purple-700" /> Email: contact@adbuthverse.com
-                </p>
+            <div className="space-y-4">
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Essential Cookies</h3>
+                    <p>Required for: Website operation; Security; Checkout functionality; Session management. These cannot generally be disabled.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Analytics Cookies</h3>
+                    <p>Used to: Measure traffic; Analyze performance; Improve functionality.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Functional Cookies</h3>
+                    <p>Used to: Remember preferences; Improve user experience.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Marketing Cookies</h3>
+                    <p>Used to: Deliver advertisements; Measure campaign performance; Personalize content. Marketing cookies are deployed only where permitted by law.</p>
+                </div>
+            </div>
+        ),
+        icon: Cookie
+    },
+    {
+        id: "cookie-consent",
+        title: "19. COOKIE CONSENT",
+        content: (
+            <p>Where required by applicable laws: Visitors will be provided options to: Accept all cookies; Reject non-essential cookies; Customize preferences. Consent may be withdrawn at any time.</p>
+        ),
+        icon: Cookie
+    },
+    {
+        id: "third-party-cookies",
+        title: "20. THIRD-PARTY COOKIES",
+        content: (
+            <p>Third-party services may set cookies including: Analytics providers; Advertising providers; Payment processors; Social media integrations. Such providers maintain their own privacy policies.</p>
+        ),
+        icon: Cookie
+    },
+    {
+        id: "retention-principles",
+        title: "21. RETENTION PRINCIPLES",
+        content: (
+            <p>We retain information only as long as reasonably necessary for: Service delivery; Legal compliance; Accounting obligations; Security purposes; Business operations.</p>
+        ),
+        icon: Clipboard
+    },
+    {
+        id: "retention-periods",
+        title: "22. RETENTION PERIODS",
+        content: (
+            <div className="space-y-4">
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Customer Orders</h3>
+                    <p>Retained for up to seven (7) years.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Invoices</h3>
+                    <p>Retained for up to seven (7) years.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Support Communications</h3>
+                    <p>Retained for up to three (3) years.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Marketing Information</h3>
+                    <p>Retained until: Consent withdrawal; Opt-out request; Business necessity ends.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Analytics Information</h3>
+                    <p>Retained according to applicable analytics settings and legal requirements.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Customer Files</h3>
+                    <p>Customer files may be archived, deleted, or removed after project completion. Customers are responsible for maintaining backups of delivered files. Adbuthverse does not guarantee indefinite file storage.</p>
+                </div>
+            </div>
+        ),
+        icon: Clipboard
+    },
+    {
+        id: "deletion-requests",
+        title: "23. DATA DELETION REQUESTS",
+        content: (
+            <p>Customers may request deletion of personal information. Certain information may be retained where necessary for: Legal compliance; Tax obligations; Fraud prevention; Contract enforcement.</p>
+        ),
+        icon: Clipboard
+    },
+    {
+        id: "india",
+        title: "24. INDIA",
+        content: (
+            <p>For Indian users, personal data is processed in accordance with applicable Indian laws, including the Digital Personal Data Protection Act, 2023 and related regulations.</p>
+        ),
+        icon: Globe
+    },
+    {
+        id: "eu",
+        title: "25. EUROPEAN UNION",
+        content: (
+            <p>For EU residents: Processing is performed in accordance with GDPR requirements where applicable.</p>
+        ),
+        icon: Globe
+    },
+    {
+        id: "uk",
+        title: "26. UNITED KINGDOM",
+        content: (
+            <p>For UK residents: Processing is performed in accordance with UK GDPR and related laws.</p>
+        ),
+        icon: Globe
+    },
+    {
+        id: "canada",
+        title: "27. CANADA",
+        content: (
+            <p>For Canadian residents: Information handling practices are designed to align with the principles of PIPEDA and applicable provincial privacy legislation.</p>
+        ),
+        icon: Globe
+    },
+    {
+        id: "australia",
+        title: "28. AUSTRALIA",
+        content: (
+            <p>For Australian residents: Information handling practices are designed to align with the Australian Privacy Act and Australian Privacy Principles where applicable.</p>
+        ),
+        icon: Globe
+    },
+    {
+        id: "us",
+        title: "29. UNITED STATES",
+        content: (
+            <p>Residents of certain U.S. states may possess additional privacy rights under applicable state laws. Such rights may include: Access requests; Deletion requests; Correction requests; Opt-out rights.</p>
+        ),
+        icon: Globe
+    },
+    {
+        id: "changes",
+        title: "30. CHANGES TO THIS POLICY",
+        content: (
+            <p>We may modify this Privacy Policy periodically. Changes become effective when published on the Website. Continued use of our Services constitutes acceptance of the revised Policy.</p>
+        ),
+        icon: Clipboard
+    },
+    {
+        id: "contact-officer",
+        title: "31. CONTACT INFORMATION",
+        content: (
+            <div className="space-y-3">
+                <p>Privacy Officer<br />Jaya's Adbuth Productions LLP<br />Email: privacy@adbuthverse.com<br />Support Email: support@adbuthverse.com<br />Website: https://www.adbuthverse.com<br />Nellore, Andhra Pradesh, India</p>
             </div>
         ),
         icon: Mail
@@ -120,7 +441,7 @@ export default function Privacy() {
             <div className="max-w-6xl mx-auto px-6 py-12">
                 <div className="flex flex-col lg:flex-row gap-10">
                     {/* Sticky Sidebar Nav (Desktop) */}
-                    <aside className="hidden lg:block sticky top-28 self-start w-56 shrink-0">
+                    <aside className="hidden lg:block sticky top-28 self-start w-64 shrink-0">
                         <nav className="space-y-1">
                             {SECTIONS.map((sec) => (
                                 <a

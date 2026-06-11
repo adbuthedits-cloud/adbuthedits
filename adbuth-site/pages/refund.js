@@ -1,4 +1,4 @@
-import { Calendar, CreditCard, RefreshCw } from 'lucide-react';
+import { Calendar, CreditCard, RefreshCw, ShieldAlert, Mail } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SeoHead from '../components/SeoHead';
@@ -6,22 +6,70 @@ import useSeo from '../hooks/useSeo';
 
 const SECTIONS = [
     {
-        id: "cancellation",
-        title: "1. Cancellation Policy",
-        content: "Cancellations will be considered only if the request is submitted within 24 hours of placing the order. However, please note that cancellation requests cannot be entertained once the order has been assigned to our editing/rendering team or is already marked as completed/delivered.",
-        icon: Calendar
-    },
-    {
         id: "refund-policy",
-        title: "2. Refund Policy",
-        content: "For digital products (such as templates and custom project downloads), due to the non-tangible and instantly downloadable nature of the assets, we do not issue refunds once the download link has been accessed or generated. If you experience technical defects, compatibility problems, or file corruption, please contact our support team. Service-based creative orders are reviewed case-by-case; partial refunds may be approved if work hasn't begun or is in early stages.",
+        title: "1. REFUND & CANCELLATION POLICY",
+        content: (
+            <div className="space-y-4">
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">General Rule</h3>
+                    <p>Due to the digital and customized nature of our products, refunds are limited.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Instant Download Products</h3>
+                    <p>Once a digital product has been: Downloaded; Accessed; Delivered; Made available; it becomes non-refundable.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Customized Products</h3>
+                    <p>A customized order becomes non-refundable once: Production begins; Design work commences; Resources are allocated; Draft creation starts.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Before Work Begins</h3>
+                    <p>If cancellation is requested before work begins, Adbuthverse may issue a refund at its sole discretion after deducting: Gateway fees; Administrative costs; Processing charges.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">After Draft Creation</h3>
+                    <p>No refunds shall be provided after: Draft creation; Preview delivery; Creative development; Design execution.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">After Approval</h3>
+                    <p>No refunds shall be available after customer approval of any draft. Approval confirms customer acceptance of the design direction.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">After Final Delivery</h3>
+                    <p>No refunds shall be issued after final files are delivered.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Technical Defect Exception</h3>
+                    <p>If a delivered file is: Corrupted; Unreadable; Inaccessible; and Adbuthverse cannot provide a functional replacement within a reasonable period, we may: Repair the file; Replace the file; Re-deliver the file. Refunds shall remain at Adbuthverse's discretion.</p>
+                </div>
+            </div>
+        ),
         icon: CreditCard
     },
     {
-        id: "processing",
-        title: "3. Processing Refunds",
-        content: "If your refund request is approved, it will be automatically processed and credited back to your original payment method (via Razorpay secure gateway). The refunded amount usually takes 5-7 business days to reflect in your bank account, depending on your bank's clearance times.",
-        icon: RefreshCw
+        id: "chargeback-policy",
+        title: "2. CHARGEBACK POLICY",
+        content: (
+            <div className="space-y-3">
+                <p>Customers agree to contact Adbuthverse before initiating: Chargebacks; Payment disputes; Banking disputes; Payment gateway complaints.</p>
+                <p>We reserve the right to submit evidence including: Order records; Communications; Draft approvals; Delivery records; Download logs; Customer acknowledgements.</p>
+                <p>Fraudulent chargebacks may result in: Account suspension; Legal recovery efforts; Collection actions where legally permitted.</p>
+            </div>
+        ),
+        icon: ShieldAlert
+    },
+    {
+        id: "contact-info",
+        title: "3. CONTACT INFORMATION",
+        content: (
+            <div className="space-y-3">
+                <p>Jaya's Adbuth Productions LLP</p>
+                <p>Email: support@adbuthverse.com</p>
+                <p>Website: https://www.adbuthverse.com</p>
+                <p>Address: Nellore, Andhra Pradesh, India</p>
+            </div>
+        ),
+        icon: Mail
     }
 ];
 
@@ -56,7 +104,7 @@ export default function Refund() {
             <div className="max-w-6xl mx-auto px-6 py-12">
                 <div className="flex flex-col lg:flex-row gap-10">
                     {/* Sticky Sidebar Nav (Desktop) */}
-                    <aside className="hidden lg:block sticky top-28 self-start w-56 shrink-0">
+                    <aside className="hidden lg:block sticky top-28 self-start w-64 shrink-0">
                         <nav className="space-y-1">
                             {SECTIONS.map((sec) => (
                                 <a
@@ -92,9 +140,9 @@ export default function Refund() {
                                             {sec.title}
                                         </h2>
                                     </div>
-                                    <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
+                                    <div className="text-slate-600 leading-relaxed text-sm sm:text-base">
                                         {sec.content}
-                                    </p>
+                                    </div>
                                 </div>
                             );
                         })}

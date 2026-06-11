@@ -1,4 +1,4 @@
-import { Download, Clock, Tag } from 'lucide-react';
+import { Download, Mail } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SeoHead from '../components/SeoHead';
@@ -6,22 +6,46 @@ import useSeo from '../hooks/useSeo';
 
 const SECTIONS = [
     {
-        id: "digital",
-        title: "1. Digital Delivery",
-        content: "All pre-made template purchases, graphics bundles, presets, and digital assets are delivered instantly. Upon successful payment verification, you will receive an automated email containing download links. You can also access all download links directly from your account orders dashboard.",
+        id: "digital-delivery",
+        title: "1. DIGITAL DELIVERY POLICY",
+        content: (
+            <div className="space-y-4">
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Delivery Timelines</h3>
+                    <p>Delivery timelines displayed on the Website are estimates only. Actual timelines may vary due to: Order volume; Project complexity; Revision requirements; Customer delays; Technical issues. Delivery estimates are not guarantees.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Download Availability</h3>
+                    <p>Download links may remain active for a limited period. Unless otherwise stated: Links remain active for thirty (30) days. Customers should download and store files immediately.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Expired Links</h3>
+                    <p>Expired links may be reactivated at our discretion. Additional fees may apply.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">File Storage</h3>
+                    <p>Adbuthverse is not obligated to permanently store customer files. Customers should maintain backups of all delivered files.</p>
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 mb-1">Delivery Completion</h3>
+                    <p>Delivery shall be deemed complete when: Files are emailed; Download links are provided; Customer access is granted. Customer failure to download files shall not invalidate delivery.</p>
+                </div>
+            </div>
+        ),
         icon: Download
     },
     {
-        id: "service",
-        title: "2. Service Delivery",
-        content: "For customized editing, templates, and video projects, delivery will be completed according to the project timeline specified during checkout or outlined in the creative brief. Progress notifications will be sent to your registered email, and the final high-quality render files will be delivered digitally through your client dashboard.",
-        icon: Clock
-    },
-    {
-        id: "charges",
-        title: "3. Shipping Charges",
-        content: "Because all products and custom editing services provided by Adbuth Verse are delivered digitally, there are no physical shipping fees, packaging costs, or logistics charges associated with any transaction.",
-        icon: Tag
+        id: "contact-info",
+        title: "2. CONTACT INFORMATION",
+        content: (
+            <div className="space-y-3">
+                <p>Jaya's Adbuth Productions LLP</p>
+                <p>Email: support@adbuthverse.com</p>
+                <p>Website: https://www.adbuthverse.com</p>
+                <p>Address: Nellore, Andhra Pradesh, India</p>
+            </div>
+        ),
+        icon: Mail
     }
 ];
 
@@ -56,7 +80,7 @@ export default function Shipping() {
             <div className="max-w-6xl mx-auto px-6 py-12">
                 <div className="flex flex-col lg:flex-row gap-10">
                     {/* Sticky Sidebar Nav (Desktop) */}
-                    <aside className="hidden lg:block sticky top-28 self-start w-56 shrink-0">
+                    <aside className="hidden lg:block sticky top-28 self-start w-64 shrink-0">
                         <nav className="space-y-1">
                             {SECTIONS.map((sec) => (
                                 <a
@@ -92,9 +116,9 @@ export default function Shipping() {
                                             {sec.title}
                                         </h2>
                                     </div>
-                                    <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
+                                    <div className="text-slate-600 leading-relaxed text-sm sm:text-base">
                                         {sec.content}
-                                    </p>
+                                    </div>
                                 </div>
                             );
                         })}
