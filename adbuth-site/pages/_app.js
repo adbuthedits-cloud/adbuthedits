@@ -7,6 +7,15 @@ import { WishlistProvider } from '../context/WishlistContext'
 import PageLoader from '../components/PageLoader'
 import dynamic from 'next/dynamic'
 
+const GA_MEASUREMENT_ID = 'G-49661TWW9D'
+
+// Helper: send a page_view event to GA4 on every route change
+const pageview = (url) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('config', GA_MEASUREMENT_ID, { page_path: url })
+  }
+}
+
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 config.autoAddCss = false
@@ -32,7 +41,10 @@ function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     const handleStart = () => setIsPageLoading(true)
-    const handleComplete = () => setIsPageLoading(false)
+    const handleComplete = (url) => {
+      setIsPageLoading(false)
+      pageview(url) // ── Track page view in GA4 on every navigation
+    }
 
     router.events.on('routeChangeStart', handleStart)
     router.events.on('routeChangeComplete', handleComplete)
