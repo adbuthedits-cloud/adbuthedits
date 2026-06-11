@@ -71,6 +71,17 @@ const migrations = [
     `ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS change_request_reason TEXT`,
     `ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS change_request_attachments JSONB DEFAULT '[]'::jsonb`,
     `ALTER TABLE "Orders" ADD COLUMN IF NOT EXISTS change_requested_at TIMESTAMP WITH TIME ZONE`,
+
+    // --- AWS SES Bounce & Complaint Suppression Table ---
+    `CREATE TABLE IF NOT EXISTS email_suppressions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR(255) NOT NULL UNIQUE,
+        reason VARCHAR(20) NOT NULL CHECK (reason IN ('bounce', 'complaint')),
+        bounce_type VARCHAR(50),
+        raw_payload TEXT,
+        suppressed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`,
 ];
 
 async function runSafeMigrations() {

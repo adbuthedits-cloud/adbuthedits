@@ -69,6 +69,7 @@ const settingRoutes = require('./routes/settingRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
 const fileManagerRoutes = require('./routes/fileManagerRoutes');
 const otpRoutes = require('./routes/otpRoutes');
+const sesRoutes = require('./routes/sesRoutes');
 const { runSafeMigrations } = require('./utils/safeSync');
 
 // Use Routes
@@ -88,6 +89,9 @@ app.use('/api/settings', settingRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/file-manager', fileManagerRoutes);
 app.use('/api/otp', otpRoutes);
+
+// SES SNS Notification Webhook (must use raw body — registered separately)
+app.use('/api/ses', sesRoutes);
 
 // Database connection and server start
 const startServer = async () => {
