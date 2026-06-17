@@ -102,6 +102,16 @@ const startServer = async () => {
         // Run safe additive migrations (adds new columns/tables without dropping data)
         await runSafeMigrations();
 
+        // Flush Redis cache to clear stale data from the previous version
+        if (redisClient.isOpen) {
+            try {
+                await redisClient.flushAll();
+                console.log('[Cache] Redis cache flushed successfully on startup.');
+            } catch (err) {
+                console.error('[Cache] Error flushing Redis cache on startup:', err);
+            }
+        }
+
         // Initialize user uploads cleanup on startup
         cleanupUserUploads();
 
