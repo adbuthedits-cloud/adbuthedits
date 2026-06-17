@@ -39,7 +39,8 @@ function CreateProduct() {
         meta_title: "",
         meta_description: "",
         meta_keywords: "",
-        canonical_url: ""
+        canonical_url: "",
+        language: "English"
     });
 
     const [images, setImages] = useState([]); 
@@ -482,7 +483,8 @@ function CreateProduct() {
                 video: finalVideos,
                 summary: summaryObject,
                 customization: customizations,
-                resource_file: resourceFileUrl
+                resource_file: resourceFileUrl,
+                language: formData.language || 'English'
             };
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -702,6 +704,17 @@ function CreateProduct() {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-300">Compared Price (₹)</label>
                             <input name="compared_price" type="number" onChange={handleChange} className="w-full p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all placeholder-gray-500" placeholder="1499" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-300">Language</label>
+                            <select name="language" value={formData.language} onChange={handleChange} className="w-full p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all">
+                                {['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Punjabi', 'Gujarati'].map(lang => (
+                                    <option key={lang} value={lang}>{lang}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>

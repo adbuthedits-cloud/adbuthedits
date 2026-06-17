@@ -44,7 +44,8 @@ function EditProduct() {
         meta_title: '',
         meta_description: '',
         meta_keywords: '',
-        canonical_url: ''
+        canonical_url: '',
+        language: 'English'
     });
 
     // Dynamic Lists State
@@ -156,7 +157,8 @@ function EditProduct() {
                         meta_title: product.meta_title || '',
                         meta_description: product.meta_description || '',
                         meta_keywords: product.meta_keywords || '',
-                        canonical_url: product.canonical_url || ''
+                        canonical_url: product.canonical_url || '',
+                        language: product.language || 'English'
                     });
 
                     // Populate Dynamic Lists
@@ -746,7 +748,8 @@ function EditProduct() {
                 video: finalVideos,
                 summary: summaryObject,
                 customization: customizations,
-                resource_file: resourceFileUrl
+                resource_file: resourceFileUrl,
+                language: formData.language || 'English'
             };
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -886,6 +889,17 @@ function EditProduct() {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-300">Compared Price (₹)</label>
                             <input name="compared_price" type="number" value={formData.compared_price} onChange={handleChange} className="w-full p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all placeholder-gray-500" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-300">Language</label>
+                            <select name="language" value={formData.language} onChange={handleChange} className="w-full p-3 bg-[#2d1b4e] border border-transparent rounded-xl text-gray-200 focus:ring-2 focus:ring-[#a78bfa]/30 focus:border-[#a78bfa]/50 outline-none transition-all">
+                                {['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Punjabi', 'Gujarati'].map(lang => (
+                                    <option key={lang} value={lang}>{lang}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1459,6 +1473,20 @@ function EditProduct() {
 
                         {customizations.length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Language auto-inject indicator */}
+                                <div className="flex justify-between items-start p-5 bg-[#1E1628] border border-purple-500/30 rounded-2xl shadow-sm border-l-4 border-l-purple-500">
+                                    <div className="space-y-3">
+                                        <span className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                                            🌐 Language Selection
+                                            <span className="text-[9px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded font-bold uppercase border border-purple-500/20">Auto-Injected</span>
+                                        </span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            <span className="text-[9px] bg-[#2d1b4e] text-gray-400 px-2 py-1 rounded-md border border-[#3b2a5f] font-bold">Language <span className="opacity-50 text-[7px]">select</span></span>
+                                        </div>
+                                        <p className="text-[10px] text-gray-500 italic">Automatically shown to customers before the last form section.</p>
+                                    </div>
+                                </div>
+
                                 {customizations.map((cust, idx) => {
                                     const key = Object.keys(cust)[0];
                                     const fields = cust[key];

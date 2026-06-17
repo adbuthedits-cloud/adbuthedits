@@ -85,6 +85,12 @@ const migrations = [
 
     // --- User Email Consent (AWS SES opt-in compliance) ---
     `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS email_consent BOOLEAN DEFAULT false`,
+
+    // --- Language column for Products ---
+    `ALTER TABLE "Products" ADD COLUMN IF NOT EXISTS language VARCHAR(100) NOT NULL DEFAULT 'English'`,
+
+    // --- Backfill existing products with English ---
+    `UPDATE "Products" SET language = 'English' WHERE language IS NULL OR language = ''`,
 ];
 
 async function runSafeMigrations() {

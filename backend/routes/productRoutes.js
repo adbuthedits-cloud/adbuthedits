@@ -87,7 +87,7 @@ router.get('/', cache('products', 1800), async (req, res) => {
     try {
         const {
             search, category, style, for: forWho, color, pricing, music, minPrice, maxPrice,
-            parentCategory, assetCategory, assetSubCategory, assetType, assetVariant, orientation
+            parentCategory, assetCategory, assetSubCategory, assetType, assetVariant, orientation, language
         } = req.query;
 
         const where = { 
@@ -214,6 +214,12 @@ router.get('/', cache('products', 1800), async (req, res) => {
             }
         }
 
+        // Language filter
+        if (language) {
+            const langVals = language.split(',').filter(Boolean);
+            where.language = langVals.length === 1 ? langVals[0] : { [Op.in]: langVals };
+        }
+
         const products = await Product.findAll({
             where,
             include,
@@ -244,6 +250,12 @@ router.get('/', cache('products', 1800), async (req, res) => {
     }
 });
 
+// Supported languages for template customization
+const SUPPORTED_LANGUAGES = [
+    'English', 'Hindi', 'Tamil', 'Telugu', 'Kannada',
+    'Malayalam', 'Marathi', 'Bengali', 'Punjabi', 'Gujarati'
+];
+
 // GET /api/products/master-data
 router.get('/master-data', cache('master-data', 86400), async (req, res) => {
     try {
@@ -256,7 +268,7 @@ router.get('/master-data', cache('master-data', 86400), async (req, res) => {
             AssetSubCategory.findAll({ order: [['name', 'ASC']] }),
             ShopSetting.findOne()
         ]);
-        res.json({ categories, parentCategories, types, variants, orientations, subCategories, shopSettings });
+        res.json({ categories, parentCategories, types, variants, orientations, subCategories, shopSettings, languages: SUPPORTED_LANGUAGES });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

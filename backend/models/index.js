@@ -36,6 +36,7 @@ const AuditLog = require('./AuditLog');
 const Attribute = require('./Attribute');
 const SeoPage = require('./SeoPage');
 const CustomizationTemplate = require('./CustomizationTemplate');
+const EmailSuppression = require('./EmailSuppression');
 
 // Association Setup
 
@@ -204,5 +205,6 @@ module.exports = {
     Attribute,
     SeoPage,
     CustomizationTemplate,
+    EmailSuppression,
     Sequelize
 };

@@ -2805,7 +2805,7 @@ router.get('/coupons/:id', checkPermission('marketing', 'view'), async (req, res
     }
 });
 
-router.post('/coupons', checkPermission('coupons', 'edit'), async (req, res) => {
+router.post('/coupons', checkPermission('marketing', 'edit'), async (req, res) => {
     try {
         const coupon = await Coupon.create(req.body);
         res.status(201).json(coupon);
@@ -2818,12 +2818,12 @@ router.post('/coupons', checkPermission('coupons', 'edit'), async (req, res) => 
 });
 
 // --- Coupon Media Upload ---
-router.post('/coupons/upload', checkPermission('coupons', 'edit'), uploadCouponMedia.single('media'), (req, res) => {
+router.post('/coupons/upload', checkPermission('marketing', 'edit'), uploadCouponMedia.single('media'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     res.json({ url: publicFileUrl(req.file.key) });
 });
 
-router.put('/coupons/:id', checkPermission('coupons', 'edit'), async (req, res) => {
+router.put('/coupons/:id', checkPermission('marketing', 'edit'), async (req, res) => {
     try {
         const [updated] = await Coupon.update(req.body, { where: { coupon_id: req.params.id } });
         if (!updated) return res.status(404).json({ error: 'Coupon not found' });
@@ -2833,7 +2833,7 @@ router.put('/coupons/:id', checkPermission('coupons', 'edit'), async (req, res) 
     }
 });
 
-router.delete('/coupons/:id', checkPermission('coupons', 'delete'), async (req, res) => {
+router.delete('/coupons/:id', checkPermission('marketing', 'delete'), async (req, res) => {
     try {
         const deleted = await Coupon.destroy({ where: { coupon_id: req.params.id } });
         if (!deleted) return res.status(404).json({ error: 'Coupon not found' });

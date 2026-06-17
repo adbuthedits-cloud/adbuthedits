@@ -311,6 +311,7 @@ function ViewProduct() {
                                 { label: 'Asset Category', val: assetCat },
                                 { label: 'Sub-Category', val: assetSubCat },
                                 { label: 'Orientation', val: assetOrientation },
+                                { label: 'Language', val: product.language || 'English' },
                                 { label: 'Serial Number', val: product.serial_number ? String(product.serial_number).padStart(4, '0') : '—' }
                             ].map((prop, i) => (
                                 <div key={i} className="bg-[#130C1C]/50 rounded-xl p-3.5 border border-[#2d1b4e]">

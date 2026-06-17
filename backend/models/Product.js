@@ -124,6 +124,11 @@ const Product = sequelize.define('Product', {
         allowNull: false,
         defaultValue: false
     },
+    language: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'English'
+    },
 });
 
 module.exports = Product;

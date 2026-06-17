@@ -164,7 +164,7 @@ export default function ShopSidebar({ filters, onFilterChange, masterData, maxPr
         onFilterChange('bulk', {
             parentCategory: [], assetCategory: [], assetSubCategory: [],
             assetType: [], assetVariant: [], orientation: [],
-            maxPrice: null, search: ''
+            language: [], maxPrice: null, search: ''
         });
     };
 
@@ -175,6 +175,7 @@ export default function ShopSidebar({ filters, onFilterChange, masterData, maxPr
         ...(filters.assetType ?? []),
         ...(filters.assetVariant ?? []),
         ...(filters.orientation ?? []),
+        ...(filters.language ?? []),
     ].length > 0;
 
     return (
@@ -244,6 +245,14 @@ export default function ShopSidebar({ filters, onFilterChange, masterData, maxPr
                     options={(masterData?.orientations ?? []).map(o => ({ label: o.name, value: o.slug || o.orientation_id }))}
                     selection={filters.orientation ?? []}
                     onSelect={(slug) => handleMultiSelect('orientation', slug)}
+                />
+
+                {/* LANGUAGES */}
+                <FilterSection
+                    title="Languages"
+                    options={(masterData?.languages ?? []).map(l => ({ label: l, value: l }))}
+                    selection={filters.language ?? []}
+                    onSelect={(lang) => handleMultiSelect('language', lang)}
                 />
 
                 {/* PRICE */}

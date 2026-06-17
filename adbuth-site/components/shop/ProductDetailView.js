@@ -81,6 +81,7 @@ export default function ProductDetailView({ slug, masterData }) {
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
     const [occasionGroups, setOccasionGroups] = useState([]);
+    const [selectedLanguage, setSelectedLanguage] = useState('English');
 
     const { user } = useAuth();
     const { toggleWishlist, isInWishlist } = useWishlist();
@@ -327,7 +328,7 @@ export default function ProductDetailView({ slug, masterData }) {
             const res = await fetch(`${apiUrl}/api/cart`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ product_id: product.products_id, customization: finalCustomizations, quantity: quantity })
+                body: JSON.stringify({ product_id: product.products_id, customization: finalCustomizations, quantity: quantity, language: selectedLanguage })
             });
 
             if (res.ok) {
@@ -611,6 +612,8 @@ export default function ProductDetailView({ slug, masterData }) {
                                     data={getCurrentItemData()}
                                     onChange={handleFieldChange}
                                     index={selectedItemIndex}
+                                    selectedLanguage={selectedLanguage}
+                                    onLanguageChange={setSelectedLanguage}
                                 />
 
                                 <div className="mt-8 pt-6 border-t border-gray-100">

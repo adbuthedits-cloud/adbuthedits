@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faPlus, faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faPlus, faTimes, faSearch, faChevronDown, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 
-export default function CustomizationForm({ schema, data, onChange, index = 0, isEditMode = false }) {
+const LANGUAGES = [
+    'English', 'Hindi', 'Tamil', 'Telugu', 'Kannada',
+    'Malayalam', 'Marathi', 'Bengali', 'Punjabi', 'Gujarati'
+];
+
+export default function CustomizationForm({ schema, data, onChange, index = 0, isEditMode = false, selectedLanguage = 'English', onLanguageChange }) {
     const [uploadingState, setUploadingState] = useState({});
     // Schema is expected to be an array of group objects: [{ "Group Name": [["Label", "Type"], ...] }]
 
@@ -23,12 +28,42 @@ export default function CustomizationForm({ schema, data, onChange, index = 0, i
                 </div>
             )}
 
+
             {schema.map((groupObj, groupIdx) => {
                 const groupName = Object.keys(groupObj)[0];
                 const fields = groupObj[groupName];
+                const isLastGroup = groupIdx === schema.length - 1;
 
                 return (
-                    <div key={groupIdx} className="space-y-4">
+                    <React.Fragment key={groupIdx}>
+                        {/* Inject Language Selector before the last group */}
+                        {isLastGroup && onLanguageChange && (
+                            <div className="p-4 bg-white border border-purple-100 rounded-xl shadow-sm">
+                                <label className="block text-[13px] font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                                        <FontAwesomeIcon icon={faGlobe} className="text-[10px]" />
+                                    </span>
+                                    <span className="text-red-500 mr-0.5">*</span>
+                                    Language
+                                </label>
+                                <p className="text-[11px] text-gray-400 mb-3 font-medium">Select the language for your invitation content</p>
+                                <div className="relative">
+                                    <select
+                                        value={selectedLanguage}
+                                        onChange={(e) => onLanguageChange(e.target.value)}
+                                        className="w-full appearance-none border border-gray-200 px-4 py-2.5 pr-10 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm text-gray-900 bg-white cursor-pointer font-medium"
+                                    >
+                                        {LANGUAGES.map(lang => (
+                                            <option key={lang} value={lang}>{lang}</option>
+                                        ))}
+                                    </select>
+                                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                        <FontAwesomeIcon icon={faChevronDown} className="text-[11px]" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             <div className="w-1 h-4 bg-purple-400 rounded-full" />
                             <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{groupName}</h4>
@@ -182,7 +217,8 @@ export default function CustomizationForm({ schema, data, onChange, index = 0, i
                                 );
                             })}
                         </div>
-                    </div>
+                                </div>
+                            </React.Fragment>
                 );
             })}
         </div>

@@ -46,6 +46,7 @@ function deserializeProducts(raw) {
         asset_type_id: p[13],
         asset_variant_id: p[14],
         asset_orientation_id: p[15],
+        language: p[16] || 'English',
     }));
 }
 
@@ -220,6 +221,7 @@ function readFiltersFromQuery(query) {
         assetType: parseQArray(query.assetType),
         assetVariant: parseQArray(query.assetVariant),
         orientation: parseQArray(query.orientation),
+        language: parseQArray(query.language),
         maxPrice: query.maxPrice ? Number(query.maxPrice) : null,
         search: query.search || '',
     };
@@ -289,6 +291,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
             if (newFilters.assetType?.length) q.assetType = newFilters.assetType.join(',');
             if (newFilters.assetVariant?.length) q.assetVariant = newFilters.assetVariant.join(',');
             if (newFilters.orientation?.length) q.orientation = newFilters.orientation.join(',');
+            if (newFilters.language?.length) q.language = newFilters.language.join(',');
             if (newFilters.maxPrice) q.maxPrice = newFilters.maxPrice;
             if (newFilters.search) q.search = newFilters.search;
             const pathname = slugParentCategory ? `/shop/category/${slugParentCategory}` : '/shop';
@@ -321,6 +324,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
             const ids = filters.orientation.map(slug => masterData?.orientations?.find(o => o.slug === slug || o.orientation_id === slug)?.orientation_id).filter(Boolean);
             if (ids.length) list = list.filter(p => ids.includes(p.asset_orientation_id));
         }
+        if (filters.language?.length) list = list.filter(p => filters.language.includes(p.language));
         if (filters.maxPrice) list = list.filter(p => (p.price || 0) <= filters.maxPrice);
         if (SORT_FNS[sortBy]) list = [...list].sort(SORT_FNS[sortBy]);
         return list;
@@ -351,6 +355,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
         ...(filters.assetType ?? []),
         ...(filters.assetVariant ?? []),
         ...(filters.orientation ?? []),
+        ...(filters.language ?? []),
     ].length;
 
     const isShopBase = activeFilterCount === 0 && !filters.search && !filters.maxPrice;
@@ -423,7 +428,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                                         onClear={() => handleFilterChange('bulk', {
                                             parentCategory: [], assetCategory: [], assetSubCategory: [],
                                             assetType: [], assetVariant: [], orientation: [],
-                                            maxPrice: null, search: ''
+                                            language: [], maxPrice: null, search: ''
                                         })}
                                     />
                                 )
@@ -488,6 +493,7 @@ export async function getStaticProps() {
             p.asset_type_id || null,
             p.asset_variant_id || null,
             p.asset_orientation_id || null,
+            p.language || 'English',
         ]);
 
         // Trim masterData to only required fields
@@ -505,6 +511,7 @@ export async function getStaticProps() {
             types: (masterData.types || []).map(t => ({ type_id: t.type_id, name: t.name, slug: t.slug || null })),
             variants: (masterData.variants || []).map(v => ({ variant_id: v.variant_id, name: v.name, slug: v.slug || null })),
             orientations: (masterData.orientations || []).map(o => ({ orientation_id: o.orientation_id, name: o.name, slug: o.slug || null, code: o.code || null })),
+            languages: masterData.languages || [],
             shopSettings: masterData.shopSettings ? {
                 shop_banner_image: masterData.shopSettings.shop_banner_image || null,
                 shop_banner_title: masterData.shopSettings.shop_banner_title || null,
