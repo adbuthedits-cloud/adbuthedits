@@ -228,6 +228,7 @@ router.get('/', cache('products', 1800), async (req, res) => {
                 'thumbnail', 'video', 'updatedAt',
                 'parent_category_id', 'asset_category_id', 'asset_sub_category_id',
                 'asset_type_id', 'asset_variant_id', 'asset_orientation_id',
+                'language',
                 // Single pre-aggregated join instead of N correlated subqueries
                 [sequelize.literal(`(
                     SELECT ROUND(AVG(r.rating)::numeric, 1)
