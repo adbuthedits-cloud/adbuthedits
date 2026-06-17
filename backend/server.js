@@ -102,22 +102,6 @@ const startServer = async () => {
         // Run safe additive migrations (adds new columns/tables without dropping data)
         await runSafeMigrations();
 
-        // Clear stale product and master-data caches on startup safely (keeps BullMQ queues intact)
-        if (redisClient.isOpen) {
-            try {
-                const patterns = ['products', 'product', 'products-meta', 'master-data'];
-                for (const pattern of patterns) {
-                    const keys = await redisClient.keys(`${pattern}:*`);
-                    if (keys.length > 0) {
-                        await redisClient.del(keys);
-                    }
-                }
-                console.log('[Cache] Stale product and master-data caches cleared on startup.');
-            } catch (err) {
-                console.error('[Cache] Error clearing stale caches on startup:', err);
-            }
-        }
-
         // Initialize user uploads cleanup on startup
         cleanupUserUploads();
 
