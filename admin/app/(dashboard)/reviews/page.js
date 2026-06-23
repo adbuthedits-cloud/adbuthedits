@@ -12,6 +12,7 @@ import ReviewDetailsModal from "../../../components/ReviewDetailsModal";
 import { getAuthToken, getAuthUser, hasPermission } from "../../../utils/auth";
 import withPermission from "../../../components/withPermission";
 import { useSortableData } from "../../../hooks/useSortableData";
+import { useUnsavedChangesWarning } from "../../../hooks/useUnsavedChangesWarning";
 
 function Reviews() {
     const router = useRouter();
@@ -27,8 +28,21 @@ function Reviews() {
     const [selectedReview, setSelectedReview] = useState(null);
     const [search, setSearch] = useState("");
     const [settings, setSettings] = useState({ auto_reply_text: "", is_auto_reply_enabled: true });
+    const [initialSettings, setInitialSettings] = useState(null);
+    const [isDirty, setIsDirty] = useState(false);
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsSaving, setSettingsSaving] = useState(false);
+
+    useUnsavedChangesWarning(isDirty);
+
+    useEffect(() => {
+        if (!initialSettings) {
+            setIsDirty(false);
+            return;
+        }
+        const isDifferent = JSON.stringify(settings) !== JSON.stringify(initialSettings);
+        setIsDirty(isDifferent);
+    }, [settings, initialSettings]);
 
     const { items: sortedReviews, requestSort, sortConfig } = useSortableData(reviews);
 
@@ -59,6 +73,7 @@ function Reviews() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSettings(res.data);
+            setInitialSettings(res.data);
         } catch (error) {
             console.error("Failed to fetch settings", error);
         } finally {
@@ -75,6 +90,7 @@ function Reviews() {
             await axios.post(`${apiUrl}/api/admin/reviews/settings`, settings, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            setInitialSettings(settings);
             alert("Settings saved successfully");
         } catch (error) {
             console.error("Failed to save settings", error);

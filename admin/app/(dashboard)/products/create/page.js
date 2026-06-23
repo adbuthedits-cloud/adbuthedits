@@ -11,6 +11,8 @@ import Link from "next/link";
 import VideoThumbnailGenerator from "../../../../components/VideoThumbnailGenerator";
 import { useVideoCompressor } from "../../../../hooks/useVideoCompressor";
 import { compressImage } from "../../../../utils/imageCompressor";
+import { useUnsavedChangesWarning } from "../../../../hooks/useUnsavedChangesWarning";
+import toast from "react-hot-toast";
 
 import withPermission from "../../../../components/withPermission";
 
@@ -19,6 +21,9 @@ function CreateProduct() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isDraftSubmit, setIsDraftSubmit] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
+
+    useUnsavedChangesWarning(isDirty);
 
     const [formData, setFormData] = useState({
         title: "",
@@ -61,6 +66,9 @@ function CreateProduct() {
     const [uploadingVideo, setUploadingVideo] = useState(false);
     const [uploadingResource, setUploadingResource] = useState(false);
 
+    // Per-file upload progress during submit: { [label]: { pct: 0-100, done: bool, error: bool } }
+    const [uploadProgress, setUploadProgress] = useState({});
+
     const [tempImage, setTempImage] = useState("");
     const [tempTagKey, setTempTagKey] = useState("");
     const [tempTagValue, setTempTagValue] = useState("");
@@ -85,7 +93,7 @@ function CreateProduct() {
     const [internalSku, setInternalSku] = useState("");
 
     // Client-side video compression
-    const { compressVideo, isCompressing } = useVideoCompressor();
+    const { compressVideo, cancelCompression, isCompressing } = useVideoCompressor();
     // Per-video compression status: { [index]: { status: 'compressing'|'done'|'skipped', pct: number } }
     const [videoCompressStatus, setVideoCompressStatus] = useState({});
 
@@ -184,6 +192,7 @@ function CreateProduct() {
         }
         if (e.target.name === "slug") setIsSlugManuallyEdited(true);
         setFormData({ ...formData, [e.target.name]: value });
+        setIsDirty(true);
     };
 
     const handleKeyDown = (e) => {
@@ -197,10 +206,12 @@ function CreateProduct() {
         if (!item.trim()) return;
         setList([...list, item.trim()]);
         setItem("");
+        setIsDirty(true);
     };
 
     const removeItem = (index, list, setList) => {
         setList(list.filter((_, i) => i !== index));
+        setIsDirty(true);
     };
 
     const addTagItem = () => {
@@ -208,10 +219,12 @@ function CreateProduct() {
         setTags([...tags, { key: tempTagKey.trim(), value: tempTagValue.trim() }]);
         setTempTagKey("");
         setTempTagValue("");
+        setIsDirty(true);
     };
 
     const removeTagItem = (index) => {
         setTags(tags.filter((_, i) => i !== index));
+        setIsDirty(true);
     };
 
     const addSummaryPoint = () => {
@@ -239,6 +252,7 @@ function CreateProduct() {
 
         setTempSummaryKey("");
         setTempSummaryPoints([]);
+        setIsDirty(true);
     };
 
     const startEditSummary = (index) => {
@@ -260,6 +274,7 @@ function CreateProduct() {
             cancelEditSummary();
         }
         setSummary(summary.filter((_, i) => i !== index));
+        setIsDirty(true);
     };
 
     const addCustField = () => {
@@ -293,6 +308,7 @@ function CreateProduct() {
             setTempCustFieldType("text");
         }
         setTempCustFieldList(tempCustFieldList.filter((_, i) => i !== fIdx));
+        setIsDirty(true);
     };
 
     const addCustomizationGroup = () => {
@@ -311,6 +327,7 @@ function CreateProduct() {
         setTempCustKey("");
         setTempCustFieldList([]);
         setEditingCustFieldIndex(null);
+        setIsDirty(true);
     };
 
     const startEditCustomization = (index) => {
@@ -337,8 +354,10 @@ function CreateProduct() {
         setCustomizations(customizations.filter((_, i) => i !== index));
     };
 
-    const handleFileUpload = async (file, subfolder = "image", explicitKey = null) => {
-        if (!file) return null;
+    // Upload a single file to R2 via the backend.
+    // Returns { url, timedOut, error } — never throws.
+    const handleFileUpload = async (file, subfolder = "image", explicitKey = null, onProgress = null) => {
+        if (!file) return { url: null, timedOut: false, error: 'No file provided' };
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
             const formDataPayload = new FormData();
@@ -365,13 +384,25 @@ function CreateProduct() {
             const headers = { "Content-Type": "multipart/form-data" };
             if (token) headers["Authorization"] = `Bearer ${token}`;
 
+            // Generous timeouts: 15 min for video, 5 min for everything else
+            const isVideo = subfolder === "video" || file.type?.startsWith("video/");
+            const TIMEOUT_MS = isVideo ? 15 * 60 * 1000 : 5 * 60 * 1000;
+
             const res = await axios.post(`${apiUrl}/api/admin/upload-media`, formDataPayload, {
-                headers: headers
+                headers,
+                timeout: TIMEOUT_MS,
+                onUploadProgress: (evt) => {
+                    if (onProgress && evt.total) {
+                        const pct = Math.round((evt.loaded / evt.total) * 100);
+                        onProgress(pct);
+                    }
+                }
             });
-            return res.data.url;
+            return { url: res.data.url, timedOut: false, error: null };
         } catch (err) {
-            console.error("Upload failed:", err);
-            return null;
+            const isTimeout = err.code === 'ECONNABORTED' || err.message?.toLowerCase().includes('timeout');
+            console.error(`Upload ${isTimeout ? 'timed out' : 'failed'}:`, err.response?.data || err.message || err);
+            return { url: null, timedOut: isTimeout, error: err.message };
         }
     };
 
@@ -379,11 +410,39 @@ function CreateProduct() {
         e.preventDefault();
         
         if (isCompressing) {
-            alert("Please wait for video compression to finish before submitting. Large videos might take a minute.");
+            alert("Please wait for video compression to finish before submitting.");
             return;
         }
 
         setLoading(true);
+
+        // Pre-populate upload progress for all files to be uploaded so overall progress is calculated correctly
+        const initialProgress = {};
+        if (formData.thumbnail instanceof File) {
+            initialProgress["Thumbnail"] = { pct: 0, done: false, error: false };
+        }
+        for (let i = 0; i < images.length; i++) {
+            if (images[i] instanceof File) {
+                initialProgress[`Image ${i + 1}`] = { pct: 0, done: false, error: false };
+            }
+        }
+        for (let i = 0; i < videos.length; i++) {
+            if (videos[i] instanceof File) {
+                initialProgress[`Video ${i + 1} (Original)`] = { pct: 0, done: false, error: false };
+                if (videos[i].compressedVersion && videos[i].compressedVersion !== videos[i]) {
+                    initialProgress[`Video ${i + 1} (Compressed)`] = { pct: 0, done: false, error: false };
+                }
+            }
+        }
+        if (formData.resource_file instanceof File) {
+            initialProgress["Resource File"] = { pct: 0, done: false, error: false };
+        }
+        setUploadProgress(initialProgress);
+
+        // Helper: update one entry in the upload progress panel
+        const setFileProgress = (label, pct, done = false, timedOut = false, failed = false) => {
+            setUploadProgress(prev => ({ ...prev, [label]: { pct, done, timedOut, error: failed } }));
+        };
 
         try {
             const token = getAuthToken();
@@ -392,63 +451,128 @@ function CreateProduct() {
                 return;
             }
 
+            // ── Thumbnail ──────────────────────────────────────────────
             let thumbnailUrl = formData.thumbnail;
             if (formData.thumbnail instanceof File) {
                 setUploadingThumbnail(true);
-                thumbnailUrl = await handleFileUpload(formData.thumbnail, "thumbnail");
+                setFileProgress("Thumbnail", 0);
+                const result = await handleFileUpload(
+                    formData.thumbnail, "thumbnail", null,
+                    (pct) => setFileProgress("Thumbnail", pct)
+                );
+                thumbnailUrl = result.url;
                 setUploadingThumbnail(false);
-                if (!thumbnailUrl) throw new Error("Thumbnail upload failed");
+                if (result.url) {
+                    setFileProgress("Thumbnail", 100, true);
+                } else {
+                    setFileProgress("Thumbnail", 0, false, result.timedOut, !result.timedOut);
+                    console.warn("Thumbnail upload failed — continuing without it.");
+                }
             }
 
+            // ── Gallery Images ─────────────────────────────────────────
             const finalImages = [];
             if (images.some(img => img instanceof File)) setUploadingGallery(true);
-            for (const item of images) {
+            for (let i = 0; i < images.length; i++) {
+                const item = images[i];
                 if (item instanceof File) {
-                    const url = await handleFileUpload(item, "image");
-                    if (url) finalImages.push(url);
-                    else throw new Error("Gallery image upload failed");
+                    const label = `Image ${i + 1}`;
+                    setFileProgress(label, 0);
+                    const result = await handleFileUpload(
+                        item, "image", null,
+                        (pct) => setFileProgress(label, pct)
+                    );
+                    if (result.url) {
+                        finalImages.push(result.url);
+                        setFileProgress(label, 100, true);
+                    } else {
+                        setFileProgress(label, 0, false, result.timedOut, !result.timedOut);
+                        console.warn(`Gallery image ${i + 1} upload ${result.timedOut ? 'timed out' : 'failed'} — skipping.`);
+                    }
                 } else {
                     finalImages.push(item);
                 }
             }
             setUploadingGallery(false);
 
+            // ── Videos: upload BOTH original AND compressed to R2 ──────
             const finalVideos = [];
-            if (videos.some(vid => vid instanceof File)) setUploadingVideo(true);
-            for (const item of videos) {
-                if (item instanceof File) {
-                    const url = await handleFileUpload(item, "video");
-                    if (url) {
-                        // If we have a compressed version, upload it with _web suffix and store its URL instead
-                        if (item.compressedVersion && item.compressedVersion !== item) {
-                            try {
-                                const urlObj = new URL(url);
-                                let originalKey = decodeURIComponent(urlObj.pathname);
-                                if (originalKey.startsWith('/')) originalKey = originalKey.substring(1);
-                                const webKey = originalKey.replace(/\.[^/.]+$/, '_web.mp4');
-                                const webUrl = await handleFileUpload(item.compressedVersion, "video", webKey);
-                                finalVideos.push(webUrl || url);
-                            } catch (e) {
-                                console.error("Failed to upload compressed version", e);
-                                finalVideos.push(url);
-                            }
-                        } else {
-                            finalVideos.push(url);
-                        }
-                    }
-                    else throw new Error("Video upload failed");
-                } else {
+            const hasLocalVideos = videos.some(vid => vid instanceof File);
+            if (hasLocalVideos) setUploadingVideo(true);
+
+            for (let i = 0; i < videos.length; i++) {
+                const item = videos[i];
+                if (!(item instanceof File)) {
                     finalVideos.push(item);
+                    continue;
+                }
+
+                const vidNum = i + 1;
+                const origLabel = `Video ${vidNum} (Original)`;
+                const compLabel = `Video ${vidNum} (Compressed)`;
+                const hasCompressed = item.compressedVersion && item.compressedVersion !== item;
+
+                // --- Upload original ---
+                setFileProgress(origLabel, 0);
+                const origResult = await handleFileUpload(
+                    item, "video", null,
+                    (pct) => setFileProgress(origLabel, pct)
+                );
+                if (origResult.url) {
+                    setFileProgress(origLabel, 100, true);
+                    finalVideos.push(origResult.url);
+                } else {
+                    setFileProgress(origLabel, 0, false, origResult.timedOut, !origResult.timedOut);
+                    console.warn(`Video ${vidNum} original upload ${origResult.timedOut ? 'timed out' : 'failed'}.`);
+                }
+
+                // --- Upload compressed as a _web version to R2 ---
+                if (hasCompressed) {
+                    // Build the _web key based on original key so they live side-by-side
+                    let webKey = null;
+                    if (origResult.url) {
+                        try {
+                            const urlObj = new URL(origResult.url);
+                            let originalKey = decodeURIComponent(urlObj.pathname);
+                            if (originalKey.startsWith('/')) originalKey = originalKey.substring(1);
+                            webKey = originalKey.replace(/\.[^/.]+$/, '_web.mp4');
+                        } catch {}
+                    }
+
+                    setFileProgress(compLabel, 0);
+                    const compResult = await handleFileUpload(
+                        item.compressedVersion, "video", webKey,
+                        (pct) => setFileProgress(compLabel, pct)
+                    );
+                    if (compResult.url) {
+                        setFileProgress(compLabel, 100, true);
+                        finalVideos.push(compResult.url);
+                    } else {
+                        setFileProgress(compLabel, 0, false, compResult.timedOut, !compResult.timedOut);
+                        console.warn(`Video ${vidNum} compressed upload ${compResult.timedOut ? 'timed out' : 'failed'} — original still saved.`);
+                    }
                 }
             }
             setUploadingVideo(false);
 
+            // ── Resource File ──────────────────────────────────────────
             let resourceFileUrl = formData.resource_file;
             if (formData.resource_file instanceof File) {
                 setUploadingResource(true);
-                resourceFileUrl = await handleFileUpload(formData.resource_file, "file");
+                const resLabel = "Resource File";
+                setFileProgress(resLabel, 0);
+                const result = await handleFileUpload(
+                    formData.resource_file, "file", null,
+                    (pct) => setFileProgress(resLabel, pct)
+                );
+                resourceFileUrl = result.url;
                 setUploadingResource(false);
-                if (!resourceFileUrl) throw new Error("Resource file upload failed");
+                if (result.url) {
+                    setFileProgress(resLabel, 100, true);
+                } else {
+                    setFileProgress(resLabel, 0, false, result.timedOut, !result.timedOut);
+                    console.warn(`Resource file upload ${result.timedOut ? 'timed out' : 'failed'} — continuing without it.`);
+                }
             }
 
             const summaryObject = summary.reduce((acc, curr) => {
@@ -492,11 +616,12 @@ function CreateProduct() {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
+            setIsDirty(false);
             if (isDraftSubmit) {
-                alert("Draft saved successfully! You can continue editing.");
+                toast.success("Draft saved successfully!");
                 setLoading(false);
-                // Don't redirect if it's a draft
             } else {
+                toast.success("Product created successfully!");
                 router.push("/products");
             }
         } catch (error) {
@@ -505,7 +630,7 @@ function CreateProduct() {
             setUploadingVideo(false);
             setUploadingResource(false);
             console.error(error);
-            alert("Failed to create product: " + (error.response?.data?.error || error.message));
+            toast.error("Failed to create product: " + (error.response?.data?.error || error.message));
         } finally {
             setLoading(false);
         }
@@ -524,15 +649,16 @@ function CreateProduct() {
         if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
             URL.revokeObjectURL(thumbnailPreview);
         }
-        setUploadingThumbnail(true);
         try {
             const compressed = await compressImage(file);
             setFormData(prev => ({ ...prev, thumbnail: compressed }));
             setThumbnailPreview(URL.createObjectURL(compressed));
+            setIsDirty(true);
         } catch (err) {
             console.error("Image compression failed, using original:", err);
             setFormData(prev => ({ ...prev, thumbnail: file }));
             setThumbnailPreview(URL.createObjectURL(file));
+            setIsDirty(true);
         } finally {
             setUploadingThumbnail(false);
             e.target.value = "";
@@ -550,9 +676,11 @@ function CreateProduct() {
                 files.map(f => f.type.startsWith("image/") ? compressImage(f) : Promise.resolve(f))
             );
             setImages(prev => [...prev, ...compressedFiles]);
+            setIsDirty(true);
         } catch (err) {
             console.error("Gallery compression failed, using original:", err);
             setImages(prev => [...prev, ...files]);
+            setIsDirty(true);
         } finally {
             setUploadingGallery(false);
         }
@@ -563,35 +691,49 @@ function CreateProduct() {
         if (files.length === 0) return;
         e.target.value = "";
 
-        // Add placeholders immediately so user sees them in the list
-        setVideos(prev => [...prev, ...files]);
-        const startIdx = videos.length; // index of first new video
+        const filesWithId = files.map(file => {
+            if (file.type.startsWith("video/")) {
+                file.previewId = "vid_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+            }
+            return file;
+        });
+
+        // Add videos with unique IDs to state
+        setVideos(prev => [...prev, ...filesWithId]);
+        setIsDirty(true);
 
         // Compress each video in the browser
-        for (let i = 0; i < files.length; i++) {
-            const vidIdx = startIdx + i;
-            const file = files[i];
+        for (let i = 0; i < filesWithId.length; i++) {
+            const file = filesWithId[i];
             if (!file.type.startsWith("video/")) continue;
 
-            setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: "compressing", pct: 0 } }));
+            const vidId = file.previewId;
+            setVideoCompressStatus(s => ({ ...s, [vidId]: { status: "compressing", pct: 0 } }));
 
             try {
                 const compressed = await compressVideo(file, (pct) => {
-                    setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: "compressing", pct } }));
+                    setVideoCompressStatus(s => ({ ...s, [vidId]: { status: "compressing", pct } }));
                 });
 
-                // Attach the compressed file to the original file object
-                // We do NOT replace the placeholder. The original file stays in `videos` array.
+                // Attach compressed file to original so submit can read it
                 file.compressedVersion = compressed;
-                
+
                 setVideoCompressStatus(s => ({
                     ...s,
-                    [vidIdx]: compressed.size < file.size
+                    [vidId]: compressed.size < file.size
                         ? { status: "done", pct: 100 }
                         : { status: "skipped", pct: 100 }
                 }));
-            } catch {
-                setVideoCompressStatus(s => ({ ...s, [vidIdx]: { status: "skipped", pct: 0 } }));
+            } catch (err) {
+                if (err.message === "COMPRESSION_CANCELLED") {
+                    setVideoCompressStatus(s => {
+                        const n = { ...s };
+                        delete n[vidId];
+                        return n;
+                    });
+                } else {
+                    setVideoCompressStatus(s => ({ ...s, [vidId]: { status: "skipped", pct: 0 } }));
+                }
             }
         }
     };
@@ -600,6 +742,7 @@ function CreateProduct() {
         const file = e.target.files[0];
         if (file) {
             setFormData(prev => ({ ...prev, resource_file: file }));
+            setIsDirty(true);
         }
         e.target.value = "";
     };
@@ -874,6 +1017,7 @@ function CreateProduct() {
                                     <button
                                         type="button"
                                         onClick={() => {
+                                            if (!window.confirm("Are you sure you want to remove the current thumbnail?")) return;
                                             if (thumbnailPreview && thumbnailPreview.startsWith('blob:')) {
                                                 URL.revokeObjectURL(thumbnailPreview);
                                             }
@@ -913,10 +1057,12 @@ function CreateProduct() {
                                                     URL.revokeObjectURL(thumbnailPreview);
                                                 }
                                                 setThumbnailPreview(URL.createObjectURL(compressed));
+                                                setIsDirty(true);
                                             } catch (err) {
                                                 console.error("Frame compression failed:", err);
                                                 setFormData(prev => ({ ...prev, thumbnail: file }));
                                                 setThumbnailPreview(previewUrl);
+                                                setIsDirty(true);
                                             } finally {
                                                 setUploadingThumbnail(false);
                                             }
@@ -947,7 +1093,15 @@ function CreateProduct() {
                                             <div className="relative w-20 h-20 rounded-lg border border-[#2d1b4e] overflow-hidden">
                                                 <Image src={src} alt="Gallery item" fill className="object-cover" sizes="80px" />
                                             </div>
-                                            <button type="button" onClick={() => removeItem(idx, images, setImages)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500/80 text-white rounded-full text-[10px] flex items-center justify-center shadow-lg hover:bg-red-500">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (window.confirm("Are you sure you want to remove this image?")) {
+                                                        removeItem(idx, images, setImages);
+                                                    }
+                                                }}
+                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500/80 text-white rounded-full text-[10px] flex items-center justify-center shadow-lg hover:bg-red-500"
+                                            >
                                                 <FontAwesomeIcon icon={faTimes} />
                                             </button>
                                         </div>
@@ -990,7 +1144,8 @@ function CreateProduct() {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 p-4 bg-[#130C1C]/50 rounded-2xl border border-[#2d1b4e] min-h-[100px]">
                             {videos.map((vid, idx) => {
                                 const isLocal = vid instanceof File;
-                                const cs = videoCompressStatus[idx];
+                                const vidId = isLocal ? vid.previewId : vid;
+                                const cs = videoCompressStatus[vidId];
                                 const isVidCompressing = cs?.status === "compressing";
                                 return (
                                     <div key={idx} className="relative group aspect-video bg-black rounded-xl overflow-hidden shadow-sm border border-[#2d1b4e] cursor-pointer" onClick={() => !isVidCompressing && setSelectedVideo(vid)}>
@@ -1007,7 +1162,25 @@ function CreateProduct() {
                                                 <FontAwesomeIcon icon={faPlay} className="text-white text-2xl group-hover:scale-110 transition-transform" />
                                             </div>
                                         )}
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); removeItem(idx, videos, setVideos); setVideoCompressStatus(s => { const n = {...s}; delete n[idx]; return n; }); }} className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (isVidCompressing) {
+                                                    const confirmed = window.confirm(
+                                                        'This video is currently being compressed.\n\nAre you sure you want to cancel compression and remove it?'
+                                                    );
+                                                    if (!confirmed) return;
+                                                    cancelCompression();
+                                                } else {
+                                                    const confirmed = window.confirm('Are you sure you want to remove this video?');
+                                                    if (!confirmed) return;
+                                                }
+                                                removeItem(idx, videos, setVideos);
+                                                setVideoCompressStatus(s => { const n = {...s}; delete n[vidId]; return n; });
+                                            }}
+                                            className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                        >
                                             <FontAwesomeIcon icon={faTimes} />
                                         </button>
                                         {/* Status badge */}
@@ -1064,7 +1237,11 @@ function CreateProduct() {
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => setFormData(p => ({ ...p, resource_file: "" }))}
+                                        onClick={() => {
+                                            if (window.confirm("Are you sure you want to remove this resource package?")) {
+                                                setFormData(p => ({ ...p, resource_file: "" }));
+                                            }
+                                        }}
                                         className="text-gray-500 hover:text-red-400 p-2"
                                     >
                                         <FontAwesomeIcon icon={faTrash} />
@@ -1154,6 +1331,7 @@ function CreateProduct() {
                                     const template = masterData.customizationTemplates?.find(t => t.template_id === e.target.value);
                                     if (template && confirm(`Load template "${template.name}"? This will replace your current customization fields.`)) {
                                         setCustomizations(template.fields);
+                                        setIsDirty(true);
                                     }
                                     e.target.value = "";
                                 }}
@@ -1285,33 +1463,143 @@ function CreateProduct() {
                     </div>
                 </div>
 
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#130C1C]/80 backdrop-blur-md border-t border-[#2d1b4e] z-40 flex justify-end gap-4">
-                    <button type="submit" formNoValidate onClick={() => setIsDraftSubmit(true)} disabled={loading || isCompressing} className="w-full max-w-[250px] bg-[#2d1b4e] text-gray-300 py-2 rounded-full font-bold hover:bg-[#3b2a5f] transition-all shadow-xl shadow-purple-900/10 flex items-center justify-center gap-3 text-lg border border-[#3b2a5f] disabled:opacity-50 disabled:cursor-not-allowed">
-                        {loading && isDraftSubmit ? (
-                            <>
-                                <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
-                                Saving Draft...
-                            </>
-                        ) : (
-                            <>
-                                <FontAwesomeIcon icon={faSave} />
-                                Save as Draft
-                            </>
+                <div className="fixed bottom-0 right-0 z-40 transition-all duration-200" style={{ left: 'var(--sidebar-width, 260px)' }}>
+
+                    {/* Upload Progress Panel — shown during submit */}
+                    {loading && Object.keys(uploadProgress).length > 0 && (
+                        <div className="bg-[#0E0819]/98 backdrop-blur-xl border-t border-purple-500/20 px-6 pt-5 pb-3 shadow-[0_-8px_32px_rgba(124,58,237,0.15)]">
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                                    <span className="text-xs font-bold text-purple-300 uppercase tracking-[0.15em]">Uploading Files</span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 font-medium">
+                                    {Object.values(uploadProgress).filter(p => p.done).length} / {Object.keys(uploadProgress).length} complete
+                                </span>
+                            </div>
+
+                            {/* Progress Items */}
+                            <div className="space-y-3 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
+                                {Object.entries(uploadProgress).map(([label, { pct, done, timedOut, error }]) => {
+                                    const isActive = !done && !error && !timedOut;
+                                    const gradientBar = error
+                                        ? 'from-red-600 to-red-400'
+                                        : timedOut
+                                        ? 'from-amber-600 to-amber-400'
+                                        : done
+                                        ? 'from-emerald-600 to-green-400'
+                                        : 'from-violet-600 via-purple-500 to-fuchsia-400';
+                                    const badge = error
+                                        ? { text: 'Failed', cls: 'bg-red-500/15 text-red-400 border-red-500/30' }
+                                        : timedOut
+                                        ? { text: 'Timed Out', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' }
+                                        : done
+                                        ? { text: '✓ Done', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' }
+                                        : { text: `${pct}%`, cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30' };
+                                    return (
+                                        <div key={label} className="flex items-center gap-3 group">
+                                            {/* Icon indicator */}
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                                                error ? 'bg-red-500/20' : timedOut ? 'bg-amber-500/20' : done ? 'bg-emerald-500/20' : 'bg-purple-500/15'
+                                            }`}>
+                                                {error ? (
+                                                    <span className="text-red-400 text-xs font-bold">✕</span>
+                                                ) : timedOut ? (
+                                                    <span className="text-amber-400 text-xs">⏱</span>
+                                                ) : done ? (
+                                                    <span className="text-emerald-400 text-xs font-bold">✓</span>
+                                                ) : (
+                                                    <div className="w-3 h-3 border-2 border-purple-400/40 border-t-purple-400 rounded-full animate-spin"></div>
+                                                )}
+                                            </div>
+
+                                            {/* Label + bar */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-[11px] text-gray-300 font-medium truncate leading-none">{label}</span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ml-2 shrink-0 ${badge.cls}`}>
+                                                        {badge.text}
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full bg-gradient-to-r ${gradientBar} transition-all duration-500 ${isActive ? 'shadow-[0_0_8px_rgba(139,92,246,0.6)]' : ''}`}
+                                                        style={{ width: `${timedOut || error ? 100 : pct}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Action Buttons Bar */}
+                    <div className="bg-[#130C1C]/98 backdrop-blur-xl border-t border-[#2d1b4e]/80 px-6 py-4 flex items-center justify-end gap-3 shadow-[0_-4px_24px_rgba(0,0,0,0.4)]">
+                        {/* Overall progress mini-bar (shown when uploading) */}
+                        {loading && Object.keys(uploadProgress).length > 0 && (
+                            <div className="flex-1 max-w-xs hidden md:block">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[10px] text-gray-500 font-medium">
+                                        Overall
+                                    </span>
+                                    <span className="text-[10px] text-purple-300 font-bold">
+                                        {Math.round(Object.values(uploadProgress).reduce((sum, p) => sum + (p.done || p.timedOut || p.error ? 100 : p.pct), 0) / Math.max(Object.keys(uploadProgress).length, 1))}%
+                                    </span>
+                                </div>
+                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-400 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+                                        style={{
+                                            width: `${Math.round(Object.values(uploadProgress).reduce((sum, p) => sum + (p.done || p.timedOut || p.error ? 100 : p.pct), 0) / Math.max(Object.keys(uploadProgress).length, 1))}%`
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         )}
-                    </button>
-                    <button type="submit" onClick={() => setIsDraftSubmit(false)} disabled={loading || isCompressing} className="w-full max-w-[250px] bg-[#7C3AED] text-white py-2 rounded-full font-bold hover:bg-[#6D28D9] transition-all shadow-2xl shadow-purple-900/20 flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                        {loading && !isDraftSubmit ? (
-                            <>
-                                <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
-                                Creating Product...
-                            </>
-                        ) : (
-                            <>
-                                <FontAwesomeIcon icon={faPlus} />
-                                Create Product
-                            </>
-                        )}
-                    </button>
+
+                        <button
+                            type="submit"
+                            formNoValidate
+                            onClick={() => setIsDraftSubmit(true)}
+                            disabled={loading || isCompressing}
+                            className="flex items-center justify-center gap-2.5 px-7 py-3 rounded-xl font-bold text-sm text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/40 hover:text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+                        >
+                            {loading && isDraftSubmit ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-gray-400/40 border-t-gray-300 rounded-full animate-spin"></div>
+                                    <span>Saving Draft...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <FontAwesomeIcon icon={faSave} className="text-xs" />
+                                    <span>Save as Draft</span>
+                                </>
+                            )}
+                        </button>
+
+                        <button
+                            type="submit"
+                            onClick={() => setIsDraftSubmit(false)}
+                            disabled={loading || isCompressing}
+                            className="relative flex items-center justify-center gap-2.5 px-8 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-purple-900/40 overflow-hidden group"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out"></div>
+                            {loading && !isDraftSubmit ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    <span>Uploading...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <FontAwesomeIcon icon={faPlus} className="text-xs" />
+                                    <span>Create Product</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </form>
 

@@ -108,12 +108,23 @@ router.get('/list', checkPermission('media_manager', 'view'), async (req, res) =
         const response = await publicS3.send(command);
 
         // Folders = CommonPrefixes
-        const folders = (response.CommonPrefixes || []).map(cp => {
+        const folders = await Promise.all((response.CommonPrefixes || []).map(async (cp) => {
             const fullPrefix = cp.Prefix;
             const parts = fullPrefix.replace(/\/$/, '').split('/');
             const name = parts[parts.length - 1];
-            return { name, prefix: fullPrefix };
-        });
+            
+            let lastModified = null;
+            try {
+                const head = await publicS3.send(new HeadObjectCommand({
+                    Bucket: BUCKET,
+                    Key: fullPrefix
+                }));
+                lastModified = head.LastModified;
+            } catch (e) {
+                // Ignore NotFound error for folders that are just virtual prefixes
+            }
+            return { name, prefix: fullPrefix, lastModified };
+        }));
 
         // Files = Contents (exclude the folder placeholder itself)
         const files = (response.Contents || [])

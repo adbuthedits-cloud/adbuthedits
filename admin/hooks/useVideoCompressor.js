@@ -165,6 +165,13 @@ export function useVideoCompressor() {
             if (onProgress) onProgress(100);
             return compressedFile;
         } catch (err) {
+            const isCancel = err && (err.message === "called FFmpeg.terminate()" || err.message?.includes("terminate") || err.message?.includes("aborted"));
+            if (isCancel) {
+                console.log("[useVideoCompressor] Compression was cancelled by the user.");
+                setCompressStatus("Cancelled");
+                setTimeout(() => setCompressStatus(""), 3000);
+                throw new Error("COMPRESSION_CANCELLED");
+            }
             console.error("[useVideoCompressor] Compression error:", err);
             setCompressStatus("Compression failed — uploading original");
             setTimeout(() => setCompressStatus(""), 4000);
@@ -174,5 +181,25 @@ export function useVideoCompressor() {
         }
     }, [ensureLoaded]);
 
-    return { compressVideo, compressStatus, isCompressing, ffmpegLoaded };
+    /**
+     * cancelCompression
+     * Kills the FFmpeg WebWorker immediately and resets state.
+     * Call this when the user removes a video while it is compressing.
+     */
+    const cancelCompression = useCallback(() => {
+        if (ffmpegRef.current) {
+            try {
+                ffmpegRef.current.terminate();
+            } catch {}
+            // Null out so ensureLoaded() will reload on next use
+            ffmpegRef.current = null;
+            setFfmpegLoaded(false);
+            loadingRef.current = false;
+        }
+        setIsCompressing(false);
+        setCompressStatus('Cancelled');
+        setTimeout(() => setCompressStatus(''), 2000);
+    }, []);
+
+    return { compressVideo, cancelCompression, compressStatus, isCompressing, ffmpegLoaded };
 }

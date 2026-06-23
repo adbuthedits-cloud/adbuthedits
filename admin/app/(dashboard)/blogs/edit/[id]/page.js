@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { getAuthToken } from '../../../../../utils/auth';
 import { BuilderProvider, useBuilder } from '../../../../../components/builder/BuilderContext';
 import PageBuilder from '../../../../../components/builder/PageBuilder';
+import { useUnsavedChangesWarning } from '../../../../../hooks/useUnsavedChangesWarning';
 import withPermission from '../../../../../components/withPermission';
 
 // Separate component to consume context
@@ -20,6 +21,7 @@ function EditBlogContent({ initialData }) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const { sections, setSections } = useBuilder();
+    const [isDirty, setIsDirty] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -38,6 +40,42 @@ function EditBlogContent({ initialData }) {
     });
 
     const [categories, setCategories] = useState([]);
+
+    useUnsavedChangesWarning(isDirty);
+
+    useEffect(() => {
+        if (loading) {
+            setIsDirty(false);
+            return;
+        }
+
+        const titleChanged = (formData.title || '') !== (initialData.title || '');
+        const slugChanged = (formData.slug || '') !== (initialData.slug || '');
+        const authorChanged = (formData.author || '') !== (initialData.author || '');
+        const dateChanged = (formData.post_date || '') !== (initialData.post_date ? new Date(initialData.post_date).toISOString().split('T')[0] : '');
+        const thumbnailChanged = (formData.thumbnail || '') !== (initialData.thumbnail || '');
+        const tagsChanged = (formData.tags || '') !== (Array.isArray(initialData.tags) ? initialData.tags.join(', ') : initialData.tags || '');
+        const metaTitleChanged = (formData.meta_title || '') !== (initialData.meta_title || '');
+        const metaDescriptionChanged = (formData.meta_description || '') !== (initialData.meta_description || '');
+        const metaKeywordsChanged = (formData.meta_keywords || '') !== (initialData.meta_keywords || '');
+        const canonicalUrlChanged = (formData.canonical_url || '') !== (initialData.canonical_url || '');
+        const publishedChanged = Boolean(formData.published) !== Boolean(initialData.published);
+        const categoryChanged = (formData.blog_category_id || '') !== (initialData.blog_category_id || '');
+
+        const hasTextChange = titleChanged || slugChanged || authorChanged || dateChanged || thumbnailChanged || tagsChanged || metaTitleChanged || metaDescriptionChanged || metaKeywordsChanged || canonicalUrlChanged || publishedChanged || categoryChanged;
+
+        let initialSections = [];
+        if (initialData.structure) {
+            try {
+                initialSections = typeof initialData.structure === 'string' ? JSON.parse(initialData.structure) : initialData.structure;
+            } catch (e) {
+                console.error("Failed to parse structure in dirty check", e);
+            }
+        }
+        const hasSectionChange = JSON.stringify(sections) !== JSON.stringify(initialSections);
+
+        setIsDirty(hasTextChange || hasSectionChange);
+    }, [formData, sections, initialData, loading]);
 
     // Load initial sections if available
     useEffect(() => {

@@ -5,6 +5,7 @@ import AccessDenied from "../../../components/AccessDenied";
 import withPermission from "../../../components/withPermission";
 import { getAuthToken, getAuthUser, hasPermission } from "../../../utils/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useUnsavedChangesWarning } from "../../../hooks/useUnsavedChangesWarning";
 import {
     faShieldHalved, faPlus, faEdit, faTrash, faSave, faTimes,
     faSpinner, faUsers, faCheckCircle, faCircleXmark
@@ -110,6 +111,9 @@ function RolesPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [newRole, setNewRole] = useState({ name: "", description: "", permissions: {} });
+
+    const isDirty = (showCreate && (newRole.name !== "" || newRole.description !== "")) || (editingRole !== null);
+    useUnsavedChangesWarning(isDirty);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 

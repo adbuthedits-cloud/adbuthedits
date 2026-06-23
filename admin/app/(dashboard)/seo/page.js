@@ -8,6 +8,7 @@ import { getAuthToken } from '../../../utils/auth';
 import { useRouter } from 'next/navigation';
 import Button from '../../../components/Button';
 import GlobalLoader from '../../../components/GlobalLoader';
+import { useUnsavedChangesWarning } from '../../../hooks/useUnsavedChangesWarning';
 
 function SeoDashboard() {
     const router = useRouter();
@@ -15,6 +16,9 @@ function SeoDashboard() {
     const [loading, setLoading] = useState(true);
     const [selectedPage, setSelectedPage] = useState(null); // For editing
     const [saving, setSaving] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
+
+    useUnsavedChangesWarning(isDirty);
 
     // Grouped by Root Folder Structure
     const systemPages = [
@@ -112,6 +116,7 @@ function SeoDashboard() {
             await axios.post(`${apiUrl}/api/seo/pages`, selectedPage, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            setIsDirty(false);
             fetchPages();
             setSelectedPage(null);
         } catch (error) {
@@ -201,7 +206,7 @@ function SeoDashboard() {
                                     <label className="text-sm font-bold text-gray-300">Page Identifier</label>
                                     <input
                                         value={selectedPage.page_identifier || ''}
-                                        onChange={e => setSelectedPage({ ...selectedPage, page_identifier: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                                        onChange={e => { setSelectedPage({ ...selectedPage, page_identifier: e.target.value.toLowerCase().replace(/\s+/g, '-') }); setIsDirty(true); }}
                                         disabled={!selectedPage.isNew}
                                         className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa] disabled:opacity-50"
                                         placeholder="e.g. my-custom-page"
@@ -212,7 +217,7 @@ function SeoDashboard() {
                                     <label className="text-sm font-bold text-gray-300">Route Path</label>
                                     <input
                                         value={selectedPage.path || ''}
-                                        onChange={e => setSelectedPage({ ...selectedPage, path: e.target.value })}
+                                        onChange={e => { setSelectedPage({ ...selectedPage, path: e.target.value }); setIsDirty(true); }}
                                         className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa]"
                                         placeholder="e.g. /my-custom-page"
                                         required
@@ -224,7 +229,7 @@ function SeoDashboard() {
                                 <label className="text-sm font-bold text-gray-300">Meta Title</label>
                                 <input
                                     value={selectedPage.meta_title || selectedPage.title || ''}
-                                    onChange={e => setSelectedPage({ ...selectedPage, meta_title: e.target.value, title: e.target.value })}
+                                    onChange={e => { setSelectedPage({ ...selectedPage, meta_title: e.target.value, title: e.target.value }); setIsDirty(true); }}
                                     className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa]"
                                     required
                                 />
@@ -233,7 +238,7 @@ function SeoDashboard() {
                                 <label className="text-sm font-bold text-gray-300">Meta Description</label>
                                 <textarea
                                     value={selectedPage.meta_description || selectedPage.description || ''}
-                                    onChange={e => setSelectedPage({ ...selectedPage, meta_description: e.target.value, description: e.target.value })}
+                                    onChange={e => { setSelectedPage({ ...selectedPage, meta_description: e.target.value, description: e.target.value }); setIsDirty(true); }}
                                     rows={4}
                                     className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa] resize-none"
                                 />
@@ -242,14 +247,14 @@ function SeoDashboard() {
                                 <label className="text-sm font-bold text-gray-300">Keywords</label>
                                 <input
                                     value={selectedPage.keywords || selectedPage.meta_keywords || ''}
-                                    onChange={e => setSelectedPage({ ...selectedPage, keywords: e.target.value, meta_keywords: e.target.value })}
+                                    onChange={e => { setSelectedPage({ ...selectedPage, keywords: e.target.value, meta_keywords: e.target.value }); setIsDirty(true); }}
                                     className="w-full p-3 bg-[#130C1C] border border-[#2d1b4e] rounded-xl text-white outline-none focus:border-[#a78bfa]"
                                     placeholder="keyword1, keyword2"
                                 />
                             </div>
 
                             <div className="flex justify-end gap-4 pt-4">
-                                <button type="button" onClick={() => setSelectedPage(null)} className="text-gray-400 hover:text-white px-4 py-2">Cancel</button>
+                                <button type="button" onClick={() => { setSelectedPage(null); setIsDirty(false); }} className="text-gray-400 hover:text-white px-4 py-2">Cancel</button>
                                 <button type="submit" disabled={saving} className="bg-[#7C3AED] text-white px-8 py-2 rounded-xl font-bold hover:bg-[#6D28D9]">
                                     {saving ? 'Saving...' : 'Save Changes'}
                                 </button>

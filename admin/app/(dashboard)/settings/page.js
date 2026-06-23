@@ -3,14 +3,16 @@ import withPermission from '../../../components/withPermission';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faSave, faCheckCircle, faExclamationCircle, faEye, faEyeSlash, faPowerOff } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faSave, faCheckCircle, faExclamationCircle, faEye, faEyeSlash, faPowerOff, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
 import { getAuthToken } from '../../../utils/auth';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlideIn } from '../../../components/Animations';
+import { useUnsavedChangesWarning } from '../../../hooks/useUnsavedChangesWarning';
 
 function Settings() {
     const router = useRouter();
+    const [isDirty, setIsDirty] = useState(false);
     const [formData, setFormData] = useState({
         currentPassword: '',
         newPassword: '',
@@ -27,9 +29,14 @@ function Settings() {
     // Maintenance Mode State
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [fetchingMaintenance, setFetchingMaintenance] = useState(true);
+    const [clearingCache, setClearingCache] = useState(false);
+    const [cacheStatus, setCacheStatus] = useState({ type: '', message: '' });
+
+    useUnsavedChangesWarning(isDirty);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setIsDirty(true);
         if (status.message) setStatus({ type: '', message: '' });
     };
 
@@ -76,6 +83,38 @@ function Settings() {
         }
     };
 
+    const handleClearCache = async () => {
+        const confirmed = window.confirm(
+            'This will flush ALL cached data from Redis.\n\nPages will reload fresh data from the database on next request.\n\nAre you sure?'
+        );
+        if (!confirmed) return;
+
+        setClearingCache(true);
+        setCacheStatus({ type: '', message: '' });
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
+            if (!token) return router.push('/login');
+
+            const res = await axios.post(
+                `${apiUrl}/api/admin/clear-cache`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setCacheStatus({
+                type: 'success',
+                message: `Cache cleared successfully — ${res.data.clearedKeys} key(s) removed.`
+            });
+        } catch (err) {
+            setCacheStatus({
+                type: 'error',
+                message: err.response?.data?.error || 'Failed to clear cache.'
+            });
+        } finally {
+            setClearingCache(false);
+        }
+    };
+
     // Validation Requirements
     const validations = {
         length: formData.newPassword.length >= 6,
@@ -112,6 +151,7 @@ function Settings() {
 
             setStatus({ type: 'success', message: res.data.msg });
             setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' }); // Reset form
+            setIsDirty(false);
         } catch (error) {
             setStatus({
                 type: 'error',
@@ -174,7 +214,9 @@ function Settings() {
                         {/* System Settings Section */}
                         <div className="mb-10">
                             <h3 className="font-bold text-lg text-white mb-6 border-b border-[#2d1b4e] pb-4">System Status</h3>
-                            <div className="bg-[#2d1b4e]/30 p-6 rounded-xl border border-[#a78bfa]/20 flex items-center justify-between">
+
+                            {/* Maintenance Mode toggle */}
+                            <div className="bg-[#2d1b4e]/30 p-6 rounded-xl border border-[#a78bfa]/20 flex items-center justify-between mb-4">
                                 <div>
                                     <h4 className="text-white font-semibold flex items-center gap-2">
                                         <FontAwesomeIcon icon={faPowerOff} className={maintenanceMode ? "text-amber-500" : "text-emerald-500"} />
@@ -192,6 +234,32 @@ function Settings() {
                                     className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${maintenanceMode ? 'bg-amber-500' : 'bg-[#3b2a5f]'} ${fetchingMaintenance ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-[#a78bfa]/50'}`}
                                 >
                                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${maintenanceMode ? 'translate-x-8' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+
+                            {/* Clear Cache */}
+                            <div className="bg-[#2d1b4e]/30 p-6 rounded-xl border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                    <h4 className="text-white font-semibold flex items-center gap-2">
+                                        <FontAwesomeIcon icon={faTrash} className="text-red-400" />
+                                        Clear All Cache
+                                    </h4>
+                                    <p className="text-gray-400 text-sm mt-1">
+                                        Flush all Redis cached data. Use this after bulk changes to force fresh data on all pages.
+                                    </p>
+                                    {cacheStatus.message && (
+                                        <p className={`text-xs mt-2 font-medium ${cacheStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                            {cacheStatus.type === 'success' ? '✓' : '✕'} {cacheStatus.message}
+                                        </p>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={handleClearCache}
+                                    disabled={clearingCache}
+                                    className="shrink-0 flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <FontAwesomeIcon icon={clearingCache ? faSync : faTrash} className={clearingCache ? 'animate-spin' : ''} />
+                                    {clearingCache ? 'Clearing...' : 'Clear Cache'}
                                 </button>
                             </div>
                         </div>

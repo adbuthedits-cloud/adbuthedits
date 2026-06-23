@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { getAuthToken } from '../../../../utils/auth';
 import { BuilderProvider, useBuilder } from '../../../../components/builder/BuilderContext';
 import PageBuilder from '../../../../components/builder/PageBuilder';
+import { useUnsavedChangesWarning } from '../../../../hooks/useUnsavedChangesWarning';
 import Button from '../../../../components/Button';
 import withPermission from '../../../../components/withPermission';
 
@@ -19,6 +20,7 @@ function CreateBlogContent() {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const { sections } = useBuilder();
+    const [isDirty, setIsDirty] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -39,6 +41,29 @@ function CreateBlogContent() {
     });
 
     const [categories, setCategories] = useState([]);
+
+    useUnsavedChangesWarning(isDirty);
+
+    useEffect(() => {
+        if (loading) {
+            setIsDirty(false);
+            return;
+        }
+        const hasTextChange = formData.title !== '' ||
+                              formData.slug !== '' ||
+                              formData.author !== '' ||
+                              formData.thumbnail !== '' ||
+                              formData.tags !== '' ||
+                              formData.meta_title !== '' ||
+                              formData.meta_description !== '' ||
+                              formData.meta_keywords !== '' ||
+                              formData.canonical_url !== '' ||
+                              formData.blog_category_id !== '';
+        
+        const hasSectionChange = sections.length > 0;
+
+        setIsDirty(hasTextChange || hasSectionChange);
+    }, [formData, sections, loading]);
 
     useEffect(() => {
         fetchCategories();

@@ -661,6 +661,14 @@ function MediaManagerPage() {
                                                 <span className="text-gray-300 text-xs font-medium truncate w-full group-hover:text-white transition-colors">
                                                     {folder.name}
                                                 </span>
+                                                {folder.lastModified && (
+                                                    <span className="text-gray-500 text-[10px] block mt-0.5" title={new Date(folder.lastModified).toString()}>
+                                                        {new Date(folder.lastModified).toLocaleString("en-IN", {
+                                                            day: "numeric", month: "short", year: "numeric",
+                                                            hour: "2-digit", minute: "2-digit", hour12: true
+                                                        })}
+                                                    </span>
+                                                )}
                                             </div>
                                         </button>
                                         {canDelete && (
@@ -707,9 +715,10 @@ function MediaManagerPage() {
                                                     <span className="text-gray-600 text-xs">{formatBytes(file.size)}</span>
                                                     {file.lastModified && (
                                                         <span className="text-gray-700 text-xs">
-                                                            {new Date(file.lastModified).toLocaleDateString("en-IN", {
-                                                                day: "numeric", month: "short", year: "numeric"
-                                                            })}
+                                                             {new Date(file.lastModified).toLocaleString("en-IN", {
+                                                                 day: "numeric", month: "short", year: "numeric",
+                                                                 hour: "2-digit", minute: "2-digit", hour12: true
+                                                             })}
                                                         </span>
                                                     )}
                                                 </div>

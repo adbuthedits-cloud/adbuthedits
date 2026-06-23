@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { getAuthToken } from '../../../../../utils/auth';
+import { useUnsavedChangesWarning } from '../../../../../hooks/useUnsavedChangesWarning';
 
 import withPermission from '../../../../../components/withPermission';
 
@@ -15,6 +16,7 @@ function EditUser() {
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
 
     const [formData, setFormData] = useState({
         first_name: '',
@@ -24,6 +26,8 @@ function EditUser() {
         phone_number: '',
         role: 'customer'
     });
+
+    useUnsavedChangesWarning(isDirty);
 
     useEffect(() => {
         if (id) fetchUser();
@@ -73,6 +77,7 @@ function EditUser() {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setIsDirty(true);
     };
 
     const handleSubmit = async (e) => {
@@ -101,6 +106,7 @@ function EditUser() {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
+            setIsDirty(false);
             router.push('/users');
         } catch (error) {
             console.error('Failed to update user', error);

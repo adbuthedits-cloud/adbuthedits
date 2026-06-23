@@ -5,6 +5,7 @@ import axios from 'axios';
 import { getAuthToken, getAuthUser, hasPermission } from '../../../utils/auth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEdit, faTrash, faSave, faTimes, faTags, faEye } from '@fortawesome/free-solid-svg-icons';
+import { useUnsavedChangesWarning } from '../../../hooks/useUnsavedChangesWarning';
 
 function BlogCategories() {
     const user = getAuthUser() || {};
@@ -17,6 +18,9 @@ function BlogCategories() {
     const [formData, setFormData] = useState({ name: '', slug: '' });
     const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
     const [showAddModal, setShowAddModal] = useState(false);
+
+    const isDirty = (editingId !== null) || (showAddModal && (newCategory.name !== '' || newCategory.slug !== ''));
+    useUnsavedChangesWarning(isDirty);
 
     useEffect(() => {
         fetchCategories();

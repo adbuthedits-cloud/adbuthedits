@@ -119,6 +119,12 @@ export default function AdminLayout({ children }) {
     const canSee = (module) => canAccessModule(user, module);
 
     useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.style.setProperty('--sidebar-width', collapsed ? '80px' : '260px');
+        }
+    }, [collapsed]);
+
+    useEffect(() => {
         if (!searchQuery.trim()) {
             setSearchResults([]);
             return;

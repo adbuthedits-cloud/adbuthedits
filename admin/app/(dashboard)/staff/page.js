@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getAuthToken, getAuthUser, hasPermission } from "../../../utils/auth";
 import withPermission from "../../../components/withPermission";
+import { useUnsavedChangesWarning } from "../../../hooks/useUnsavedChangesWarning";
 
 // Role badge colors by common role name keywords
 const ROLE_COLORS = {
@@ -60,6 +61,9 @@ function StaffPage() {
     const [modalMode, setModalMode] = useState(null);
     const [selected, setSelected] = useState(null);
     const [formData, setFormData] = useState(emptyForm);
+
+    const isDirty = (modalMode === "add" && (formData.first_name !== "" || formData.last_name !== "" || formData.email !== "")) || (modalMode === "edit");
+    useUnsavedChangesWarning(isDirty);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [copied, setCopied] = useState(false);

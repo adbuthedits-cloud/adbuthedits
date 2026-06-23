@@ -3630,5 +3630,85 @@ router.delete('/master-data/customization-templates/:id', checkPermission('setti
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
+// ── Clear All Cache ───────────────────────────────────────────────────────────
+// POST /api/admin/clear-cache
+// Flushes every known cache pattern from Redis.
+router.post('/clear-cache', checkPermission('settings', 'edit'), async (req, res) => {
+    try {
+        if (!redisClient.isOpen) {
+            return res.status(503).json({ error: 'Redis is not connected. Cache cannot be cleared.' });
+        }
+
+        // Collect every key in Redis and delete all, or clear known patterns
+        const allKeys = await redisClient.keys('*');
+        if (allKeys.length > 0) {
+            await redisClient.del(allKeys);
+        }
+
+        console.log(`[ClearCache] Flushed ${allKeys.length} key(s) from Redis.`);
+        return res.json({ success: true, clearedKeys: allKeys.length });
+    } catch (err) {
+        console.error('[ClearCache] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ── Delete Product Media from R2 ──────────────────────────────────────────────
+// DELETE /api/admin/delete-media
+// Deletes original media file and its related web-optimized version (_web.mp4 or .webp) from R2.
+router.delete('/delete-media', checkPermission('products', 'edit'), async (req, res) => {
+    try {
+        const { fileUrl } = req.body;
+        if (!fileUrl) {
+            return res.status(400).json({ error: 'fileUrl is required' });
+        }
+
+        let fileKey = '';
+        try {
+            const urlObj = new URL(fileUrl);
+            fileKey = decodeURIComponent(urlObj.pathname.substring(1));
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid URL format' });
+        }
+
+        if (!fileKey) {
+            return res.status(400).json({ error: 'Could not extract file key from URL' });
+        }
+
+        const { webpKey, webVideoKey } = require('../utils/webAssets');
+        const path = require('path');
+        const ext = path.extname(fileKey).toLowerCase();
+        
+        const imageExts = ['.png', '.jpg', '.jpeg', '.gif', '.tiff', '.bmp', '.webp'];
+        const videoExts = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+
+        const keysToDelete = [{ Key: fileKey }];
+
+        if (imageExts.includes(ext)) {
+            const webp = webpKey(fileKey);
+            if (webp && webp !== fileKey) {
+                keysToDelete.push({ Key: webp });
+            }
+        } else if (videoExts.includes(ext)) {
+            const webVideo = webVideoKey(fileKey);
+            if (webVideo && webVideo !== fileKey) {
+                keysToDelete.push({ Key: webVideo });
+            }
+        }
+
+        await publicS3.send(new DeleteObjectsCommand({
+            Bucket: process.env.R2_PUBLIC_BUCKET,
+            Delete: { Objects: keysToDelete, Quiet: true },
+        }));
+
+        console.log(`[Storage Cleanup] Deleted product media keys:`, keysToDelete.map(k => k.Key));
+
+        return res.json({ success: true, message: 'Media files deleted successfully from R2.' });
+    } catch (err) {
+        console.error('[DeleteProductMedia] Error:', err);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
 
