@@ -199,20 +199,10 @@ router.put('/complete-profile', authMiddleware, async (req, res) => {
         if (email !== currentUser.email) {
             const emailConflict = await User.findOne({ where: { email } });
             if (emailConflict && emailConflict.user_id !== currentUser.user_id) {
-                const conflictIsComplete = !!(emailConflict.first_name && emailConflict.email && emailConflict.phone_number);
-                if (conflictIsComplete) {
-                    return res.status(400).json({
-                        field: 'email',
-                        msg: 'This email belongs to another account. Please use a different email or log in with that account.'
-                    });
-                }
-                // Merge: conflicting account is incomplete (partial) → absorb its data and delete it
-                console.log(`[complete-profile] Merging email-conflict user ${emailConflict.user_id} into ${currentUser.user_id}`);
-                // Transfer useful data from conflicting account if current user is missing it
-                if (!currentUser.first_name && emailConflict.first_name) currentUser.first_name = emailConflict.first_name;
-                if (!currentUser.last_name && emailConflict.last_name) currentUser.last_name = emailConflict.last_name;
-                if (!currentUser.phone_number && emailConflict.phone_number) currentUser.phone_number = emailConflict.phone_number;
-                await emailConflict.destroy();
+                return res.status(400).json({
+                    field: 'email',
+                    msg: 'This email belongs to another account. Please use a different email or log in with that account.'
+                });
             }
         }
 
@@ -229,19 +219,10 @@ router.put('/complete-profile', authMiddleware, async (req, res) => {
         });
 
         if (phoneConflict) {
-            const conflictIsComplete = !!(phoneConflict.first_name && phoneConflict.email && phoneConflict.phone_number);
-            if (conflictIsComplete) {
-                return res.status(400).json({
-                    field: 'phone',
-                    msg: 'This phone number belongs to another account. Please use a different number.'
-                });
-            }
-            // Merge: absorb partial phone-conflict user and delete it
-            console.log(`[complete-profile] Merging phone-conflict user ${phoneConflict.user_id} into ${currentUser.user_id}`);
-            if (!currentUser.first_name && phoneConflict.first_name) currentUser.first_name = phoneConflict.first_name;
-            if (!currentUser.last_name && phoneConflict.last_name) currentUser.last_name = phoneConflict.last_name;
-            if (!currentUser.email && phoneConflict.email) currentUser.email = phoneConflict.email;
-            await phoneConflict.destroy();
+            return res.status(400).json({
+                field: 'phone',
+                msg: 'This phone number belongs to another account. Please use a different number.'
+            });
         }
 
         // ─ Apply updates to current user ─────────────────────────────────────────
