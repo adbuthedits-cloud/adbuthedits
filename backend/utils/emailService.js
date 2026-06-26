@@ -22,12 +22,19 @@ const transporter = nodemailer.createTransport(
           }
 );
 
-// Verify connection configuration
+// Verify connection configuration on startup
 transporter.verify((error, success) => {
     if (error) {
-        console.error('[Email] Transporter configuration error:', error);
+        console.error('[Email] ❌ Transporter configuration error:', {
+            message: error.message,
+            code: error.code,
+            responseCode: error.responseCode,
+            response: error.response,
+            command: error.command,
+        });
     } else {
-        console.log('[Email] Server is ready to send messages');
+        const method = process.env.SMTP_HOST ? `SMTP (${process.env.SMTP_HOST})` : 'Gmail';
+        console.log(`[Email] ✅ Server ready to send via ${method} as ${process.env.SMTP_SYSTEM_EMAIL || process.env.EMAIL_USER}`);
     }
 });
 

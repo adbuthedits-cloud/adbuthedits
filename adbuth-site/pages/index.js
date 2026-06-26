@@ -32,15 +32,23 @@ export async function getStaticProps() {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const res = await fetch(`${apiUrl}/api/blogs`);
+    
+    if (!res.ok) {
+      throw new Error(`API returned status ${res.status}`);
+    }
+
     const blogs = await res.json();
+    if (!Array.isArray(blogs)) {
+      throw new Error(`Expected array of blogs, got: ${typeof blogs}`);
+    }
 
     const items = blogs
-      .filter(b => b.published)
+      .filter(b => b && b.published)
       .slice(0, 6)
       .map(b => ({
         slug: b.slug,
         title: b.title,
-        excerpt: b.meta_description || b.content.substring(0, 150) + '...',
+        excerpt: b.meta_description || (b.content ? b.content.substring(0, 150) + '...' : ''),
         meta_description: b.meta_description || '',
         image: b.thumbnail || 'https://assets.adbuthverse.com/website-assets/pages/home/blog-1.webp'
       }));

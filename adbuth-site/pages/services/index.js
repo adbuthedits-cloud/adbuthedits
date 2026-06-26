@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ServiceDrawer from '../../components/ServiceDrawer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import { cdnImage } from '../../utils/cdn';
 
 
@@ -33,7 +33,7 @@ const servicesData = [
     title: 'DESIGN',
     description: 'Creative designs that communicate your brand\'s essence.',
     img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/service-design.webp'),
-    mainLink: '/services/design',
+    mainLink: '/services/designing',
     subServices: [
       { title: 'Adbuth E-Invitations', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/services-e-invitation.webp'), link: '/services/designing/adbuth-e-invitations' },
       { title: 'Adbuth Graphics', img: cdnImage('https://assets.adbuthverse.com/website-assets/pages/services/index/services-graphics.webp'), link: '/services/designing/adbuth-graphics' }
@@ -112,7 +112,7 @@ export default function Services() {
         </section>
 
         {/* Interactive Services List */}
-        <section className="w-full px-10 pt-10  lg:px-0 bg-white gap-6 lg:gap-0 flex flex-col" onMouseLeave={handleMouseLeave}>
+        <section className="w-full px-10 pt-10 pb-10 lg:pb-0  lg:px-0 bg-white gap-6 lg:gap-0 flex flex-col" onMouseLeave={handleMouseLeave}>
           {servicesData.map((service) => {
             const isActive = activeService === service.id;
 

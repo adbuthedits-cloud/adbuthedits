@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -46,15 +47,15 @@ const countryOptions = [
  *   onComplete   {fn}       — Called with updated user object on success
  */
 export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete, onClose }) {
-    const [firstName, setFirstName]   = useState('');
-    const [lastName, setLastName]     = useState('');
-    const [email, setEmail]           = useState(prefill.email || '');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState(prefill.email || '');
     const [countryCode, setCountryCode] = useState(prefill.phone?.code || '+91');
-    const [phoneNum, setPhoneNum]     = useState(prefill.phone?.number || '');
+    const [phoneNum, setPhoneNum] = useState(prefill.phone?.number || '');
     const [fieldErrors, setFieldErrors] = useState({});
     const [globalError, setGlobalError] = useState('');
-    const [submitting, setSubmitting]  = useState(false);
-    const [done, setDone]             = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [done, setDone] = useState(false);
 
     // Sync prefill when it changes (e.g., modal opened with new context)
     useEffect(() => {
@@ -76,10 +77,34 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
         setGlobalError('');
 
         const errors = {};
-        if (!firstName.trim()) errors.firstName = 'First name is required.';
-        if (!email.trim()) errors.email = 'Email is required.';
-        if (!phoneNum.trim()) errors.phone = 'Phone number is required.';
-        if (Object.keys(errors).length) { setFieldErrors(errors); return; }
+        if (!firstName.trim()) {
+            errors.firstName = 'First name is required.';
+        }
+
+        const emailTrimmed = email.trim();
+        if (!emailTrimmed) {
+            errors.email = 'Email is required.';
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailTrimmed)) {
+                errors.email = 'Please enter a valid email address.';
+            }
+        }
+
+        const phoneCleaned = phoneNum.replace(/[\s\-()]/g, '');
+        if (!phoneCleaned) {
+            errors.phone = 'Phone number is required.';
+        } else {
+            const phoneRegex = /^\d{7,15}$/;
+            if (!phoneRegex.test(phoneCleaned)) {
+                errors.phone = 'Please enter a valid phone number (7 to 15 digits).';
+            }
+        }
+
+        if (Object.keys(errors).length) {
+            setFieldErrors(errors);
+            return;
+        }
 
         setSubmitting(true);
         try {
@@ -136,45 +161,40 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-                    style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.7)' }}
+                    className="font-sans fixed inset-0 z-[200] flex items-center justify-center p-4"
+                    style={{ backdropFilter: 'blur(16px)', backgroundColor: 'rgba(5,0,15,0.75)' }}
                 >
                     <motion.div
-                        initial={{ scale: 0.92, opacity: 0, y: 24 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.95, opacity: 0, y: 16 }}
-                        transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                        className="relative w-full max-w-md"
+                        initial={{ opacity: 0, scale: 0.95, y: 20, filter: 'blur(10px)' }}
+                        animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        className="w-full max-w-sm sm:max-w-md relative z-20"
                     >
-                        {/* Glow border */}
-                        <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-br from-purple-600 via-fuchsia-500 to-purple-800 opacity-80 blur-[2px]" />
+                        <div className="relative group">
+                            {/* Noise overlay */}
+                            <div className="absolute inset-0 z-0 opacity-10 pointer-events-none rounded-3xl" style={{
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                            }} />
 
-                        <div className="relative bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl">
-                            {/* Top accent */}
-                            <div className="h-1.5 w-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-800" />
+                            <div className="relative bg-neutral-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden w-full flex flex-col">
 
-                            {/* Close / Skip button */}
-                            {onClose && (
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="absolute top-4 right-4 text-white/40 hover:text-white/80 transition-colors duration-200 z-10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10"
-                                    aria-label="Skip profile completion"
-                                >
-                                    <FontAwesomeIcon icon={faTimes} className="text-sm" />
-                                </button>
-                            )}
+                                {/* Close / Skip button */}
+                                {onClose && (
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="absolute top-4 right-4 text-white/40 hover:text-white/80 transition-colors duration-200 z-20 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10"
+                                        aria-label="Skip profile completion"
+                                    >
+                                        <FontAwesomeIcon icon={faTimes} className="text-sm" />
+                                    </button>
+                                )}
 
-                            <div className="p-7">
                                 {/* Header */}
-                                <div className="text-center mb-6">
-                                    <div className="w-14 h-14 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                        <FontAwesomeIcon icon={faUser} className="text-purple-400 text-xl" />
-                                    </div>
-                                    <h2 className="text-xl font-bold text-white mb-1">Complete Your Profile</h2>
-                                    <p className="text-white/50 text-xs leading-relaxed">
-                                        Your name, email, and phone are required to place orders.
-                                    </p>
+                                <div className="text-center mb-6 relative z-10">
+                                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 tracking-tight">Complete Your Profile</h2>
+                                    <p className="text-white/50 text-xs">Your name, email, and phone are required to place orders</p>
                                 </div>
 
                                 {/* Success State */}
@@ -183,7 +203,7 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
                                         <motion.div
                                             initial={{ scale: 0.8, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
-                                            className="text-center py-6"
+                                            className="text-center py-6 relative z-10"
                                         >
                                             <div className="w-16 h-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                                 <FontAwesomeIcon icon={faCheckCircle} className="text-green-400 text-2xl" />
@@ -195,7 +215,7 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
                                 </AnimatePresence>
 
                                 {!done && (
-                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                    <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
                                         {/* Global error */}
                                         <AnimatePresence>
                                             {globalError && (
@@ -212,91 +232,91 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
                                         </AnimatePresence>
 
                                         {/* Name row */}
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-white/50 text-[10px] uppercase tracking-wider mb-1.5">
-                                                    First Name <span className="text-red-400">*</span>
+                                                <label className="block text-white/55 text-[10px] uppercase tracking-wider mb-1">
+                                                    First Name <span className="text-purple-400">*</span>
                                                 </label>
                                                 <input
                                                     id="profile-first-name"
                                                     type="text"
                                                     value={firstName}
                                                     onChange={e => { setFirstName(e.target.value); setFieldErrors(p => ({ ...p, firstName: '' })); }}
-                                                    placeholder="John"
-                                                    className={`w-full bg-white/5 border ${fieldErrors.firstName ? 'border-red-500/50' : 'border-white/10'} text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500 focus:bg-white/8 transition-all`}
+                                                    placeholder="First Name"
+                                                    className={`w-full bg-transparent border-b text-white placeholder-white/20 px-0 py-1.5 focus:outline-none transition-colors text-sm
+                                                        ${fieldErrors.firstName ? 'border-red-400 focus:border-red-400' : 'border-white/20 focus:border-purple-500'}`}
                                                 />
                                                 {fieldErrors.firstName && <p className="text-red-400 text-[10px] mt-1">{fieldErrors.firstName}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-white/50 text-[10px] uppercase tracking-wider mb-1.5">Last Name</label>
+                                                <label className="block text-white/55 text-[10px] uppercase tracking-wider mb-1">Last Name</label>
                                                 <input
                                                     id="profile-last-name"
                                                     type="text"
                                                     value={lastName}
                                                     onChange={e => setLastName(e.target.value)}
-                                                    placeholder="Doe"
-                                                    className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500 focus:bg-white/8 transition-all"
+                                                    placeholder="Last Name"
+                                                    className="w-full bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 focus:outline-none focus:border-purple-500 transition-colors text-sm"
                                                 />
                                             </div>
                                         </div>
 
                                         {/* Email */}
                                         <div>
-                                            <label className="block text-white/50 text-[10px] uppercase tracking-wider mb-1.5">
-                                                Email <span className="text-red-400">*</span>
-                                                {emailLocked && <span className="ml-1 text-purple-400 text-[9px]">(auto-detected)</span>}
+                                            <label className="block text-white/55 text-[10px] uppercase tracking-wider mb-1">
+                                                Email <span className="text-purple-400">*</span>
+                                                {emailLocked && <span className="ml-1 text-purple-400 text-[9px] lowercase">(auto-detected)</span>}
                                             </label>
-                                            <div className="relative">
-                                                <FontAwesomeIcon icon={faEnvelope} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-xs" />
-                                                <input
-                                                    id="profile-email"
-                                                    type="email"
-                                                    value={email}
-                                                    onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({ ...p, email: '' })); }}
-                                                    placeholder="your@email.com"
-                                                    readOnly={emailLocked}
-                                                    className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border transition-all focus:outline-none
-                                                        ${emailLocked
-                                                            ? 'bg-purple-900/20 border-purple-500/30 text-purple-200 cursor-default'
-                                                            : `bg-white/5 border ${fieldErrors.email ? 'border-red-500/50' : 'border-white/10'} text-white focus:border-purple-500 focus:bg-white/8`
-                                                        }`}
-                                                />
-                                            </div>
+                                            <input
+                                                id="profile-email"
+                                                type="email"
+                                                value={email}
+                                                onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({ ...p, email: '' })); }}
+                                                placeholder="your@email.com"
+                                                readOnly={emailLocked}
+                                                className={`w-full bg-transparent border-b text-white placeholder-white/20 px-0 py-1.5 focus:outline-none transition-colors text-sm
+                                                    ${emailLocked
+                                                        ? 'text-purple-300/50 border-white/10 cursor-not-allowed'
+                                                        : fieldErrors.email
+                                                            ? 'border-red-400 focus:border-red-400'
+                                                            : 'border-white/20 focus:border-purple-500'}`}
+                                            />
                                             {fieldErrors.email && <p className="text-red-400 text-[10px] mt-1">{fieldErrors.email}</p>}
                                         </div>
 
                                         {/* Phone */}
                                         <div>
-                                            <label className="block text-white/50 text-[10px] uppercase tracking-wider mb-1.5">
-                                                Phone <span className="text-red-400">*</span>
-                                                {phoneLocked && <span className="ml-1 text-purple-400 text-[9px]">(auto-detected)</span>}
+                                            <label className="block text-white/55 text-[10px] uppercase tracking-wider mb-1">
+                                                Phone <span className="text-purple-400">*</span>
+                                                {phoneLocked && <span className="ml-1 text-purple-400 text-[9px] lowercase">(auto-detected)</span>}
                                             </label>
-                                            <div className={`flex gap-2 rounded-xl border overflow-hidden transition-all ${fieldErrors.phone ? 'border-red-500/50' : 'border-white/10'}`}>
+                                            <div className="flex gap-4 items-end">
                                                 <select
                                                     id="profile-country-code"
                                                     value={countryCode}
                                                     onChange={e => setCountryCode(e.target.value)}
                                                     disabled={phoneLocked}
-                                                    className={`bg-white/5 text-white text-sm py-2.5 pl-3 pr-1 focus:outline-none border-r border-white/10 min-w-[90px]
-                                                        ${phoneLocked ? 'opacity-60 cursor-default bg-purple-900/20' : ''} [&>option]:text-black`}
+                                                    className={`bg-transparent border-b border-white/20 text-white py-1 focus:border-purple-500 outline-none w-24 text-sm cursor-pointer [&>option]:text-black
+                                                        ${phoneLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                 >
                                                     {countryOptions.map(o => (
                                                         <option key={o.code} value={o.code}>{o.code} {o.country}</option>
                                                     ))}
                                                 </select>
-                                                <div className="relative flex-1">
-                                                    <FontAwesomeIcon icon={faPhone} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-xs" />
-                                                    <input
-                                                        id="profile-phone"
-                                                        type="tel"
-                                                        value={phoneNum}
-                                                        onChange={e => { setPhoneNum(e.target.value); setFieldErrors(p => ({ ...p, phone: '' })); }}
-                                                        placeholder="98765 43210"
-                                                        readOnly={phoneLocked}
-                                                        className={`w-full pl-9 pr-3 py-2.5 text-sm bg-transparent text-white focus:outline-none
-                                                            ${phoneLocked ? 'text-purple-200 cursor-default' : ''}`}
-                                                    />
-                                                </div>
+                                                <input
+                                                    id="profile-phone"
+                                                    type="tel"
+                                                    value={phoneNum}
+                                                    onChange={e => { setPhoneNum(e.target.value); setFieldErrors(p => ({ ...p, phone: '' })); }}
+                                                    placeholder="Phone Number"
+                                                    readOnly={phoneLocked}
+                                                    className={`flex-1 bg-transparent border-b text-white placeholder-white/20 px-0 py-1 focus:outline-none transition-colors text-sm
+                                                        ${phoneLocked
+                                                            ? 'text-purple-300/50 border-white/10 cursor-not-allowed'
+                                                            : fieldErrors.phone
+                                                                ? 'border-red-400 focus:border-red-400'
+                                                                : 'border-white/20 focus:border-purple-500'}`}
+                                                />
                                             </div>
                                             {fieldErrors.phone && <p className="text-red-400 text-[10px] mt-1">{fieldErrors.phone}</p>}
                                         </div>
@@ -306,16 +326,16 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
                                             id="complete-profile-submit"
                                             type="submit"
                                             disabled={submitting}
-                                            className="w-full mt-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold py-3 rounded-xl hover:from-purple-700 hover:to-fuchsia-700 transition-all active:scale-[0.98] disabled:opacity-70 shadow-lg shadow-purple-900/40 flex items-center justify-center gap-2 text-sm"
+                                            className="w-full mt-6 bg-white text-black font-bold py-2.5 rounded-xl hover:bg-gray-100 transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 text-sm"
                                         >
                                             {submitting ? (
-                                                <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Saving...</>
+                                                <><FontAwesomeIcon icon={faSpinner} className="animate-spin w-4 h-4" /> Saving...</>
                                             ) : (
                                                 <>Complete Profile <FontAwesomeIcon icon={faArrowRight} className="text-xs" /></>
                                             )}
                                         </button>
 
-                                        <p className="text-center text-white/25 text-[10px] mt-1">
+                                        <p className="text-center text-white/25 text-[10px] mt-2">
                                             This information is required to place orders and receive updates.
                                         </p>
                                     </form>
@@ -324,7 +344,8 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
                         </div>
                     </motion.div>
                 </motion.div>
-            )}
-        </AnimatePresence>
+            )
+            }
+        </AnimatePresence >
     );
 }

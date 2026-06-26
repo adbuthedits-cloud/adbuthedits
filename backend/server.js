@@ -101,19 +101,23 @@ const startServer = async () => {
 
         // Run safe additive migrations (adds new columns/tables without dropping data)
         await runSafeMigrations();
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
 
+    try {
         // Initialize user uploads cleanup on startup
         cleanupUserUploads();
 
         // Start BullMQ workers for order workflow & email throttling
         startWorkers().catch(err => console.error('[Workers] Startup error:', err));
-
-        app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
-        });
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
+    } catch (err) {
+        console.error('Error starting workers/cleanup:', err);
     }
+
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+    });
 };
 
 // Trigger restart

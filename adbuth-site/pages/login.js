@@ -320,19 +320,13 @@ export default function Login() {
                 // Refresh full user data
                 const freshUser = await refreshUser();
 
-                if (data.isNewUser) {
-                    // Show profile completion popup with email pre-filled
-                    openProfileModal({ email: otpEmail });
-                    setSuccess('Welcome! Please complete your profile.');
+                setSuccess(data.isNewUser ? 'Welcome! Redirecting...' : 'Logged in successfully!');
+                const intended = localStorage.getItem('intendedDestination');
+                if (intended) {
+                    localStorage.removeItem('intendedDestination');
+                    setTimeout(() => { window.location.href = intended; }, 600);
                 } else {
-                    setSuccess('Logged in successfully!');
-                    const intended = localStorage.getItem('intendedDestination');
-                    if (intended) {
-                        localStorage.removeItem('intendedDestination');
-                        setTimeout(() => { window.location.href = intended; }, 600);
-                    } else {
-                        setTimeout(() => { window.location.href = '/'; }, 800);
-                    }
+                    setTimeout(() => { window.location.href = '/'; }, 800);
                 }
             }
         } catch (err) { setError(err.message); }
@@ -445,21 +439,13 @@ export default function Login() {
                 // Refresh full user data
                 await refreshUser();
 
-                if (data.isNewUser) {
-                    // Show profile completion popup with phone pre-filled
-                    openProfileModal({
-                        phone: { code: countryCode, number: phoneNumber.replace(/[\s\-()]/g, '') }
-                    });
-                    setSuccess('Welcome! Please complete your profile.');
+                setSuccess(data.isNewUser ? 'Welcome! Redirecting...' : 'Logged in successfully!');
+                const intended = localStorage.getItem('intendedDestination');
+                if (intended) {
+                    localStorage.removeItem('intendedDestination');
+                    setTimeout(() => { window.location.href = intended; }, 600);
                 } else {
-                    setSuccess('Logged in successfully!');
-                    const intended = localStorage.getItem('intendedDestination');
-                    if (intended) {
-                        localStorage.removeItem('intendedDestination');
-                        setTimeout(() => { window.location.href = intended; }, 600);
-                    } else {
-                        setTimeout(() => { window.location.href = '/'; }, 800);
-                    }
+                    setTimeout(() => { window.location.href = '/'; }, 800);
                 }
             }
 

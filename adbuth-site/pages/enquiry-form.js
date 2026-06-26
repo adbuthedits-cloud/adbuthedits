@@ -65,20 +65,43 @@ export default function EnquiryForm() {
     useEffect(() => {
         if (user) {
             if (!isInitialized) {
+                let finalPhoneStr = '';
+                let extCode = '91';
+
+                if (user.phone_number) {
+                    try {
+                        const parsed = typeof user.phone_number === 'string'
+                            ? JSON.parse(user.phone_number)
+                            : user.phone_number;
+
+                        if (parsed && typeof parsed === 'object') {
+                            const cleanCode = parsed.code ? parsed.code.replace('+', '') : '91';
+                            const cleanNum = parsed.number ? String(parsed.number).replace(/[\s\-()]/g, '') : '';
+                            extCode = cleanCode;
+                            finalPhoneStr = cleanCode + cleanNum;
+                        } else {
+                            const pStr = String(user.phone_number).replace(/[\s\-()]/g, '');
+                            finalPhoneStr = pStr.startsWith('+') ? pStr.slice(1) : pStr;
+                            if (pStr.startsWith('+91')) {
+                                extCode = '91';
+                            } else if (pStr.startsWith('91') && pStr.length > 10) {
+                                extCode = '91';
+                            }
+                        }
+                    } catch (e) {
+                        const pStr = String(user.phone_number).replace(/[\s\-()]/g, '');
+                        finalPhoneStr = pStr.startsWith('+') ? pStr.slice(1) : pStr;
+                    }
+                }
+
                 setFormData(prev => ({
                     ...prev,
                     firstName: user.first_name || '',
                     lastName: user.last_name || '',
                     email: user.email || '',
-                    phone: user.phone_number || ''
+                    phone: finalPhoneStr
                 }));
-                if (user.phone_number) {
-                    if (user.phone_number.startsWith('91')) {
-                        setDialCode('91');
-                    } else if (user.phone_number.startsWith('+91')) {
-                        setDialCode('91');
-                    }
-                }
+                setDialCode(extCode);
                 setIsInitialized(true);
             }
         } else {

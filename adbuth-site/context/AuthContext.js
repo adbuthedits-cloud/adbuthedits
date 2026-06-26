@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import ProfileCompleteModal from '../components/auth/ProfileCompleteModal';
@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [profileModalPrefill, setProfileModalPrefill] = useState({});
     const router = useRouter();
+    const modalDismissedThisSession = useRef(false);
 
     /** Re-fetch the full user record from /api/auth/verify */
     const refreshUser = useCallback(async () => {
@@ -77,13 +78,38 @@ export const AuthProvider = ({ children }) => {
      * @param {object} prefill  e.g. { email: 'a@b.com' } or { phone: { code: '+91', number: '...' } }
      */
     const openProfileModal = useCallback((prefill = {}) => {
-        setProfileModalPrefill(prefill);
+        const merged = { ...prefill };
+        if (typeof window !== 'undefined') {
+            const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+            const currentUser = storedUser || user;
+            if (currentUser) {
+                if (!merged.email && currentUser.email) {
+                    merged.email = currentUser.email;
+                }
+                if (!merged.phone && currentUser.phone_number) {
+                    try {
+                        const parsed = typeof currentUser.phone_number === 'string'
+                            ? JSON.parse(currentUser.phone_number)
+                            : currentUser.phone_number;
+                        if (parsed && parsed.number) {
+                            merged.phone = parsed;
+                        } else if (typeof currentUser.phone_number === 'string') {
+                            merged.phone = { code: '+91', number: currentUser.phone_number };
+                        }
+                    } catch (e) {
+                        merged.phone = { code: '+91', number: currentUser.phone_number };
+                    }
+                }
+            }
+        }
+        setProfileModalPrefill(merged);
         setShowProfileModal(true);
-    }, []);
+    }, [user]);
 
     /** Called when profile is successfully completed */
     const handleProfileComplete = useCallback(async (updatedUser) => {
         setShowProfileModal(false);
+        modalDismissedThisSession.current = true;
         // Re-fetch full user to get all fields
         const fresh = await refreshUser();
         const finalUser = fresh || updatedUser;
@@ -178,6 +204,16 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    // Automatically trigger ProfileCompleteModal after a delay of landing on the page
+    useEffect(() => {
+        if (!loading && user && !isProfileComplete(user) && !showProfileModal && !modalDismissedThisSession.current) {
+            const timer = setTimeout(() => {
+                openProfileModal();
+            }, 3000); // 3 seconds delay
+            return () => clearTimeout(timer);
+        }
+    }, [loading, user, showProfileModal, openProfileModal]);
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -197,7 +233,10 @@ export const AuthProvider = ({ children }) => {
                 isOpen={showProfileModal}
                 prefill={profileModalPrefill}
                 onComplete={handleProfileComplete}
-                onClose={() => setShowProfileModal(false)}
+                onClose={() => {
+                    setShowProfileModal(false);
+                    modalDismissedThisSession.current = true;
+                }}
             />
         </AuthContext.Provider>
     );
