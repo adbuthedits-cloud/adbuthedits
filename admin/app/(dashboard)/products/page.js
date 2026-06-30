@@ -144,12 +144,12 @@ function Products() {
             (p.assetOrientation?.code || '').toLowerCase().includes(s) ||
             JSON.stringify(p.tags || {}).toLowerCase().includes(s);
 
-        const matchParentCategory = selectedParentCategory ? p.parent_category_id === selectedParentCategory : true;
-        const matchAssetCategory = selectedAssetCategory ? p.asset_category_id === selectedAssetCategory : true;
-        const matchSubCategory = selectedSubCategory ? p.asset_sub_category_id === selectedSubCategory : true;
-        const matchType = selectedType ? p.asset_type_id === selectedType : true;
-        const matchVariant = selectedVariant ? p.asset_variant_id === selectedVariant : true;
-        const matchOrientation = selectedOrientation ? p.asset_orientation_id === selectedOrientation : true;
+        const matchParentCategory = selectedParentCategory ? String(p.parent_category_id) === String(selectedParentCategory) : true;
+        const matchAssetCategory = selectedAssetCategory ? String(p.asset_category_id) === String(selectedAssetCategory) : true;
+        const matchSubCategory = selectedSubCategory ? String(p.asset_sub_category_id) === String(selectedSubCategory) : true;
+        const matchType = selectedType ? String(p.asset_type_id) === String(selectedType) : true;
+        const matchVariant = selectedVariant ? String(p.asset_variant_id) === String(selectedVariant) : true;
+        const matchOrientation = selectedOrientation ? String(p.asset_orientation_id) === String(selectedOrientation) : true;
 
         const price = parseFloat(p.price) || 0;
         const matchMinPrice = minPrice ? price >= parseFloat(minPrice) : true;
@@ -514,17 +514,17 @@ function Products() {
                                                     setSelectedAssetCategory(e.target.value);
                                                     setSelectedSubCategory('');
                                                 }}
-                                                disabled={!selectedParentCategory}
-                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm"
                                             >
-                                                <option value="">{selectedParentCategory ? "All Asset Categories" : "Select Parent Category First"}</option>
-                                                {assetCategories
-                                                    .filter(cat => cat.parent_category_id === selectedParentCategory)
-                                                    .map((cat) => (
-                                                        <option key={cat.asset_category_id} value={cat.asset_category_id}>
-                                                            {cat.name} ({cat.code})
-                                                        </option>
-                                                    ))}
+                                                <option value="">All Asset Categories</option>
+                                                {(selectedParentCategory
+                                                    ? assetCategories.filter(cat => String(cat.parent_category_id) === String(selectedParentCategory))
+                                                    : assetCategories
+                                                ).map((cat) => (
+                                                    <option key={cat.asset_category_id} value={cat.asset_category_id}>
+                                                        {cat.name} ({cat.code})
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
 
@@ -534,17 +534,17 @@ function Products() {
                                             <select
                                                 value={selectedSubCategory}
                                                 onChange={(e) => setSelectedSubCategory(e.target.value)}
-                                                disabled={!selectedAssetCategory}
-                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                                className="w-full p-2.5 bg-[#2d1b4e] border border-[#3b2a5f] hover:border-[#a78bfa]/30 focus:border-[#a78bfa]/60 rounded-lg text-sm text-gray-200 outline-none transition-all cursor-pointer shadow-sm"
                                             >
-                                                <option value="">{selectedAssetCategory ? "All Subcategories" : "Select Asset Category First"}</option>
-                                                {subCategories
-                                                    .filter(sub => sub.asset_category_id === selectedAssetCategory)
-                                                    .map((sub) => (
-                                                        <option key={sub.asset_sub_category_id} value={sub.asset_sub_category_id}>
-                                                            {sub.name} ({sub.code})
-                                                        </option>
-                                                    ))}
+                                                <option value="">All Subcategories</option>
+                                                {(selectedAssetCategory
+                                                    ? subCategories.filter(sub => String(sub.asset_category_id) === String(selectedAssetCategory))
+                                                    : subCategories
+                                                ).map((sub) => (
+                                                    <option key={sub.asset_sub_category_id} value={sub.asset_sub_category_id}>
+                                                        {sub.name} ({sub.code})
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
