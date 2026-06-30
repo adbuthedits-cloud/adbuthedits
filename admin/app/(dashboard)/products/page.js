@@ -567,7 +567,7 @@ function Products() {
                                             >
                                                 <option value="">All Types</option>
                                                 {types.map((t) => (
-                                                    <option key={t.asset_type_id} value={t.asset_type_id}>
+                                                    <option key={t.type_id || t.asset_type_id} value={t.type_id || t.asset_type_id}>
                                                         {t.name} ({t.code})
                                                     </option>
                                                 ))}
@@ -584,7 +584,7 @@ function Products() {
                                             >
                                                 <option value="">All Variants</option>
                                                 {variants.map((v) => (
-                                                    <option key={v.asset_variant_id} value={v.asset_variant_id}>
+                                                    <option key={v.variant_id || v.asset_variant_id} value={v.variant_id || v.asset_variant_id}>
                                                         {v.name} ({v.code})
                                                     </option>
                                                 ))}
@@ -601,7 +601,7 @@ function Products() {
                                             >
                                                 <option value="">All Orientations</option>
                                                 {orientations.map((o) => (
-                                                    <option key={o.asset_orientation_id} value={o.asset_orientation_id}>
+                                                    <option key={o.orientation_id || o.asset_orientation_id} value={o.orientation_id || o.asset_orientation_id}>
                                                         {o.name} ({o.code})
                                                     </option>
                                                 ))}
