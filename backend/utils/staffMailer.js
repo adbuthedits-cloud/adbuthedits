@@ -14,7 +14,7 @@ async function sendStaffWelcomeEmail({ to, firstName, lastName, staffId, usernam
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Adbuthverse</title>
+  <title>Welcome to Adbuth Verse</title>
 </head>
 <body style="margin:0;padding:0;background-color:#0f0a1a;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f0a1a;padding:40px 20px;">
@@ -25,7 +25,7 @@ async function sendStaffWelcomeEmail({ to, firstName, lastName, staffId, usernam
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#7D287E,#4a1070);padding:40px;text-align:center;">
-              <h1 style="color:#ffffff;font-size:28px;margin:0;font-weight:700;letter-spacing:-0.5px;">Adbuthverse</h1>
+              <h1 style="color:#ffffff;font-size:28px;margin:0;font-weight:700;letter-spacing:-0.5px;">Adbuth Verse</h1>
               <p style="color:rgba(255,255,255,0.75);font-size:14px;margin:8px 0 0;">Official Onboarding Notice</p>
             </td>
           </tr>
@@ -38,7 +38,7 @@ async function sendStaffWelcomeEmail({ to, firstName, lastName, staffId, usernam
                 Hello, ${firstName} ${lastName}!
               </h2>
               <p style="color:#9ca3af;font-size:15px;line-height:1.7;margin:0 0 28px;">
-                You have been officially onboarded to the <strong style="color:#e9d5ff;">Adbuthverse</strong> administrative team.
+                You have been officially onboarded to the <strong style="color:#e9d5ff;">Adbuth Verse</strong> administrative team.
                 Your account has been set up with the role of <strong style="color:#c084fc;">${roleLabel}</strong>.
                 Please find your login credentials below.
               </p>
@@ -108,7 +108,7 @@ async function sendStaffWelcomeEmail({ to, firstName, lastName, staffId, usernam
           <tr>
             <td style="background-color:#130C1C;padding:24px 40px;border-top:1px solid #2d1b4e;text-align:center;">
               <p style="color:#4b5563;font-size:12px;margin:0;line-height:1.6;">
-                © ${new Date().getFullYear()} Adbuthverse. All rights reserved.<br>
+                © ${new Date().getFullYear()} Adbuth Verse. All rights reserved.<br>
                 This is an automated email. Please do not reply to this message.
               </p>
             </td>
@@ -121,9 +121,9 @@ async function sendStaffWelcomeEmail({ to, firstName, lastName, staffId, usernam
 </html>`;
 
     await transporter.sendMail({
-        from: `"Adbuthverse" <${senders.system}>`,
+        from: `"Adbuth Verse" <${senders.system}>`,
         to,
-        subject: `[Adbuthverse] Welcome! Your Admin Account is Ready — ${staffId}`,
+        subject: `[Adbuth Verse] Welcome! Your Admin Account is Ready — ${staffId}`,
         html
     });
 }

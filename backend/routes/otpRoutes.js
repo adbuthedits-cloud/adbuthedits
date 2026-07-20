@@ -49,7 +49,7 @@ async function sendOtpEmail({ to, otp, purpose }) {
           <!-- Header -->
           <tr>
             <td align="center" style="padding:32px 40px 20px;background-color:#ffffff;border-bottom:1px solid #f5f3f9;">
-              <img src="https://assets.adbuthverse.com/website-assets/brand/logo.png" alt="Adbuthverse" style="height:48px;width:auto;display:block;margin:0 auto;image-rendering:-webkit-optimize-contrast;">
+              <img src="https://assets.adbuthverse.com/website-assets/brand/logo.png" alt="Adbuth Verse" style="height:48px;width:auto;display:block;margin:0 auto;image-rendering:-webkit-optimize-contrast;">
             </td>
           </tr>
 
@@ -74,7 +74,7 @@ async function sendOtpEmail({ to, otp, purpose }) {
           <tr>
             <td style="background-color:#FAF9FC;padding:20px;border-top:1px solid #EAE6F2;text-align:center;">
               <p style="color:#d1d5db;font-size:11px;margin:0;">
-                © ${new Date().getFullYear()} Adbuthverse. All rights reserved.
+                © ${new Date().getFullYear()} Adbuth Verse. All rights reserved.
               </p>
             </td>
           </tr>
@@ -87,9 +87,9 @@ async function sendOtpEmail({ to, otp, purpose }) {
 </html>`;
 
     await transporter.sendMail({
-        from: `"Adbuthverse" <${senders.system}>`,
+        from: `"Adbuth Verse" <${senders.system}>`,
         to,
-        subject: `${otp} — Your ${label} OTP | Adbuthverse`,
+        subject: `${otp} — Your ${label} OTP | Adbuth Verse`,
         html,
     });
 }

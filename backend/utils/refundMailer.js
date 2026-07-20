@@ -84,11 +84,11 @@ const sendRefundEmail = async ({ to, name, orderId, refundAmount, status, reason
                     `}
                     
                     <p style="margin-top: 30px;">Thank you for your patience and understanding.</p>
-                    <p>Warm regards,<br>The Adbuthverse Support Team</p>
+                    <p>Warm regards,<br>The Adbuth Verse Support Team</p>
                 </div>
                 
                 <div style="${footerStyles}">
-                    <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuthverse. All rights reserved.</p>
+                    <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuth Verse. All rights reserved.</p>
                     <p style="margin: 4px 0;">Payments and refunds are processed securely via Razorpay.</p>
                 </div>
             </div>
@@ -97,7 +97,7 @@ const sendRefundEmail = async ({ to, name, orderId, refundAmount, status, reason
         `;
 
         const info = await transporter.sendMail({
-            from: `"Adbuthverse Support" <${senders.support}>`,
+            from: `"Adbuth Verse Support" <${senders.support}>`,
             to,
             subject,
             html
@@ -159,12 +159,12 @@ const sendChangeRequestEmail = async ({ to, name, orderId, status, details }) =>
                         <p>You will receive another email from us as soon as your edits are ready.</p>
                     `}
                     
-                    <p style="margin-top: 30px;">Thank you for choosing Adbuthverse!</p>
-                    <p>Warm regards,<br>The Adbuthverse Design Team</p>
+                    <p style="margin-top: 30px;">Thank you for choosing Adbuth Verse!</p>
+                    <p>Warm regards,<br>The Adbuth Verse Design Team</p>
                 </div>
                 
                 <div style="${footerStyles}">
-                    <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuthverse. All rights reserved.</p>
+                    <p style="margin: 0;">&copy; ${new Date().getFullYear()} Adbuth Verse. All rights reserved.</p>
                     <p style="margin: 4px 0;">This email is sent in response to action requested on your order.</p>
                 </div>
             </div>
@@ -173,7 +173,7 @@ const sendChangeRequestEmail = async ({ to, name, orderId, status, details }) =>
         `;
 
         const info = await transporter.sendMail({
-            from: `"Adbuthverse Design" <${senders.support}>`,
+            from: `"Adbuth Verse Design" <${senders.support}>`,
             to,
             subject,
             html
