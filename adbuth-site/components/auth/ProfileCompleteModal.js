@@ -209,7 +209,7 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
                                                 <FontAwesomeIcon icon={faCheckCircle} className="text-green-400 text-2xl" />
                                             </div>
                                             <p className="text-green-400 font-bold text-lg">Profile Complete!</p>
-                                            <p className="text-white/50 text-xs mt-1">Welcome to Adbuth Edits 🎉</p>
+                                            <p className="text-white/50 text-xs mt-1">Welcome to Adbuthverse 🎉</p>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

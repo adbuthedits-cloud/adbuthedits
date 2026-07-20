@@ -437,7 +437,7 @@ export default function Signup() {
 
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            setSuccess('Phone verified! Welcome to Adbuth Edits 🎉');
+            setSuccess('Phone verified! Welcome to Adbuthverse 🎉');
             setTimeout(() => { window.location.href = '/'; }, 1200);
         } catch (err) {
             console.error('[Firebase Phone Signup] Verify error:', err);
@@ -462,8 +462,8 @@ export default function Signup() {
     return (
         <div className="relative min-h-screen w-full bg-neutral-950 flex flex-col overflow-y-auto overflow-x-hidden">
             <SeoHead
-                title={seoData?.meta_title || seoData?.title || "Sign Up | Adbuth Edits"}
-                description={seoData?.meta_description || seoData?.description || "Create your Adbuth Edits account."}
+                title={seoData?.meta_title || seoData?.title || "Sign Up | Adbuthverse"}
+                description={seoData?.meta_description || seoData?.description || "Create your Adbuthverse account."}
                 data={seoData}
             />
 
@@ -531,7 +531,7 @@ export default function Signup() {
 
                                         <div className="text-center mb-5">
                                             <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 tracking-tight">Create Account</h1>
-                                            <p className="text-white/50 text-xs">Join Adbuth Edits today</p>
+                                            <p className="text-white/50 text-xs">Join Adbuthverse today</p>
                                         </div>
 
                                         <form onSubmit={handleRegister} className="space-y-4">

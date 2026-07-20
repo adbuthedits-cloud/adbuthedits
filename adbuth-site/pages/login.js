@@ -471,8 +471,8 @@ export default function Login() {
     return (
         <div className="relative min-h-screen w-full bg-neutral-950 flex flex-col overflow-y-auto overflow-x-hidden">
             <SeoHead
-                title={seoData?.meta_title || seoData?.title || "Login | Adbuth Edits"}
-                description={seoData?.meta_description || seoData?.description || "Login to your Adbuth Edits account."}
+                title={seoData?.meta_title || seoData?.title || "Login | Adbuthverse"}
+                description={seoData?.meta_description || seoData?.description || "Login to your Adbuthverse account."}
                 data={seoData}
             />
 

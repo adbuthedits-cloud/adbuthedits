@@ -1,7 +1,7 @@
 const { transporter, senders } = require('./emailService');
 
 const SHOP_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const BRAND_NAME = 'Adbuth Productions';
+const BRAND_NAME = 'Adbuthverse';
 
 /**
  * Common HTML email wrapper wrapper for a premium, consistent design.

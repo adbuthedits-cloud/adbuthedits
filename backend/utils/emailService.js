@@ -73,7 +73,7 @@ const sendReply = async ({ to, subject, html }) => {
     if (await isSuppressed(to)) return null;
     try {
         const info = await transporter.sendMail({
-            from: `"Adbuth Support" <${senders.support}>`,
+            from: `"Adbuthverse Support" <${senders.support}>`,
             to,
             subject,
             html

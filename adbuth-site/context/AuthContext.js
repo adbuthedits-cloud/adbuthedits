@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }) => {
         const finalUser = fresh || updatedUser;
         setUser(finalUser);
 
-        toast.success('Profile complete! Welcome to Adbuth Edits 🎉', {
+        toast.success('Profile complete! Welcome to Adbuthverse 🎉', {
             style: { borderRadius: '12px', background: '#1a0b2e', color: '#fff', border: '1px solid #7c3aed' },
             iconTheme: { primary: '#7c3aed', secondary: '#fff' },
             duration: 4000,
