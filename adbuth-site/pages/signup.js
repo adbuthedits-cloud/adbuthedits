@@ -266,7 +266,7 @@ export default function Signup() {
         setIsEmailValid(vEmail);
         setIsPhoneValid(vPhone);
         setTouched({ email: true, phone: true });
-        
+
         if (!vEmail) {
             setError('Please enter a valid email address.');
             return;
@@ -462,8 +462,8 @@ export default function Signup() {
     return (
         <div className="relative min-h-screen w-full bg-neutral-950 flex flex-col overflow-y-auto overflow-x-hidden">
             <SeoHead
-                title={seoData?.meta_title || seoData?.title || "Sign Up | Adbuthverse"}
-                description={seoData?.meta_description || seoData?.description || "Create your Adbuthverse account."}
+                title={seoData?.meta_title || seoData?.title || "Sign Up | Adbuth Verse"}
+                description={seoData?.meta_description || seoData?.description || "Create your Adbuth Verse account."}
                 data={seoData}
             />
 
@@ -600,11 +600,10 @@ export default function Signup() {
                                                             onChange={e => setEmailConsent(e.target.checked)}
                                                             className="sr-only"
                                                         />
-                                                        <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
-                                                            emailConsent
+                                                        <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${emailConsent
                                                                 ? 'bg-purple-500 border-purple-500'
                                                                 : 'bg-transparent border-white/30 group-hover:border-purple-400'
-                                                        }`}>
+                                                            }`}>
                                                             {emailConsent && (
                                                                 <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
