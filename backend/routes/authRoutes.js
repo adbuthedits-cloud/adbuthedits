@@ -494,15 +494,94 @@ router.post('/admin/logout', authMiddleware, adminMiddleware, async (req, res) =
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, loginIdentifier, password } = req.body;
+        const identifier = (loginIdentifier || email || '').trim();
 
-        let user = await User.findOne({ where: { email } });
+        if (!identifier || !password) {
+            return res.status(400).json({ msg: 'Please provide email or phone number and password' });
+        }
+
+        let user = null;
+
+        // 1. If identifier contains '@', lookup user by email
+        if (identifier.includes('@')) {
+            user = await User.findOne({ where: { email: identifier.toLowerCase() } });
+        } else {
+            // 2. Otherwise, lookup user by phone number
+            const cleanedInput = identifier.replace(/[^\d+]/g, '');
+            const digitsOnly = identifier.replace(/\D/g, '');
+
+            const allUsersWithPhone = await User.findAll({
+                where: { phone_number: { [Op.ne]: null } }
+            });
+
+            const candidateUsers = allUsersWithPhone.filter(u => {
+                try {
+                    const p = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
+                    if (!p) return false;
+
+                    const storedCode = (p.code || '').replace(/\D/g, '');
+                    const storedNum = (p.number || '').replace(/\D/g, '');
+                    const storedFullDigits = storedCode + storedNum;
+
+                    // Match full digits (code + number)
+                    if (storedFullDigits && digitsOnly && storedFullDigits === digitsOnly) return true;
+                    // Match local number (digits only matching stored number)
+                    if (storedNum && digitsOnly && storedNum === digitsOnly) return true;
+
+                    // Compare E.164 strings if + was supplied in input or stored
+                    const storedE164 = `${p.code || ''}${p.number || ''}`.replace(/[^\d+]/g, '');
+                    if (cleanedInput.startsWith('+') && storedE164 && storedE164 === cleanedInput) return true;
+
+                    return false;
+                } catch {
+                    return false;
+                }
+            });
+
+            for (const cand of candidateUsers) {
+                if (cand.password_hash && (await cand.checkPassword(password))) {
+                    user = cand;
+                    break;
+                }
+            }
+
+            // If no password matched among phone candidates, default user to first candidate (so error reporting remains standard)
+            if (!user && candidateUsers.length > 0) {
+                user = candidateUsers[0];
+            }
+
+            // Fallback: Check if identifier matches email directly just in case
+            if (!user) {
+                user = await User.findOne({ where: { email: identifier } });
+            }
+        }
+
         if (!user) {
+            return res.status(404).json({ msg: 'Account not found. Please register first.' });
+        }
+
+        if (user.is_deactivated) {
+            return res.status(403).json({
+                isDeactivated: true,
+                email: user.email,
+                phone_number: user.phone_number,
+                msg: 'Account is deactivated. Kindly activate your account through OTP verification.'
+            });
+        }
+
+        if (!user.password_hash) {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
         const isMatch = await user.checkPassword(password);
         if (!isMatch) {
+            const oldPassCheck = await user.checkOldPassword(password);
+            if (oldPassCheck.matched) {
+                return res.status(400).json({
+                    msg: `You changed your password ${oldPassCheck.timeAgo}. Please enter your current password.`
+                });
+            }
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
@@ -735,5 +814,107 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
         res.status(500).json({ msg: 'Server error' });
     }
 });
+
+/**
+ * POST /api/auth/deactivate-account
+ * Deactivates user account (soft delete - retains data, blocks access)
+ */
+router.post('/deactivate-account', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(444).json({ msg: 'User not found' });
+
+        await user.update({
+            is_deactivated: true,
+            deactivated_at: new Date()
+        });
+
+        res.json({
+            success: true,
+            msg: 'Account deactivated successfully. All your data remains saved, but your account is blocked from access until reactivated.'
+        });
+    } catch (err) {
+        console.error('[deactivate-account] Error:', err);
+        res.status(500).json({ msg: 'Failed to deactivate account.' });
+    }
+});
+
+/**
+ * POST /api/auth/reactivate-account
+ * Reactivates a deactivated account upon verifying OTP
+ */
+router.post('/reactivate-account', async (req, res) => {
+    try {
+        const { email, phone, otp } = req.body;
+        if (!otp || otp.trim().length !== 6) {
+            return res.status(400).json({ msg: 'Please enter a valid 6-digit OTP.' });
+        }
+
+        const { Op } = require('sequelize');
+        let user = null;
+
+        if (email) {
+            user = await User.findOne({ where: { email: email.toLowerCase().trim() } });
+        } else if (phone) {
+            const allUsers = await User.findAll({ where: { phone_number: { [Op.ne]: null } } });
+            user = allUsers.find(u => {
+                try {
+                    const p = typeof u.phone_number === 'string' ? JSON.parse(u.phone_number) : u.phone_number;
+                    if (!p) return false;
+                    const cleanIn = phone.replace(/\D/g, '');
+                    const cleanP = `${p.code}${p.number}`.replace(/\D/g, '');
+                    return cleanP === cleanIn || p.number.replace(/\D/g, '') === cleanIn;
+                } catch { return false; }
+            });
+        }
+
+        if (!user) {
+            return res.status(404).json({ msg: 'Account not found.' });
+        }
+
+        // Check OTP code and expiration
+        const isOtpValid = user.otp_code === otp &&
+                           user.otp_expires_at &&
+                           new Date() < new Date(user.otp_expires_at);
+
+        if (!isOtpValid) {
+            return res.status(400).json({ msg: 'Invalid or expired OTP. Please resend a new OTP.' });
+        }
+
+        // Reactivate account and clear OTP
+        await user.update({
+            is_deactivated: false,
+            deactivated_at: null,
+            otp_code: null,
+            otp_expires_at: null,
+            otp_type: null
+        });
+
+        // Issue JWT token
+        const jwt = require('jsonwebtoken');
+        const payload = { user: { id: user.user_id, role: user.role, type: 'customer' } };
+        const token = jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' });
+
+        return res.json({
+            success: true,
+            msg: 'Account successfully reactivated!',
+            token,
+            user: {
+                id: user.user_id,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                phone_number: user.phone_number,
+                role: user.role
+            }
+        });
+    } catch (err) {
+        console.error('[reactivate-account] Error:', err);
+        res.status(500).json({ msg: 'Reactivation failed.' });
+    }
+});
+
+module.exports = router;
 
 module.exports = router;

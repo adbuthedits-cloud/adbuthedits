@@ -319,38 +319,13 @@ router.post('/send-email-otp', async (req, res) => {
 
         let user = await User.findOne({ where: { email } });
 
-        // ── NEW USER PATH for email_login ──────────────────────────────────────
-        // If no account found and purpose is email_login → allow new user registration
-        // via a short-lived pendingToken (no DB write until OTP verified)
         if (purpose === 'email_login' && !user) {
-            const otp = generateOtp();
-            const expires = otpExpiry();
-
-            const pendingToken = jwt.sign(
-                {
-                    type: 'pending_email_login',
-                    email,
-                    otp_code: otp,
-                    otp_expires_at: expires.toISOString(),
-                },
-                process.env.JWT_SECRET || 'secretkey',
-                { expiresIn: '15m' }
-            );
-
-            await sendOtpEmail({ to: email, otp, purpose: 'email_login' });
-
-            return res.json({
-                success: true,
-                isNewUser: true,
-                pendingToken,
-                msg: 'OTP sent! This email is not registered yet. Verify OTP to create your account.'
-            });
+            return res.status(404).json({ msg: 'Account not found. Please register first.' });
         }
-        // ──────────────────────────────────────────────────────────────────────
 
         // For forgot_password / change_password_settings — user must exist
         if ((purpose === 'forgot_password' || purpose === 'change_password_settings') && !user) {
-            return res.status(404).json({ msg: 'No account found with this email.' });
+            return res.status(404).json({ msg: 'Email is not registered with us. Please check your email address or register.' });
         }
 
         // For email_verify — user must exist (they just registered)
@@ -733,7 +708,7 @@ router.post('/reset-password', async (req, res) => {
  */
 router.post('/firebase-phone-verify', async (req, res) => {
     try {
-        const { idToken } = req.body;
+        const { idToken, purpose } = req.body;
 
         if (!idToken) {
             return res.status(400).json({ msg: 'Firebase ID token is required.' });
@@ -782,8 +757,11 @@ router.post('/firebase-phone-verify', async (req, res) => {
             } catch { return false; }
         });
 
-        // 2. If no existing user, create a new account
+        // 2. If no existing user and purpose is login -> return 404
         if (!user) {
+            if (purpose === 'login' || !purpose) {
+                return res.status(404).json({ msg: 'Account not found with this phone number. Please register first.' });
+            }
             // Parse firebasePhone into code + number using common country code lengths
             // Simple heuristic: try to split at known country code lengths
             let code = '';
@@ -916,7 +894,7 @@ router.post('/firebase-phone-forgot-password', async (req, res) => {
         });
 
         if (!user) {
-            return res.status(404).json({ msg: 'No account found with this phone number.' });
+            return res.status(404).json({ msg: 'Phone number is not registered with us. Please check your number or register.' });
         }
 
         // Generate a password reset token (valid for 15m)

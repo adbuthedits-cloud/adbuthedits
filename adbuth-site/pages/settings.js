@@ -8,6 +8,7 @@ import { faUser, faLock, faSave, faShieldAlt, faEnvelope, faPhone, faRotateLeft 
 import { motion } from 'framer-motion';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
+import { isDisposableEmail } from '../utils/disposableEmails';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -276,21 +277,29 @@ export default function Settings() {
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name (Max 20 chars)</label>
                                                     <input
                                                         type="text"
+                                                        maxLength={20}
                                                         value={profileData.first_name}
-                                                        onChange={e => setProfileData({ ...profileData, first_name: e.target.value })}
+                                                        onChange={e => {
+                                                            const cleaned = e.target.value.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{203C}\u{2049}\u{2194}-\u{2199}\u{21A9}-\u{21AA}\u{3030}\u{303D}\u{3297}\u{3299}]/gu, '').slice(0, 20);
+                                                            setProfileData({ ...profileData, first_name: cleaned });
+                                                        }}
                                                         className="w-full px-4 py-3 text-black rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
                                                         placeholder="John"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name (Max 20 chars)</label>
                                                     <input
                                                         type="text"
+                                                        maxLength={20}
                                                         value={profileData.last_name}
-                                                        onChange={e => setProfileData({ ...profileData, last_name: e.target.value })}
+                                                        onChange={e => {
+                                                            const cleaned = e.target.value.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{203C}\u{2049}\u{2194}-\u{2199}\u{21A9}-\u{21AA}\u{3030}\u{303D}\u{3297}\u{3299}]/gu, '').slice(0, 20);
+                                                            setProfileData({ ...profileData, last_name: cleaned });
+                                                        }}
                                                         className="w-full px-4 py-3 text-black rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
                                                         placeholder="Doe"
                                                     />
@@ -345,6 +354,9 @@ export default function Settings() {
                                                                     try {
                                                                         if (newEmail.toLowerCase().trim() === user?.email?.toLowerCase().trim()) {
                                                                             throw new Error('New email address must be different from current email address.');
+                                                                        }
+                                                                        if (isDisposableEmail(newEmail)) {
+                                                                            throw new Error('Temporary or disposable email addresses are not allowed. Please use a permanent email address.');
                                                                         }
                                                                         // Check email availability
                                                                         const checkRes = await fetch(`${API_URL}/api/auth/check-availability`, {

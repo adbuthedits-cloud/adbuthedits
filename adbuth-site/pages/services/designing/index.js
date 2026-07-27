@@ -65,7 +65,7 @@ export default function Designing() {
                 {/* Services Section */}
                 <section className="px-6 md:px-12 lg:px-20 max-w-[1440px] mx-auto mb-20 lg:mb-32 mt-10 lg:mt-0">
                     <h2 className="text-[40px] leading-[1.1] md:text-5xl lg:text-6xl font-bold mb-12 lg:mb-24 text-center lg:text-left text-[#D060F3]">
-                        Our<br className="lg:hidden" />Design<span className="hidden lg:inline"> Services</span>
+                        Our<br className="lg:hidden" /> Design<span className="hidden lg:inline"> Services</span>
                     </h2>
 
                     {/* E-Invitations Card */}

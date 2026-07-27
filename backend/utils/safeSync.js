@@ -78,10 +78,14 @@ const migrations = [
         email VARCHAR(255) NOT NULL UNIQUE,
         reason VARCHAR(20) NOT NULL CHECK (reason IN ('bounce', 'complaint')),
         bounce_type VARCHAR(50),
-        raw_payload TEXT,
-        suppressed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        bounce_sub_type VARCHAR(50),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`,
+
+    // --- User Password History and Deactivation Columns ---
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS password_history JSONB DEFAULT '[]'::jsonb`,
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS is_deactivated BOOLEAN DEFAULT false`,
+    `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS deactivated_at TIMESTAMP WITH TIME ZONE`,
 
     // --- User Email Consent (AWS SES opt-in compliance) ---
     `ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS email_consent BOOLEAN DEFAULT false`,

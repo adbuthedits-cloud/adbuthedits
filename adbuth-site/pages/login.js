@@ -14,6 +14,8 @@ import dynamic from 'next/dynamic';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
 
+import DeactivatedAccountModal from '../components/auth/DeactivatedAccountModal';
+
 const Beams = dynamic(() => import('../components/ui/Beams'), { ssr: false });
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -129,6 +131,7 @@ export default function Login() {
     const router = useRouter();
     const { login, user, loading: authLoading, openProfileModal, refreshUser } = useAuth();
     const isLoginAction = useRef(false);
+    const isForgotTransition = useRef(false);
 
     // Tabs: 'password' | 'email_otp' | 'phone_otp'
     const [activeTab, setActiveTab] = useState('password');
@@ -163,6 +166,8 @@ export default function Login() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deactivatedModalOpen, setDeactivatedModalOpen] = useState(false);
+    const [deactivatedUserIdentifier, setDeactivatedUserIdentifier] = useState('');
 
     // Beams config
     const [beamConfig, setBeamConfig] = useState({ beamWidth: 3, beamHeight: 30, beamNumber: 20, scale: 0.2 });
@@ -197,7 +202,11 @@ export default function Login() {
     // Reset state when tab changes
     useEffect(() => {
         setError(''); setSuccess('');
-        setOtpStep('input'); setEmailOtpValue(''); setForgotMode(false);
+        if (!isForgotTransition.current) {
+            setForgotMode(false);
+        }
+        isForgotTransition.current = false;
+        setOtpStep('input'); setEmailOtpValue('');
         setPhoneStep('input'); setPhoneOtpValue('');
         setOtpTimer(0); setPhoneTimer(0);
         if (activeTab !== 'phone_otp') destroyRecaptcha();
@@ -213,19 +222,30 @@ export default function Login() {
                 window.recaptchaVerifier.clear();
                 window.recaptchaVerifier = null;
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+            window.recaptchaVerifier = null;
+        }
         try {
             const el = document.getElementById('recaptcha-container');
-            if (el) el.innerHTML = '';
+            if (el) {
+                el.innerHTML = '';
+                const newEl = el.cloneNode(false);
+                el.parentNode?.replaceChild(newEl, el);
+            }
         } catch (e) { /* ignore */ }
     };
 
-    // ── Create a fresh invisible reCAPTCHA verifier every time
+    // ── Create a fresh invisible reCAPTCHA verifier or reuse existing
     const initRecaptcha = async () => {
-        destroyRecaptcha(); // always start clean
+        if (window.recaptchaVerifier) {
+            return window.recaptchaVerifier;
+        }
 
         const { RecaptchaVerifier } = await import('firebase/auth');
         const { auth } = await import('../lib/firebase');
+
+        const el = document.getElementById('recaptcha-container');
+        if (el) el.innerHTML = '';
 
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             size: 'invisible',
@@ -240,20 +260,91 @@ export default function Login() {
     // ── Social login handlers
     const handleGoogleLogin = () => { window.location.href = `${API_URL}/api/auth/google`; };
 
+    // Helper to validate email or phone number format
+    const validateEmailOrPhone = (val) => {
+        if (!val || !val.trim()) return { isValid: false, error: 'Please enter your email address or phone number.' };
+        const trimmed = val.trim();
+        // Email regex check
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(trimmed)) {
+            return { isValid: true, type: 'email', value: trimmed };
+        }
+        // Phone regex check: allow optional +, spaces, dashes, parens, 7 to 15 digits
+        const digitsOnly = trimmed.replace(/\D/g, '');
+        const phoneRegex = /^(\+?\d{1,4}[\s.-]?)?[\d\s.()-]{7,20}$/;
+        if (digitsOnly.length >= 7 && digitsOnly.length <= 15 && phoneRegex.test(trimmed)) {
+            return { isValid: true, type: 'phone', value: trimmed };
+        }
+        return { isValid: false, error: 'Please enter a valid email address or phone number.' };
+    };
+
     // ── Password login
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
+        const check = validateEmailOrPhone(email);
+        if (!check.isValid) {
+            setError(check.error);
+            return;
+        }
         setError(''); setIsSubmitting(true);
         isLoginAction.current = true;
         const result = await login(email, password);
-        if (!result.success) { setError(result.error); isLoginAction.current = false; }
+        if (!result.success) {
+            if (result.isDeactivated) {
+                setDeactivatedUserIdentifier(email);
+                setDeactivatedModalOpen(true);
+            }
+            setError(result.error);
+            isLoginAction.current = false;
+        }
         setIsSubmitting(false);
+    };
+
+    // ── Forgot Password click handler
+    const handleForgotPasswordClick = () => {
+        setError(''); setSuccess('');
+        isForgotTransition.current = true;
+        setForgotMode(true);
+        setOtpStep('input');
+        setPhoneStep('input');
+        setEmailOtpValue('');
+        setPhoneOtpValue('');
+
+        const trimmed = (email || '').trim();
+        const check = validateEmailOrPhone(trimmed);
+        if (check.isValid) {
+            if (check.type === 'email') {
+                setOtpEmail(check.value);
+                setActiveTab('email_otp');
+            } else if (check.type === 'phone') {
+                const digits = check.value.replace(/\D/g, '');
+                setPhoneNumber(digits.length === 10 ? digits : check.value);
+                setActiveTab('phone_otp');
+            }
+        } else {
+            const digitsOnly = trimmed.replace(/\D/g, '');
+            if (digitsOnly.length >= 7) {
+                setPhoneNumber(digitsOnly.length === 10 ? digitsOnly : trimmed);
+                setActiveTab('phone_otp');
+            } else {
+                setActiveTab('email_otp');
+            }
+        }
     };
 
     // ── Email OTP: send
     const handleSendEmailOtp = async (e) => {
         e?.preventDefault();
-        if (!otpEmail) return setError('Please enter your email address.');
+        const trimmedEmail = (otpEmail || '').trim();
+        if (!trimmedEmail) return setError('Please enter your email address.');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedEmail)) {
+            const digitsOnly = trimmedEmail.replace(/\D/g, '');
+            if (digitsOnly.length >= 7) {
+                return setError('You entered a phone number. Please switch to Phone OTP tab or enter a valid email address.');
+            }
+            return setError('Please enter a valid email address.');
+        }
         setError(''); setIsSubmitting(true);
         setEmailPendingToken(null); setIsNewEmailUser(false);
         try {
@@ -261,7 +352,7 @@ export default function Login() {
             const res = await fetch(`${API_URL}/api/otp/send-email-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: otpEmail, purpose }),
+                body: JSON.stringify({ email: trimmedEmail, purpose }),
             });
             const text = await res.text();
             let data;
@@ -276,7 +367,7 @@ export default function Login() {
             if (data.isNewUser && data.pendingToken) {
                 setEmailPendingToken(data.pendingToken);
                 setIsNewEmailUser(true);
-                setSuccess('OTP sent! This will create a new account for ' + otpEmail);
+                setSuccess('OTP sent! This will create a new account for ' + trimmedEmail);
             } else {
                 setSuccess('OTP sent! Check your email.');
             }
@@ -337,6 +428,9 @@ export default function Login() {
     const handleResetPassword = async (e) => {
         e?.preventDefault();
         if (!newPassword) return setError('Please enter a new password.');
+        if (newPassword.length < 6) return setError('Password must be at least 6 characters long.');
+        if (!/[A-Z]/.test(newPassword)) return setError('Password must contain at least one uppercase letter.');
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) return setError('Password must contain at least one special character.');
         setError(''); setIsSubmitting(true);
         try {
             const res = await fetch(`${API_URL}/api/otp/reset-password`, {
@@ -354,7 +448,7 @@ export default function Login() {
             if (!res.ok) throw new Error(data.msg || 'Reset failed');
             setSuccess('Password reset! Redirecting to login...');
             setTimeout(() => {
-                setActiveTab('password'); setOtpStep('input'); setForgotMode(false);
+                setActiveTab('password'); setOtpStep('input'); setForgotMode(false); setNewPassword('');
             }, 1500);
         } catch (err) { setError(err.message); }
         setIsSubmitting(false);
@@ -418,14 +512,20 @@ export default function Login() {
             const res = await fetch(`${API_URL}/api/otp/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken }),
+                body: JSON.stringify({ idToken, purpose: 'login' }),
             });
 
             let data;
             try { data = await res.json(); }
             catch { throw new Error(`Server error (${res.status})`); }
 
-            if (!res.ok) throw new Error(data.msg || 'Verification failed');
+            if (!res.ok) {
+                if (data.isDeactivated) {
+                    setDeactivatedUserIdentifier(`${countryCode}${phoneNumber}`);
+                    setDeactivatedModalOpen(true);
+                }
+                throw new Error(data.msg || 'Verification failed');
+            }
 
             if (forgotMode) {
                 setResetToken(data.resetToken);
@@ -527,7 +627,7 @@ export default function Login() {
                                     <button
                                         key={tab.id}
                                         id={`login-tab-${tab.id}`}
-                                        onClick={() => setActiveTab(tab.id)}
+                                        onClick={() => { isForgotTransition.current = false; setForgotMode(false); setActiveTab(tab.id); }}
                                         className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-xs font-semibold transition-all duration-200 ${activeTab === tab.id
                                             ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg'
                                             : 'text-white/40 hover:text-white/70'}`}
@@ -565,7 +665,7 @@ export default function Login() {
                                         initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
                                         transition={{ duration: 0.2 }}>
                                         <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                                            <input id="login-email-input" type="email" required placeholder="EMAIL"
+                                            <input id="login-email-input" type="text" required placeholder="EMAIL OR PHONE NUMBER"
                                                 className="w-full bg-transparent border-b border-white/20 text-white placeholder-white/20 px-0 py-1.5 focus:outline-none focus:border-purple-500 transition-colors text-sm"
                                                 value={email} onChange={e => setEmail(e.target.value)} />
 
@@ -581,7 +681,7 @@ export default function Login() {
 
                                             <div className="text-right">
                                                 <button type="button" id="forgot-password-btn"
-                                                    onClick={() => { setActiveTab('email_otp'); setForgotMode(true); setOtpStep('input'); setError(''); setSuccess(''); }}
+                                                    onClick={handleForgotPasswordClick}
                                                     className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
                                                     Forgot password?
                                                 </button>
@@ -798,6 +898,16 @@ export default function Login() {
                     </div>
                 </motion.div>
             </div>
+            <DeactivatedAccountModal
+                isOpen={deactivatedModalOpen}
+                userIdentifier={deactivatedUserIdentifier}
+                onClose={() => setDeactivatedModalOpen(false)}
+                onReactivated={() => {
+                    setDeactivatedModalOpen(false);
+                    setSuccess('Account reactivated! Redirecting...');
+                    setTimeout(() => { window.location.href = '/'; }, 1000);
+                }}
+            />
         </div>
     );
 }

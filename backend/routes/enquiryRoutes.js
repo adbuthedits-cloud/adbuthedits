@@ -10,7 +10,7 @@ const path = require('path');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const { checkPermission } = require('../middleware/permissionMiddleware');
-const { sendReply } = require('../utils/emailService');
+const { sendReply, sendFormConfirmationEmail } = require('../utils/emailService');
 
 // --- Multer for R2 Private Bucket ---
 const upload = multer({
@@ -77,6 +77,8 @@ router.post('/', upload.array('attachments', 5), async (req, res) => {
             status: 'pending'
         });
 
+        sendFormConfirmationEmail({ to: email, name, formType: source === 'get_in_touch' ? 'Get In Touch request' : 'enquiry' }).catch(e => console.error('[Form Email] Error:', e.message));
+
         res.status(201).json({ success: true, message: 'Enquiry submitted successfully', data: enquiry });
     } catch (error) {
         console.error('Enquiry Submission Error:', error);
@@ -100,6 +102,9 @@ router.post('/contact', async (req, res) => {
             requirement_desc: message,
             status: 'pending'
         });
+
+        sendFormConfirmationEmail({ to: email, name, formType: 'contact message' }).catch(e => console.error('[Form Email] Error:', e.message));
+
         res.status(201).json({ success: true, message: 'Message sent successfully', data: enquiry });
     } catch (error) {
         console.error('Contact Form Error:', error);

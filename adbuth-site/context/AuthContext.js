@@ -134,13 +134,13 @@ export const AuthProvider = ({ children }) => {
             const res = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, loginIdentifier: email, password })
             });
 
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.msg || 'Login failed');
+                return { success: false, error: data.msg || 'Login failed', isDeactivated: data.isDeactivated };
             }
 
             localStorage.setItem('token', data.token);

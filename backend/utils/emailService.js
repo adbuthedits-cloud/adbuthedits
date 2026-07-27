@@ -116,4 +116,47 @@ const safeSendMail = async (mailOptions) => {
     return info;
 };
 
-module.exports = { transporter, senders, sendReply, isSuppressed, safeSendMail };
+/**
+ * Sends a professional automated confirmation email to users submitting contact, enquiry, or get-in-touch forms.
+ */
+const sendFormConfirmationEmail = async ({ to, name, formType }) => {
+    if (!to) return;
+    const recipientName = name || 'Valued Customer';
+    const senderEmail = senders.support;
+
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 24px; background-color: #ffffff;">
+            <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #f3e8ff;">
+                <h1 style="color: #7D287E; margin: 0; font-size: 24px;">ADBUTH <span style="color: #EAB308;">VERSE</span></h1>
+                <p style="color: #666; font-size: 13px; margin-top: 4px;">Post Production Studio & Creative Partner</p>
+            </div>
+            <div style="padding: 24px 0; color: #333; line-height: 1.6;">
+                <p style="font-size: 16px;">Dear <strong>${recipientName}</strong>,</p>
+                <p>Thank you for contacting <strong>Adbuth Verse</strong>. We have successfully received your ${formType || 'request'}.</p>
+                <p>Our team is currently reviewing your message and we will reach out to you shortly to assist you further.</p>
+                <div style="background-color: #f9f5ff; border-left: 4px solid #7D287E; padding: 12px 16px; margin: 20px 0; border-radius: 4px;">
+                    <p style="margin: 0; color: #7D287E; font-size: 14px; font-weight: bold;">We usually respond within 24 business hours.</p>
+                </div>
+                <p>If you have any urgent details to share in the meantime, feel free to reply directly to this email.</p>
+            </div>
+            <div style="text-align: center; border-top: 1px solid #eee; pt: 16px; margin-top: 20px; font-size: 12px; color: #888;">
+                <p style="margin: 4px 0;">© ${new Date().getFullYear()} Adbuth Verse. All rights reserved.</p>
+                <p style="margin: 0;">Sent from <a href="mailto:${senderEmail}" style="color: #7D287E; text-decoration: none;">${senderEmail}</a></p>
+            </div>
+        </div>
+    `;
+
+    try {
+        await safeSendMail({
+            from: `"Adbuth Verse Support" <${senderEmail}>`,
+            to,
+            subject: 'We Received Your Request - Adbuth Verse',
+            html
+        });
+        console.log(`[Form Email] Sent receipt confirmation to ${to}`);
+    } catch (err) {
+        console.error('[Form Email] Error sending confirmation:', err.message);
+    }
+};
+
+module.exports = { transporter, senders, sendReply, isSuppressed, safeSendMail, sendFormConfirmationEmail };

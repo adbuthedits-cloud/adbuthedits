@@ -8,6 +8,8 @@ import {
     faTimes
 } from '@fortawesome/free-solid-svg-icons';
 
+import { isDisposableEmail } from '../../utils/disposableEmails';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const countryOptions = [
@@ -79,6 +81,12 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
         const errors = {};
         if (!firstName.trim()) {
             errors.firstName = 'First name is required.';
+        } else if (firstName.length > 20) {
+            errors.firstName = 'First name cannot exceed 20 characters.';
+        }
+
+        if (lastName && lastName.length > 20) {
+            errors.lastName = 'Last name cannot exceed 20 characters.';
         }
 
         const emailTrimmed = email.trim();
@@ -88,6 +96,8 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(emailTrimmed)) {
                 errors.email = 'Please enter a valid email address.';
+            } else if (isDisposableEmail(emailTrimmed)) {
+                errors.email = 'Disposable email addresses are not allowed.';
             }
         }
 
