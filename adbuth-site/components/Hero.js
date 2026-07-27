@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +10,9 @@ const HERO_BG = cdnUrl("https://assets.adbuthverse.com/website-assets/pages/home
 export default function Hero() {
   return (
     <section className="relative w-full lg:min-h-screen  mb-56 md:mb-12 lg:mb-0 flex items-center pt-32 pb-56 md:pb-24 lg:py-0 bg-[#0a0118] text-white">
+      <Head>
+        <link rel="preload" as="image" href={HERO_BG} fetchpriority="high" />
+      </Head>
       {/* Background Image */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Image
@@ -91,9 +95,16 @@ function HeroCard() {
           <Link href="/contact-us" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
             Connect with our team
           </Link>
-          <Link href="/contact-us" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.$zoho && window.$zoho.salesiq) {
+                window.$zoho.salesiq.floatwindow.visible('show');
+              }
+            }}
+            className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center cursor-pointer"
+          >
             Message Adi
-          </Link>
+          </button>
         </div>
       </div>
     </div>

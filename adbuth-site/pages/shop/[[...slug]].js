@@ -247,30 +247,60 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     });
     const [sortBy, setSortBy] = useState('Recommended');
     const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+
+    // Restore saved displayCount after mount (prevents SSR hydration mismatch)
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = sessionStorage.getItem('adbuth_shop_display_count');
+                if (saved) {
+                    const parsed = parseInt(saved, 10);
+                    if (parsed > PAGE_SIZE) setDisplayCount(parsed);
+                }
+            } catch {}
+        }
+    }, []);
     const [filterLoading, setFilterLoading] = useState(false);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
     const queryStr = useMemo(() => JSON.stringify(queryParams), [queryParams]);
 
-    // Disable hover effects during scroll for perf
+    // Save displayCount & scroll position
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try { sessionStorage.setItem('adbuth_shop_display_count', String(displayCount)); } catch {}
+    }, [displayCount]);
+
     useEffect(() => {
         let scrollTimeout;
         const handleScroll = () => {
             if (!document.body.classList.contains('is-scrolling')) document.body.classList.add('is-scrolling');
+            // Only update saved position when on shop grid AND scroll is non-zero
+            if (!isProductDetail && window.scrollY > 0) {
+                try {
+                    sessionStorage.setItem('adbuth_shop_scroll_pos', String(window.scrollY));
+                    sessionStorage.setItem('adbuth_shop_saved_scroll', String(window.scrollY));
+                } catch {}
+            }
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => document.body.classList.remove('is-scrolling'), 150);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => { window.removeEventListener('scroll', handleScroll); clearTimeout(scrollTimeout); document.body.classList.remove('is-scrolling'); };
-    }, []);
+    }, [isProductDetail]);
 
     // Sync filters when URL changes
+    const prevQueryStr = useRef(queryStr);
     useEffect(() => {
         if (!router.isReady) return;
         const f = readFiltersFromQuery(queryParams);
         if (slugParentCategory && !f.parentCategory.length) f.parentCategory = [slugParentCategory];
         setFilters(f);
-        setDisplayCount(PAGE_SIZE);
+        // Only reset display count if filter query string actually changed (not on back navigation)
+        if (prevQueryStr.current !== queryStr) {
+            prevQueryStr.current = queryStr;
+            setDisplayCount(PAGE_SIZE);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router.isReady, queryStr]);
 
@@ -333,20 +363,62 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     const visibleProducts = useMemo(() => filteredProducts.slice(0, displayCount), [filteredProducts, displayCount]);
     const hasMore = displayCount < filteredProducts.length;
 
-    // Infinite scroll sentinel
+    // Infinite scroll observer - re-runs whenever hasMore, displayCount, or isProductDetail changes
     const sentinelRef = useRef(null);
     const observerRef = useRef(null);
 
-    useEffect(() => {
-        if (observerRef.current) { observerRef.current.disconnect(); observerRef.current = null; }
-        if (!hasMore || !sentinelRef.current) return;
+    const setupObserver = useCallback((node) => {
+        if (observerRef.current) {
+            observerRef.current.disconnect();
+            observerRef.current = null;
+        }
+        if (!node || !hasMore) return;
         observerRef.current = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) setDisplayCount(prev => Math.min(prev + PAGE_SIZE, filteredProducts.length)); },
-            { rootMargin: '400px' }
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setDisplayCount(prev => Math.min(prev + PAGE_SIZE, filteredProducts.length));
+                }
+            },
+            { rootMargin: '600px' }
         );
-        observerRef.current.observe(sentinelRef.current);
+        observerRef.current.observe(node);
+    }, [hasMore, filteredProducts.length]);
+
+    const setSentinelNode = useCallback((node) => {
+        sentinelRef.current = node;
+        setupObserver(node);
+    }, [setupObserver]);
+
+    useEffect(() => {
+        if (sentinelRef.current) {
+            setupObserver(sentinelRef.current);
+        }
         return () => observerRef.current?.disconnect();
-    }, [hasMore, filteredProducts.length, displayCount]);
+    }, [setupObserver, isProductDetail]);
+
+    // Restore scroll position ONLY when returning from ProductDetailView to Shop grid
+    useEffect(() => {
+        if (!isProductDetail && typeof window !== 'undefined') {
+            try {
+                const isFromDetail = sessionStorage.getItem('adbuth_shop_from_detail') === 'true';
+                if (isFromDetail) {
+                    const saved = sessionStorage.getItem('adbuth_shop_saved_scroll');
+                    if (saved) {
+                        const y = parseInt(saved, 10);
+                        if (y > 0) {
+                            [0, 50, 150, 350, 600].forEach(d => {
+                                setTimeout(() => {
+                                    window.scrollTo({ top: y, behavior: 'instant' });
+                                }, d);
+                            });
+                        }
+                    }
+                    sessionStorage.removeItem('adbuth_shop_from_detail');
+                    sessionStorage.removeItem('adbuth_shop_saved_scroll');
+                }
+            } catch {}
+        }
+    }, [isProductDetail]);
 
     const activeFilterCount = [
         ...(filters.parentCategory ?? []),
@@ -412,12 +484,16 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                                     <ProductGrid products={visibleProducts} loading={filterLoading} />
 
                                     {/* Infinite scroll sentinel */}
-                                    <div ref={sentinelRef} className="w-full flex justify-center py-8">
+                                    <div ref={setSentinelNode} className="w-full flex justify-center py-8">
                                         {hasMore && (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 border-2 border-purple-200 border-t-purple-700 rounded-full animate-spin" />
-                                                <span className="text-sm font-semibold text-gray-500">Loading more templates...</span>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDisplayCount(prev => Math.min(prev + PAGE_SIZE, filteredProducts.length))}
+                                                className="flex items-center gap-2 px-6 py-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-full transition-colors cursor-pointer"
+                                            >
+                                                <div className="w-5 h-5 border-2 border-purple-200 border-t-purple-700 rounded-full animate-spin" />
+                                                <span className="text-sm font-semibold text-purple-900">Loading more templates...</span>
+                                            </button>
                                         )}
                                     </div>
                                 </>

@@ -8,13 +8,7 @@ export default function Document() {
       <Head>
         <link rel="icon" href="/favicon.png" />
 
-        {/* ── Preload LCP hero background image so it loads before React boots ── */}
-        <link
-          rel="preload"
-          as="image"
-          href="https://assets.adbuthverse.com/website-assets/pages/home/hero-section.webp"
-          fetchpriority="high"
-        />
+
 
         {/* ── Preconnect to CDN origins for faster image/video loading ── */}
         <link rel="preconnect" href="https://assets.adbuthverse.com" crossOrigin="anonymous" />

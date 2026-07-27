@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faLock, faSave, faShieldAlt, faEnvelope, faPhone, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faLock, faSave, faShieldAlt, faEnvelope, faPhone, faRotateLeft, faTrash, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
@@ -61,6 +61,11 @@ export default function Settings() {
     const [phoneChangeOtp, setPhoneChangeOtp] = useState('');
     const [phoneChangeStep, setPhoneChangeStep] = useState('input'); // 'input' | 'verify'
     const [phoneChangeConfirmResult, setPhoneChangeConfirmResult] = useState(null);
+
+    // Deactivate Account state
+    const [deactivateStep, setDeactivateStep] = useState('confirm'); // 'confirm' | 'otp' | 'done'
+    const [deactivateOtp, setDeactivateOtp] = useState('');
+    const [deactivateLoading, setDeactivateLoading] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -131,6 +136,33 @@ export default function Settings() {
             cleanupRecaptcha();
         };
     }, []);
+
+    // ── Deactivate Account handler
+    const handleDeactivateRequest = async () => {
+        setDeactivateLoading(true);
+        setMessage({ text: '', type: '' });
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/auth/deactivate-account`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.msg || 'Deactivation failed');
+            setDeactivateStep('done');
+            setMessage({ text: 'Account deactivated successfully. You will be logged out shortly.', type: 'success' });
+            setTimeout(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }, 3000);
+        } catch (err) {
+            setMessage({ text: err.message || 'Failed to deactivate account.', type: 'error' });
+        }
+        setDeactivateLoading(false);
+    };
+
+    const handleDeactivateConfirm = handleDeactivateRequest;
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
@@ -224,6 +256,13 @@ export default function Settings() {
                                 >
                                     <FontAwesomeIcon icon={faLock} /> Security
                                 </button>
+                                <button
+                                    onClick={() => { setActiveTab('deactivate'); setDeactivateStep('confirm'); setMessage({ text: '', type: '' }); }}
+                                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-3 ${activeTab === 'deactivate' ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <FontAwesomeIcon icon={faTrash} /> Deactivate
+                                </button>
                             </div>
                         </div>
 
@@ -237,7 +276,7 @@ export default function Settings() {
                                     </div>
                                 )}
 
-                                {activeTab === 'profile' ? (
+                                {activeTab === 'profile' && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -583,7 +622,9 @@ export default function Settings() {
                                         </div>
 
                                     </motion.div>
-                                ) : (
+                                )}
+
+                                {activeTab === 'password' && (
                                     <motion.form
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -704,11 +745,83 @@ export default function Settings() {
                                         )}
                                     </motion.form>
                                 )}
-                            </div>
+
+                                {/* ── Deactivate Account Tab ── */}
+                            {activeTab === 'deactivate' && (
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-2xl">
+                                            <FontAwesomeIcon icon={faTrash} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-gray-900">Deactivate Account</h2>
+                                            <p className="text-gray-500 text-sm">Temporarily disable your account.</p>
+                                        </div>
+                                    </div>
+
+                                    {deactivateStep === 'done' ? (
+                                        <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
+                                            <p className="text-green-700 font-semibold">Account deactivated. Logging you out...</p>
+                                        </div>
+                                    ) : deactivateStep === 'otp' ? (
+                                        <div className="space-y-4">
+                                            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+                                                <p className="text-yellow-800 text-sm">An OTP has been sent to your registered email/phone. Enter it below to confirm deactivation.</p>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                maxLength={6}
+                                                placeholder="Enter 6-digit OTP"
+                                                value={deactivateOtp}
+                                                onChange={e => setDeactivateOtp(e.target.value.replace(/\D/g, ''))}
+                                                className="w-full px-4 py-3 text-black rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-400/10 transition-all outline-none font-mono text-center text-xl tracking-widest"
+                                            />
+                                            <div className="flex gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setDeactivateStep('confirm'); setDeactivateOtp(''); setMessage({ text: '', type: '' }); }}
+                                                    className="flex-1 border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
+                                                >Cancel</button>
+                                                <button
+                                                    type="button"
+                                                    disabled={deactivateLoading || deactivateOtp.length < 6}
+                                                    onClick={handleDeactivateConfirm}
+                                                    className="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-red-700 disabled:opacity-50 transition-colors"
+                                                >{deactivateLoading ? 'Verifying...' : 'Confirm Deactivation'}</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-6">
+                                            <div className="bg-red-50 border border-red-200 rounded-2xl p-5">
+                                                <div className="flex gap-3">
+                                                    <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-600 text-lg mt-0.5" />
+                                                    <div>
+                                                        <h4 className="text-red-900 font-bold text-sm">Are you sure you want to deactivate?</h4>
+                                                        <p className="text-red-700 text-xs mt-1 leading-relaxed">
+                                                            Deactivating your account will temporarily disable your login access. You can reactivate by logging in again with OTP verification. Your data will be preserved.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                disabled={deactivateLoading}
+                                                onClick={handleDeactivateRequest}
+                                                className="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                                {deactivateLoading ? 'Sending OTP...' : 'Deactivate My Account'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
+        </main>
             <Footer />
             {/* Firebase Recaptcha Container */}
             <div id="recaptcha-container"></div>

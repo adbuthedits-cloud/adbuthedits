@@ -31,8 +31,8 @@ export default function ContactUs() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const phoneRegex = /^\d{10}$/;
 
-        if (!formData.name || !formData.email || !formData.mobile || !formData.message) {
-            setStatus({ type: 'error', msg: 'All fields are required.' });
+        if (!formData.name || !formData.email || !formData.mobile || !formData.city || !formData.message) {
+            setStatus({ type: 'error', msg: 'All fields are required including City.' });
             return;
         }
 

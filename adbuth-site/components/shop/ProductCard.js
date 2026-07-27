@@ -147,6 +147,14 @@ export default function ProductCard({ product, index = 0 }) {
             {/* ── Image / Video Container ─────────────────────────────────── */}
             <Link
                 href={productUrl}
+                onClick={() => {
+                    if (typeof window !== 'undefined') {
+                        try {
+                            sessionStorage.setItem('adbuth_shop_saved_scroll', String(window.scrollY));
+                            sessionStorage.setItem('adbuth_shop_from_detail', 'true');
+                        } catch {}
+                    }
+                }}
                 className="block relative overflow-hidden bg-gray-50"
                 style={{ aspectRatio: '3/4' }}
                 ref={containerRef}
@@ -157,9 +165,10 @@ export default function ProductCard({ product, index = 0 }) {
                         src={thumbnail}
                         alt={product.title || 'Product Image'}
                         fill
-                        className={`object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+                        className={`object-contain transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                         priority={index < 8}
+                        suppressHydrationWarning
                     />
                 ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -172,7 +181,7 @@ export default function ProductCard({ product, index = 0 }) {
                     <video
                         ref={videoRef}
                         src={videoSrc}
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         muted
                         loop
                         playsInline
@@ -228,7 +237,18 @@ export default function ProductCard({ product, index = 0 }) {
             </button>
 
             {/* ── Product Info ────────────────────────────────────────────── */}
-            <Link href={productUrl} className="flex flex-col p-3 flex-1">
+            <Link
+                href={productUrl}
+                onClick={() => {
+                    if (typeof window !== 'undefined') {
+                        try {
+                            sessionStorage.setItem('adbuth_shop_saved_scroll', String(window.scrollY));
+                            sessionStorage.setItem('adbuth_shop_from_detail', 'true');
+                        } catch {}
+                    }
+                }}
+                className="flex flex-col p-3 flex-1"
+            >
                 <p className="text-[13px] font-semibold text-gray-900 leading-tight line-clamp-1 mb-1">
                     {product.title}
                 </p>

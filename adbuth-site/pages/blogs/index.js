@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
@@ -12,23 +12,59 @@ import SeoHead from '../../components/SeoHead';
 import useSeo from '../../hooks/useSeo';
 import { cdnImage } from '../../utils/cdn';
 
+// ── Module-level cache (survives client-side navigation, cleared on hard refresh) ──
+let _blogsCache = null;
+let _catsCache = null;
+
+const SS_BLOGS = 'adbuth_blogs_cache';
+const SS_CATS  = 'adbuth_blogs_cats_cache';
+const SS_VCNT  = 'adbuth_blogs_visible_count';
+const SS_SCRL  = 'adbuth_blogs_scroll_pos';
+const SS_FLAG  = 'adbuth_blogs_from_detail';
+
+function readBlogsCache() {
+  if (_blogsCache) return _blogsCache;
+  if (typeof window === 'undefined') return null;
+  try { const d = sessionStorage.getItem(SS_BLOGS); if (d) { _blogsCache = JSON.parse(d); return _blogsCache; } } catch { /* */ }
+  return null;
+}
+function readCatsCache() {
+  if (_catsCache) return _catsCache;
+  if (typeof window === 'undefined') return null;
+  try { const d = sessionStorage.getItem(SS_CATS); if (d) { _catsCache = JSON.parse(d); return _catsCache; } } catch { /* */ }
+  return null;
+}
+function writeBlogsCache(posts, cats) {
+  _blogsCache = posts; _catsCache = cats;
+  if (typeof window === 'undefined') return;
+  try { sessionStorage.setItem(SS_BLOGS, JSON.stringify(posts)); sessionStorage.setItem(SS_CATS, JSON.stringify(cats)); } catch { /* */ }
+}
+function readVisibleCount() {
+  if (typeof window === 'undefined') return 10;
+  try { const v = sessionStorage.getItem(SS_VCNT); return v ? parseInt(v, 10) : 10; } catch { return 10; }
+}
 
 export default function Blogs() {
-  const [categories, setCategories] = useState(['All']);
-  const [allPosts, setAllPosts] = useState([]);
+  const cachedPosts = readBlogsCache();
+  const cachedCats  = readCatsCache();
+  const [categories, setCategories] = useState(cachedCats || ['All']);
+  const [allPosts, setAllPosts] = useState(cachedPosts || []);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [currentShareUrl, setCurrentShareUrl] = useState('');
-  const [visibleCount, setVisibleCount] = useState(10);
-  const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(readVisibleCount);
+  const [loading, setLoading] = useState(!cachedPosts || cachedPosts.length === 0);
+  const isInitialMount = useRef(true);
 
   // Dynamic SEO
   const { seoData } = useSeo('blogs');
 
-  // Fetch Blogs and Categories from API
+  // Fetch Blogs and Categories from API (show cached immediately, refresh in background)
   useEffect(() => {
     const fetchData = async () => {
+      // Only show loading spinner if nothing cached yet
+      if (!cachedPosts || cachedPosts.length === 0) setLoading(true);
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         const [blogsRes, catsRes] = await Promise.all([
@@ -37,7 +73,8 @@ export default function Blogs() {
         ]);
 
         const fetchedCats = catsRes.data.map(c => c.name);
-        setCategories(['All', ...fetchedCats]);
+        const newCats = ['All', ...fetchedCats];
+        setCategories(newCats);
 
         const formattedPosts = blogsRes.data.map(blog => ({
           slug: blog.slug,
@@ -45,10 +82,11 @@ export default function Blogs() {
           date: new Date(blog.post_date || blog.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
           author: blog.author || 'Adbuth Team',
           category: blog.category?.name || 'Uncategorized',
-          excerpt: blog.content.replace(/<[^>]+>/g, '').substring(0, 150) + '...', // Strip HTML
-          image: cdnImage(blog.thumbnail) || '/images/blog1.jpg' // Fallback image
+          excerpt: blog.content ? blog.content.replace(/<[^>]+>/g, '').substring(0, 150) + '...' : '',
+          image: cdnImage(blog.thumbnail) || '/images/blog1.jpg'
         }));
         setAllPosts(formattedPosts);
+        writeBlogsCache(formattedPosts, newCats);
       } catch (error) {
         console.error('Failed to fetch data', error);
       } finally {
@@ -56,11 +94,41 @@ export default function Blogs() {
       }
     };
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reset visible count when search or category changes
+  // Save scroll position while scrolling on blog list
   useEffect(() => {
+    const onScroll = () => {
+      try { sessionStorage.setItem(SS_SCRL, String(window.scrollY)); } catch { /* */ }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Restore scroll position when returning from a blog detail page
+  useEffect(() => {
+    try {
+      const shouldRestore = sessionStorage.getItem(SS_FLAG) === 'true';
+      if (shouldRestore && allPosts.length > 0) {
+        const saved = sessionStorage.getItem(SS_SCRL);
+        if (saved) {
+          const targetY = parseInt(saved, 10);
+          [0, 50, 150, 350, 700].forEach(delay =>
+            setTimeout(() => { if (Math.abs(window.scrollY - targetY) > 5) window.scrollTo({ top: targetY, behavior: 'instant' }); }, delay)
+          );
+        }
+        sessionStorage.removeItem(SS_FLAG);
+      }
+    } catch { /* */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allPosts.length]);
+
+  // Reset visible count when search or category changes (skip initial mount to preserve restored count)
+  useEffect(() => {
+    if (isInitialMount.current) { isInitialMount.current = false; return; }
     setVisibleCount(10);
+    try { sessionStorage.setItem(SS_VCNT, '10'); } catch { /* */ }
   }, [searchQuery, selectedCategory]);
 
   // Filter Logic
@@ -74,9 +142,21 @@ export default function Blogs() {
   const visiblePosts = filteredPosts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredPosts.length;
 
+  // Save scroll + flag before navigating to a blog detail page
+  const saveScrollForDetail = () => {
+    try {
+      sessionStorage.setItem(SS_SCRL, String(window.scrollY));
+      sessionStorage.setItem(SS_FLAG, 'true');
+    } catch { /* */ }
+  };
+
   // Load more handler
   const loadMore = () => {
-    setVisibleCount(prev => prev + 10);
+    setVisibleCount(prev => {
+      const next = prev + 10;
+      try { sessionStorage.setItem(SS_VCNT, String(next)); } catch { /* */ }
+      return next;
+    });
   };
 
   // Share handlers
@@ -169,7 +249,7 @@ export default function Blogs() {
                           className="bg-white text-black rounded-lg overflow-hidden shadow-lg"
                         >
                           {/* Image & Content Link */}
-                          <Link href={`/blogs/${post.slug}`}>
+                          <Link href={`/blogs/${post.slug}`} onClick={saveScrollForDetail}>
                             <div className="cursor-pointer">
                               <div className="relative h-28 overflow-hidden">
                                 <Image
@@ -233,7 +313,7 @@ export default function Blogs() {
                         <article key={`desktop-${post.slug}-${i}`} className="flex flex-col md:flex-row gap-8 items-start border-b border-gray-800 pb-12 last:border-0">
                           {/* Image */}
                           <div className="w-full md:w-1/3 shrink-0">
-                            <Link href={`/blogs/${post.slug}`}>
+                            <Link href={`/blogs/${post.slug}`} onClick={saveScrollForDetail}>
                               <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden cursor-pointer">
                                 <Image src={post.image} alt={post.title} fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover hover:scale-105 transition-transform duration-500" />
                               </div>
@@ -242,7 +322,7 @@ export default function Blogs() {
 
                           {/* Content */}
                           <div className="flex-1">
-                            <Link href={`/blogs/${post.slug}`}>
+                            <Link href={`/blogs/${post.slug}`} onClick={saveScrollForDetail}>
                               <h2 className="text-2xl font-medium text-white mb-2 leading-tight hover:text-[#FCD804] transition-colors cursor-pointer">
                                 {post.title}
                               </h2>
@@ -252,7 +332,7 @@ export default function Blogs() {
                               {post.excerpt}
                             </p>
                             <div className="flex justify-between items-center">
-                              <Link href={`/blogs/${post.slug}`} aria-label={`Read more about ${post.title}`}>
+                              <Link href={`/blogs/${post.slug}`} onClick={saveScrollForDetail} aria-label={`Read more about ${post.title}`}>
                                 <button className="bg-[#5c6bc0] hover:bg-[#3949ab] text-white text-xs font-bold py-2 px-6 rounded transition-colors">
                                   Read More
                                 </button>

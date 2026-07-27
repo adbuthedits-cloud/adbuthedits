@@ -23,7 +23,7 @@ export default function DeactivatedAccountModal({ isOpen, userIdentifier, onReac
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: isEmail ? userIdentifier : undefined,
-                    purpose: 'forgot_password' // reuse OTP send mechanism
+                    purpose: 'reactivate_account'
                 })
             });
             const data = await res.json();

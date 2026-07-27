@@ -24,6 +24,7 @@ async function sendOtpEmail({ to, otp, purpose }) {
         email_verify: 'Email Verification',
         forgot_password: 'Password Reset',
         change_password_settings: 'Change Password',
+        reactivate_account: 'Account Reactivation',
     };
     const label = purposeLabels[purpose] || 'Verification';
 
@@ -276,7 +277,7 @@ router.post('/verify-registration-otp', async (req, res) => {
 router.post('/send-email-otp', async (req, res) => {
     try {
         const { email, purpose } = req.body;
-        const allowedPurposes = ['email_login', 'email_verify', 'forgot_password', 'change_password_settings'];
+        const allowedPurposes = ['email_login', 'email_verify', 'forgot_password', 'change_password_settings', 'reactivate_account'];
 
         if (!email || !purpose || !allowedPurposes.includes(purpose)) {
             return res.status(400).json({ msg: 'Email and a valid purpose are required.' });
@@ -323,8 +324,8 @@ router.post('/send-email-otp', async (req, res) => {
             return res.status(404).json({ msg: 'Account not found. Please register first.' });
         }
 
-        // For forgot_password / change_password_settings — user must exist
-        if ((purpose === 'forgot_password' || purpose === 'change_password_settings') && !user) {
+        // For forgot_password / change_password_settings / reactivate_account — user must exist
+        if ((purpose === 'forgot_password' || purpose === 'change_password_settings' || purpose === 'reactivate_account') && !user) {
             return res.status(404).json({ msg: 'Email is not registered with us. Please check your email address or register.' });
         }
 

@@ -204,11 +204,11 @@ export default function Login() {
         setError(''); setSuccess('');
         if (!isForgotTransition.current) {
             setForgotMode(false);
+            setOtpStep('input'); setEmailOtpValue('');
+            setPhoneStep('input'); setPhoneOtpValue('');
+            setOtpTimer(0); setPhoneTimer(0);
         }
         isForgotTransition.current = false;
-        setOtpStep('input'); setEmailOtpValue('');
-        setPhoneStep('input'); setPhoneOtpValue('');
-        setOtpTimer(0); setPhoneTimer(0);
         if (activeTab !== 'phone_otp') destroyRecaptcha();
     }, [activeTab]);
 
@@ -480,7 +480,7 @@ export default function Login() {
             destroyRecaptcha();
             const msg = {
                 'auth/invalid-phone-number': 'Invalid phone number. Use digits only e.g. 9876543210.',
-                'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.',
+                'auth/too-many-requests': 'Too many SMS attempts for this phone number. Please wait 5 minutes, or switch to the Email OTP tab above.',
                 'auth/captcha-check-failed': 'reCAPTCHA failed. Refresh the page and try again.',
                 'auth/invalid-app-credential': 'reCAPTCHA not configured in Firebase Console. Check setup.',
                 'auth/quota-exceeded': 'SMS quota exceeded. Try again later.',

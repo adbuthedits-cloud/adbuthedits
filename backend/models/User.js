@@ -127,6 +127,7 @@ const User = sequelize.define('User', {
                     if (!Array.isArray(history)) history = [];
                     history.unshift({ hash: oldHash, changed_at: new Date().toISOString() });
                     user.password_history = history.slice(0, 10);
+                    user.changed('password_history', true);
                 }
                 const salt = await bcrypt.genSalt(10);
                 user.password_hash = await bcrypt.hash(user.password_hash, salt);
