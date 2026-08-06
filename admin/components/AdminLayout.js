@@ -303,6 +303,26 @@ export default function AdminLayout({ children }) {
         }
     }, [isAuthorized]);
 
+    const DEFAULT_LOGO = "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/Adbuth%20Verse_web_1785827817455.webp";
+    const [brandLogo, setBrandLogo] = useState(DEFAULT_LOGO);
+
+    useEffect(() => {
+        const fetchLogo = async () => {
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const res = await axios.get(`${apiUrl}/api/settings/public`);
+                if (res.data?.brand_logo) setBrandLogo(res.data.brand_logo);
+            } catch(e) {}
+        };
+        fetchLogo();
+
+        const handleLogoUpdate = (e) => {
+            if (e.detail) setBrandLogo(e.detail);
+        };
+        window.addEventListener('brandLogoUpdated', handleLogoUpdate);
+        return () => window.removeEventListener('brandLogoUpdated', handleLogoUpdate);
+    }, []);
+
     if (!isAuthorized) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#1a1025] gap-4">
@@ -322,10 +342,10 @@ export default function AdminLayout({ children }) {
                 <div className="h-20 flex items-center px-6 mb-2 border-b border-[#2d1b4e]/50">
                     {!collapsed ? (
                         <div className="flex items-center gap-2">
-                            <Image src="/images/logo.png" alt="Adbuth" width={90} height={24} className="h-6 w-auto object-contain" style={{ height: "auto" }} priority />
+                            <Image src={brandLogo || DEFAULT_LOGO} alt="Adbuth Verse" width={110} height={30} className="h-7 w-auto object-contain" style={{ width: "auto", height: "auto" }} priority />
                         </div>
                     ) : (
-                        <Image src="/images/logo.png" alt="Adbuth" width={32} height={32} className="w-8 h-8 mx-auto object-contain" style={{ height: "auto" }} priority />
+                        <Image src={brandLogo || DEFAULT_LOGO} alt="Adbuth Verse" width={32} height={32} className="w-8 h-8 mx-auto object-contain" style={{ width: "auto", height: "auto" }} priority />
                     )}
                 </div>
 

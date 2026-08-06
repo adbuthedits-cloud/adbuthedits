@@ -3,7 +3,7 @@ import withPermission from '../../../components/withPermission';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faSave, faCheckCircle, faExclamationCircle, faEye, faEyeSlash, faPowerOff, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faSave, faCheckCircle, faExclamationCircle, faEye, faEyeSlash, faPowerOff, faTrash, faSync, faUpload, faImage } from '@fortawesome/free-solid-svg-icons';
 import { getAuthToken } from '../../../utils/auth';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,12 +25,98 @@ function Settings() {
     });
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState({ type: '', message: '' });
-    
+
     // Maintenance Mode State
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [fetchingMaintenance, setFetchingMaintenance] = useState(true);
     const [clearingCache, setClearingCache] = useState(false);
     const [cacheStatus, setCacheStatus] = useState({ type: '', message: '' });
+
+    // Brand Logo State
+    const [brandLogoUrl, setBrandLogoUrl] = useState('');
+    const [logoInputUrl, setLogoInputUrl] = useState('');
+    const [logoUploading, setLogoUploading] = useState(false);
+    const [logoStatus, setLogoStatus] = useState({ type: '', message: '' });
+
+    useEffect(() => {
+        const fetchLogo = async () => {
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const res = await axios.get(`${apiUrl}/api/settings/public`);
+                if (res.data?.brand_logo) {
+                    setBrandLogoUrl(res.data.brand_logo);
+                    setLogoInputUrl(res.data.brand_logo);
+                }
+            } catch (err) {
+                console.error("Failed to fetch brand logo", err);
+            }
+        };
+        fetchLogo();
+    }, []);
+
+    const handleLogoFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setLogoUploading(true);
+        setLogoStatus({ type: '', message: '' });
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
+            if (!token) return router.push('/login');
+
+            const uploadFormData = new FormData();
+            uploadFormData.append('logo', file);
+
+            const res = await axios.post(`${apiUrl}/api/settings/upload-logo`, uploadFormData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (res.data?.logo_url) {
+                setBrandLogoUrl(res.data.logo_url);
+                setLogoInputUrl(res.data.logo_url);
+                setLogoStatus({ type: 'success', message: 'Brand logo uploaded & updated successfully across the entire site and emails!' });
+                window.dispatchEvent(new CustomEvent('brandLogoUpdated', { detail: res.data.logo_url }));
+            }
+        } catch (err) {
+            setLogoStatus({
+                type: 'error',
+                message: err.response?.data?.msg || err.message || 'Failed to upload logo'
+            });
+        } finally {
+            setLogoUploading(false);
+        }
+    };
+
+    const handleSaveLogoUrl = async () => {
+        if (!logoInputUrl.trim()) return;
+        setLogoUploading(true);
+        setLogoStatus({ type: '', message: '' });
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const token = getAuthToken();
+            if (!token) return router.push('/login');
+
+            await axios.put(`${apiUrl}/api/settings/brand_logo`,
+                { value: logoInputUrl.trim(), description: "Active Brand Logo URL" },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setBrandLogoUrl(logoInputUrl.trim());
+            setLogoStatus({ type: 'success', message: 'Brand logo URL updated successfully across the entire site and emails!' });
+            window.dispatchEvent(new CustomEvent('brandLogoUpdated', { detail: logoInputUrl.trim() }));
+        } catch (err) {
+            setLogoStatus({
+                type: 'error',
+                message: err.response?.data?.msg || 'Failed to save logo URL'
+            });
+        } finally {
+            setLogoUploading(false);
+        }
+    };
 
     useUnsavedChangesWarning(isDirty);
 
@@ -68,11 +154,11 @@ function Settings() {
             const newValue = !maintenanceMode;
             setMaintenanceMode(newValue); // Optimistic update
 
-            await axios.put(`${apiUrl}/api/settings/maintenance_mode`, 
+            await axios.put(`${apiUrl}/api/settings/maintenance_mode`,
                 { value: newValue, description: "System Maintenance Mode Toggle" },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            
+
             setStatus({ type: 'success', message: `Maintenance mode ${newValue ? 'enabled' : 'disabled'} successfully.` });
         } catch (error) {
             setMaintenanceMode(!maintenanceMode); // Revert
@@ -173,27 +259,12 @@ function Settings() {
 
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Visual Side */}
-                <div className="w-full lg:w-1/3">
-                    <div className="bg-gradient-to-br from-[#1E1628] to-[#2d1b4e] text-white p-8 rounded-[18px] shadow-lg relative overflow-hidden h-full flex flex-col justify-center border border-[#2d1b4e]">
-                        <div className="relative z-10">
-                            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm shadow-inner border border-white/10">
-                                <FontAwesomeIcon icon={faLock} className="text-3xl text-[#a78bfa]" />
-                            </div>
-                            <h3 className="text-2xl font-bold mb-2">Secure Your Account</h3>
-                            <p className="text-gray-300 text-sm leading-relaxed opacity-90">
-                                Regularly updating your password helps protect your admin dashboard from unauthorized access.
-                                Use a strong, unique password.
-                            </p>
-                        </div>
-                        {/* Decorative */}
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-[#a78bfa]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    </div>
-                </div>
+
 
                 {/* Form Side */}
                 <div className="w-full lg:w-2/3">
                     <div className="bg-[#1E1628] p-8 rounded-[18px] shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-[#2d1b4e]">
-                        
+
                         {/* Status Message */}
                         <div className="mb-6">
                             <AnimatePresence>
@@ -211,6 +282,82 @@ function Settings() {
                             </AnimatePresence>
                         </div>
 
+                        {/* Brand Logo Settings Section */}
+                        <div className="mb-10">
+                            <h3 className="font-bold text-lg text-white mb-6 border-b border-[#2d1b4e] pb-4 flex items-center gap-2">
+                                <FontAwesomeIcon icon={faImage} className="text-[#a78bfa]" />
+                                Brand Logo Settings
+                            </h3>
+
+                            <div className="bg-[#2d1b4e]/30 p-6 rounded-xl border border-[#a78bfa]/20 space-y-6">
+                                <p className="text-gray-400 text-sm leading-relaxed">
+                                    Upload or update your primary Brand Logo. Any change here automatically updates the logo across the website navbar, login/signup forms, review sections, admin dashboard, and all automated email notifications.
+                                </p>
+
+                                {logoStatus.message && (
+                                    <div className={`p-4 rounded-xl text-sm border flex items-center gap-2 ${logoStatus.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                                        <FontAwesomeIcon icon={logoStatus.type === 'success' ? faCheckCircle : faExclamationCircle} />
+                                        {logoStatus.message}
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                    {/* Active Logo Preview */}
+                                    <div className="bg-[#130C1C] p-6 rounded-xl border border-[#2d1b4e] text-center flex flex-col items-center justify-center space-y-3">
+                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Brand Logo</span>
+                                        {brandLogoUrl ? (
+                                            <div className="p-4 bg-white/5 rounded-xl border border-white/10 max-w-[220px] max-h-[80px] flex items-center justify-center">
+                                                <img src={brandLogoUrl} alt="Active Brand Logo" className="max-h-12 w-auto object-contain" />
+                                            </div>
+                                        ) : (
+                                            <div className="text-gray-500 text-xs py-4">No logo configured</div>
+                                        )}
+                                        <span className="text-[11px] text-gray-500 break-all font-mono px-2">{brandLogoUrl}</span>
+                                    </div>
+
+                                    {/* Upload or Update URL */}
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-300 mb-2 block uppercase tracking-wider">Upload New Image File</label>
+                                            <label className="flex items-center justify-center gap-2 bg-[#7D287E] hover:bg-[#9333EA] text-white px-5 py-3 rounded-xl font-bold text-sm cursor-pointer transition-all shadow-lg shadow-[#7D287E]/20">
+                                                <FontAwesomeIcon icon={logoUploading ? faSync : faUpload} className={logoUploading ? 'animate-spin' : ''} />
+                                                {logoUploading ? 'Uploading Logo...' : 'Upload Logo Image'}
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleLogoFileUpload}
+                                                    disabled={logoUploading}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                            <p className="text-[11px] text-gray-500 mt-1.5">Supported formats: PNG, WEBP, SVG, JPG (Max 5MB)</p>
+                                        </div>
+
+                                        <div className="pt-2 border-t border-[#2d1b4e]">
+                                            <label className="text-xs font-bold text-gray-300 mb-2 block uppercase tracking-wider">Or Enter Image URL directly</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="url"
+                                                    value={logoInputUrl}
+                                                    onChange={(e) => setLogoInputUrl(e.target.value)}
+                                                    placeholder="https://example.com/logo.webp"
+                                                    className="flex-1 px-4 py-2.5 bg-[#2d1b4e] border border-transparent text-gray-200 text-xs rounded-xl focus:bg-[#3b2a5f] focus:ring-2 focus:ring-[#a78bfa]/30 outline-none"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSaveLogoUrl}
+                                                    disabled={logoUploading || !logoInputUrl.trim()}
+                                                    className="bg-[#a78bfa] hover:bg-[#8b5cf6] text-white px-4 py-2.5 rounded-xl font-bold text-xs transition-all disabled:opacity-40"
+                                                >
+                                                    Save URL
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* System Settings Section */}
                         <div className="mb-10">
                             <h3 className="font-bold text-lg text-white mb-6 border-b border-[#2d1b4e] pb-4">System Status</h3>
@@ -223,12 +370,12 @@ function Settings() {
                                         Maintenance Mode
                                     </h4>
                                     <p className="text-gray-400 text-sm mt-1">
-                                        {maintenanceMode 
-                                            ? "Website is currently hidden from the public." 
+                                        {maintenanceMode
+                                            ? "Website is currently hidden from the public."
                                             : "Website is live and accessible to all users."}
                                     </p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={toggleMaintenance}
                                     disabled={fetchingMaintenance}
                                     className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${maintenanceMode ? 'bg-amber-500' : 'bg-[#3b2a5f]'} ${fetchingMaintenance ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-[#a78bfa]/50'}`}

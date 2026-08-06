@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShieldHalved, faRotateLeft, faEnvelope, faPhone, faTimes, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +11,14 @@ export default function DeactivatedAccountModal({ isOpen, userIdentifier, onReac
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [resendCooldown, setResendCooldown] = useState(0);
+
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => setResendCooldown(prev => prev - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCooldown]);
 
     if (!isOpen) return null;
 
@@ -29,6 +37,7 @@ export default function DeactivatedAccountModal({ isOpen, userIdentifier, onReac
             const data = await res.json();
             if (!res.ok) throw new Error(data.msg || 'Failed to send OTP');
             setStep('verify');
+            setResendCooldown(10);
             setSuccess(`Activation OTP sent to ${userIdentifier}`);
         } catch (err) {
             setError(err.message);
@@ -129,6 +138,17 @@ export default function DeactivatedAccountModal({ isOpen, userIdentifier, onReac
                                     placeholder="123456"
                                     className="w-full bg-transparent border-b border-purple-500/50 text-center text-2xl tracking-widest text-white py-2 focus:outline-none focus:border-purple-400"
                                 />
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-white/50">
+                                <span>Didn't get the code?</span>
+                                <button
+                                    type="button"
+                                    disabled={submitting || resendCooldown > 0}
+                                    onClick={handleSendOtp}
+                                    className="text-purple-400 hover:text-purple-300 font-semibold disabled:opacity-50 transition-colors"
+                                >
+                                    {resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend OTP'}
+                                </button>
                             </div>
                             <button
                                 type="submit"

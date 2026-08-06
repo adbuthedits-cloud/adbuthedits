@@ -18,7 +18,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
   const [designingOpen, setDesigningOpen] = useState(false)
   const [learningOpen, setLearningOpen] = useState(false)
 
-  const { user, logout, isProfileComplete, openProfileModal } = useAuth()
+  const { user, logout, isProfileComplete, openProfileModal, brandLogo } = useAuth()
 
   const [imageError, setImageError] = useState(false)
 
@@ -158,7 +158,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
       <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="https://assets.adbuthverse.com/website-assets/brand/logo.webp" alt="Logo" className='lg:w-36 md:w-28 sm:w-24 w-28 object-contain' width={280} height={280} priority />
+            <Image src={brandLogo || "https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png"} alt="Logo" className='lg:w-36 md:w-28 sm:w-24 w-28 object-contain' width={280} height={280} priority />
           </Link>
         </div>
 
@@ -317,10 +317,10 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                     {user.first_name && user.last_name
                       ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
                       : user.first_name
-                      ? user.first_name[0].toUpperCase()
-                      : user.last_name
-                      ? user.last_name[0].toUpperCase()
-                      : <FontAwesomeIcon icon={faUser} aria-hidden="true" />}
+                        ? user.first_name[0].toUpperCase()
+                        : user.last_name
+                          ? user.last_name[0].toUpperCase()
+                          : <FontAwesomeIcon icon={faUser} aria-hidden="true" />}
                   </div>
                 )}
               </button>
@@ -345,8 +345,8 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                             {user?.email
                               ? user.email
                               : user?.phone_number
-                              ? (() => { try { const p = typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number; return `${p.code} ${p.number}`; } catch { return 'Phone User'; } })()
-                              : 'User'
+                                ? (() => { try { const p = typeof user.phone_number === 'string' ? JSON.parse(user.phone_number) : user.phone_number; return `${p.code} ${p.number}`; } catch { return 'Phone User'; } })()
+                                : 'User'
                             }
                           </p>
                           {!isProfileComplete(user) && (
@@ -618,10 +618,10 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                             {user.first_name && user.last_name
                               ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
                               : user.first_name
-                              ? user.first_name[0].toUpperCase()
-                              : user.last_name
-                              ? user.last_name[0].toUpperCase()
-                              : <FontAwesomeIcon icon={faUser} className="text-xs" />}
+                                ? user.first_name[0].toUpperCase()
+                                : user.last_name
+                                  ? user.last_name[0].toUpperCase()
+                                  : <FontAwesomeIcon icon={faUser} className="text-xs" />}
                           </div>
                         )}
                       </div>

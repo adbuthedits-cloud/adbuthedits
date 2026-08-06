@@ -66,7 +66,7 @@ export default function Login() {
                 <div className="md:w-1/2 bg-[#040B38] relative p-10 flex flex-col justify-between overflow-hidden">
                     <div className="relative z-10">
                         <div className="w-36 flex items-center justify-center text-white font-bold text-xl mb-6">
-                            <Image src="/images/logo.png" alt="logo" width={144} height={40} className="w-full h-auto object-contain" style={{ height: 'auto' }} priority />
+                            <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/Adbuth%20Verse_web_1785827817455.webp" alt="Adbuth Verse Logo" width={144} height={40} className="w-full h-auto object-contain" style={{ width: 'auto', height: 'auto' }} priority />
                         </div>
                         <h1 className="text-4xl font-bold text-white mb-2">Welcome Back!</h1>
                         <p className="text-blue-100">Manage your store efficiently with Adbuth Admin Panel.</p>

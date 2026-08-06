@@ -46,6 +46,7 @@ export default function Settings() {
     const [otpVerifying, setOtpVerifying] = useState(false);
     const recaptchaContainerRef = useRef(null);
     const recaptchaVerifierRef = useRef(null);
+    const recaptchaWidgetIdRef = useRef(null);
 
     // Email change state
     const [showEmailChange, setShowEmailChange] = useState(false);
@@ -62,24 +63,20 @@ export default function Settings() {
     const [phoneChangeStep, setPhoneChangeStep] = useState('input'); // 'input' | 'verify'
     const [phoneChangeConfirmResult, setPhoneChangeConfirmResult] = useState(null);
 
-    // Deactivate Account state
-    const [deactivateStep, setDeactivateStep] = useState('confirm'); // 'confirm' | 'otp' | 'done'
-    const [deactivateOtp, setDeactivateOtp] = useState('');
-    const [deactivateLoading, setDeactivateLoading] = useState(false);
+    const [phoneResendCooldown, setPhoneResendCooldown] = useState(0);
 
     useEffect(() => {
-        if (!authLoading && !user) {
-            localStorage.setItem('intendedDestination', '/settings');
-            router.replace('/login');
+        if (phoneResendCooldown > 0) {
+            const timer = setTimeout(() => setPhoneResendCooldown(prev => prev - 1), 1000);
+            return () => clearTimeout(timer);
         }
-    }, [user, authLoading, router]);
+    }, [phoneResendCooldown]);
 
     useEffect(() => {
         if (user) {
-            const names = user.name ? user.name.split(' ') : ['', ''];
             setProfileData({
-                first_name: user.first_name || names[0] || '',
-                last_name: user.last_name || names.slice(1).join(' ') || ''
+                first_name: user.first_name || '',
+                last_name: user.last_name || ''
             });
         }
     }, [user]);
@@ -97,72 +94,103 @@ export default function Settings() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(profileData)
+                body: JSON.stringify({
+                    first_name: profileData.first_name,
+                    last_name: profileData.last_name
+                })
             });
 
-            const text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (err) {
-                throw new Error(`Server returned invalid response (Status ${res.status}).`);
-            }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.msg || 'Profile update failed');
 
-            if (res.ok) {
-                setMessage({ text: 'Profile updated successfully', type: 'success' });
-                // Optionally update context if we had a method for it, or rely on next refresh
-                // For immediate feedback, we could force a reload or re-fetch user
-            } else {
-                setMessage({ text: data.msg || 'Update failed', type: 'error' });
-            }
-        } catch (error) {
-            setMessage({ text: 'Something went wrong', type: 'error' });
+            setMessage({ text: 'Profile updated successfully!', type: 'success' });
+            await refreshUser();
+        } catch (err) {
+            console.error('[Settings Update Profile] Error:', err);
+            setMessage({ text: err.message || 'Something went wrong', type: 'error' });
         } finally {
             setLoading(false);
         }
     };
 
-    const cleanupRecaptcha = () => {
-        try {
-            if (recaptchaVerifierRef.current) {
-                recaptchaVerifierRef.current.clear();
-                recaptchaVerifierRef.current = null;
-            }
-        } catch (e) { /* ignore */ }
+    // Account Action Modal state (Deactivate / Delete)
+    const [accountModalOpen, setAccountModalOpen] = useState(false);
+    const [accountActionType, setAccountActionType] = useState('select'); // 'select' | 'deactivate' | 'delete'
+    const [actionReason, setActionReason] = useState('');
+    const [confirmInput, setConfirmInput] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
+    const [actionDoneMsg, setActionDoneMsg] = useState('');
+
+    const openAccountModal = (type = 'select') => {
+        setAccountActionType(type);
+        setActionReason('');
+        setConfirmInput('');
+        setActionDoneMsg('');
+        setAccountModalOpen(true);
     };
 
-    useEffect(() => {
-        return () => {
-            cleanupRecaptcha();
-        };
-    }, []);
+    const closeAccountModal = () => {
+        if (actionLoading) return;
+        setAccountModalOpen(false);
+        setAccountActionType('select');
+        setActionReason('');
+        setConfirmInput('');
+    };
 
-    // ── Deactivate Account handler
-    const handleDeactivateRequest = async () => {
-        setDeactivateLoading(true);
+    // Deactivate Account API Call
+    const handleAccountDeactivateSubmit = async (e) => {
+        e?.preventDefault();
+        if (confirmInput.trim().toUpperCase() !== 'DEACTIVATE MY ACCOUNT') return;
+        setActionLoading(true);
         setMessage({ text: '', type: '' });
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/api/auth/deactivate-account`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ reason: actionReason.trim() }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.msg || 'Deactivation failed');
-            setDeactivateStep('done');
-            setMessage({ text: 'Account deactivated successfully. You will be logged out shortly.', type: 'success' });
+            setActionDoneMsg('Your account has been deactivated successfully. Logging out...');
             setTimeout(() => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 window.location.href = '/login';
-            }, 3000);
+            }, 2500);
         } catch (err) {
             setMessage({ text: err.message || 'Failed to deactivate account.', type: 'error' });
+            setActionLoading(false);
         }
-        setDeactivateLoading(false);
     };
 
-    const handleDeactivateConfirm = handleDeactivateRequest;
+    // Permanent Account Deletion API Call
+    const handleAccountDeleteSubmit = async (e) => {
+        e?.preventDefault();
+        if (confirmInput.trim().toUpperCase() !== 'DELETE MY ACCOUNT') return;
+        setActionLoading(true);
+        setMessage({ text: '', type: '' });
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/auth/delete-account`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ reason: actionReason.trim() }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.msg || 'Account deletion failed');
+            setActionDoneMsg('Your account and all associated data have been permanently deleted. Logging out...');
+            setTimeout(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            }, 3000);
+        } catch (err) {
+            setMessage({ text: err.message || 'Failed to delete account.', type: 'error' });
+            setActionLoading(false);
+        }
+    };
+
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
@@ -257,7 +285,7 @@ export default function Settings() {
                                     <FontAwesomeIcon icon={faLock} /> Security
                                 </button>
                                 <button
-                                    onClick={() => { setActiveTab('deactivate'); setDeactivateStep('confirm'); setMessage({ text: '', type: '' }); }}
+                                    onClick={() => { setActiveTab('deactivate'); setMessage({ text: '', type: '' }); }}
                                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-3 ${activeTab === 'deactivate' ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50'
                                         }`}
                                 >
@@ -506,8 +534,7 @@ export default function Settings() {
                                             </div>
                                             {showPhoneChange && (
                                                 <div className="bg-purple-50 rounded-xl p-4 space-y-3">
-                                                    {/* Recaptcha */}
-                                                    <div id="recaptcha-container-settings" />
+
                                                     {phoneChangeStep === 'input' && (
                                                         <>
                                                             <div className="flex gap-2">
@@ -535,6 +562,14 @@ export default function Settings() {
                                                                     setLoading(true); setMessage({ text: '', type: '' });
                                                                     try {
                                                                         const cleanNum = newPhoneNum.replace(/[\s\-()]/g, '');
+
+                                                                        // ── Local validation BEFORE touching reCAPTCHA
+                                                                        if (!cleanNum || !/^\d{7,15}$/.test(cleanNum)) {
+                                                                            setMessage({ text: 'Invalid phone number. Enter digits only (7–15 digits).', type: 'error' });
+                                                                            setLoading(false);
+                                                                            return;
+                                                                        }
+
                                                                         // Check if identical to current phone
                                                                         let currentPhone = null;
                                                                         if (user?.phone_number) {
@@ -553,22 +588,41 @@ export default function Settings() {
                                                                         const checkData = await checkRes.json();
                                                                         if (!checkRes.ok) throw new Error(checkData.msg || 'This phone number is already registered.');
 
-                                                                        const { signInWithPhoneNumber, RecaptchaVerifier } = await import('firebase/auth');
+                                                                        const { signInWithPhoneNumber } = await import('firebase/auth');
                                                                         const { auth } = await import('../lib/firebase');
-                                                                        let verifier;
-                                                                        if (!recaptchaVerifierRef.current) {
-                                                                            verifier = new RecaptchaVerifier(auth, 'recaptcha-container-settings', { size: 'invisible' });
-                                                                            await verifier.render();
-                                                                            recaptchaVerifierRef.current = verifier;
-                                                                        } else {
-                                                                            verifier = recaptchaVerifierRef.current;
-                                                                        }
+                                                                        const verifier = await getRecaptchaVerifier(); // only called when phone is valid
+
                                                                         const full = `${newPhoneCode}${cleanNum}`;
                                                                         const result = await signInWithPhoneNumber(auth, full, verifier);
                                                                         setPhoneChangeConfirmResult(result);
                                                                         setPhoneChangeStep('verify');
+                                                                        setPhoneResendCooldown(10);
                                                                         setMessage({ text: 'SMS sent to ' + full, type: 'success' });
-                                                                    } catch (e) { setMessage({ text: e.message || 'Failed to send SMS', type: 'error' }); cleanupRecaptcha(); }
+                                                                    } catch (e) {
+                                                                        cleanupRecaptcha(); // reset so next click is fresh
+                                                                        if (e.code === 'auth/invalid-app-credential' || e.code === 'auth/captcha-check-failed') {
+                                                                            try {
+                                                                                const { signInWithPhoneNumber } = await import('firebase/auth');
+                                                                                const { auth } = await import('../lib/firebase');
+                                                                                const retryVerifier = await getRecaptchaVerifier();
+                                                                                const retryFull = `${newPhoneCode}${cleanNum}`;
+                                                                                const retryResult = await signInWithPhoneNumber(auth, retryFull, retryVerifier);
+                                                                                setPhoneChangeConfirmResult(retryResult);
+                                                                                setPhoneChangeStep('verify');
+                                                                                setPhoneResendCooldown(10);
+                                                                                setMessage({ text: 'SMS sent to ' + retryFull, type: 'success' });
+                                                                                setLoading(false);
+                                                                                return;
+                                                                            } catch (retryErr) {
+                                                                                cleanupRecaptcha();
+                                                                            }
+                                                                        }
+                                                                        if (e.code === 'auth/too-many-requests') setPhoneResendCooldown(300);
+                                                                        const errMsg = e.code === 'auth/too-many-requests' ? 'Too many SMS attempts. The Send button is locked for 5 minutes.'
+                                                                            : e.code === 'auth/invalid-app-credential' ? 'reCAPTCHA session expired. Please click Send OTP again.'
+                                                                            : (e.message || 'Failed to send SMS');
+                                                                        setMessage({ text: errMsg, type: 'error' });
+                                                                    }
                                                                     setLoading(false);
                                                                 }}
                                                                 className="w-full bg-purple-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-purple-700 disabled:opacity-50"
@@ -579,7 +633,39 @@ export default function Settings() {
                                                     )}
                                                     {phoneChangeStep === 'verify' && (
                                                         <>
-                                                            <p className="text-sm text-purple-700">Enter OTP sent via SMS</p>
+                                                            <div className="flex items-center justify-between text-xs">
+                                                                <span className="text-purple-700">Enter OTP sent via SMS</span>
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={loading || phoneResendCooldown > 0}
+                                                                    onClick={async () => {
+                                                                        setLoading(true); setMessage({ text: '', type: '' });
+                                                                        try {
+                                                                            const cleanNum = newPhoneNum.replace(/\D/g, '');
+                                                                            const { signInWithPhoneNumber } = await import('firebase/auth');
+                                                                            const { auth } = await import('../lib/firebase');
+                                                                            const verifier = await getRecaptchaVerifier();
+
+                                                                            const full = `${newPhoneCode}${cleanNum}`;
+                                                                            const result = await signInWithPhoneNumber(auth, full, verifier);
+                                                                            setPhoneChangeConfirmResult(result);
+                                                                            setPhoneResendCooldown(10);
+                                                                            setMessage({ text: 'New SMS code sent to ' + full, type: 'success' });
+                                                                        } catch (e) {
+                                                                            cleanupRecaptcha(); // reset so next click is fresh
+                                                                            if (e.code === 'auth/too-many-requests') setPhoneResendCooldown(300);
+                                                                            const resendErrMsg = e.code === 'auth/too-many-requests' ? 'Too many SMS attempts. The Resend button is locked for 5 minutes.'
+                                                                                : e.code === 'auth/invalid-app-credential' ? 'reCAPTCHA session expired. Please click Resend SMS again.'
+                                                                                : (e.message || 'Failed to resend SMS');
+                                                                            setMessage({ text: resendErrMsg, type: 'error' });
+                                                                        }
+                                                                        setLoading(false);
+                                                                    }}
+                                                                    className="text-purple-600 hover:text-purple-800 font-bold disabled:opacity-50 transition-colors"
+                                                                >
+                                                                    {phoneResendCooldown > 0 ? `Resend SMS (${phoneResendCooldown}s)` : 'Resend SMS'}
+                                                                </button>
+                                                            </div>
                                                             <input
                                                                 type="text"
                                                                 maxLength={6}
@@ -746,76 +832,227 @@ export default function Settings() {
                                     </motion.form>
                                 )}
 
-                                {/* ── Deactivate Account Tab ── */}
+                                {/* ── Deactivate / Delete Account Tab ── */}
                             {activeTab === 'deactivate' && (
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                                    <div className="flex items-center gap-4 mb-6">
-                                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-2xl">
-                                            <FontAwesomeIcon icon={faTrash} />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold text-gray-900">Deactivate Account</h2>
-                                            <p className="text-gray-500 text-sm">Temporarily disable your account.</p>
-                                        </div>
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900">Manage Account Access & Data</h2>
+                                        <p className="text-gray-500 text-sm mt-1">Choose whether to temporarily deactivate your account or permanently delete your account and personal data.</p>
                                     </div>
 
-                                    {deactivateStep === 'done' ? (
-                                        <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
-                                            <p className="text-green-700 font-semibold">Account deactivated. Logging you out...</p>
-                                        </div>
-                                    ) : deactivateStep === 'otp' ? (
-                                        <div className="space-y-4">
-                                            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
-                                                <p className="text-yellow-800 text-sm">An OTP has been sent to your registered email/phone. Enter it below to confirm deactivation.</p>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                maxLength={6}
-                                                placeholder="Enter 6-digit OTP"
-                                                value={deactivateOtp}
-                                                onChange={e => setDeactivateOtp(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full px-4 py-3 text-black rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-400/10 transition-all outline-none font-mono text-center text-xl tracking-widest"
-                                            />
-                                            <div className="flex gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setDeactivateStep('confirm'); setDeactivateOtp(''); setMessage({ text: '', type: '' }); }}
-                                                    className="flex-1 border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
-                                                >Cancel</button>
-                                                <button
-                                                    type="button"
-                                                    disabled={deactivateLoading || deactivateOtp.length < 6}
-                                                    onClick={handleDeactivateConfirm}
-                                                    className="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-red-700 disabled:opacity-50 transition-colors"
-                                                >{deactivateLoading ? 'Verifying...' : 'Confirm Deactivation'}</button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-6">
-                                            <div className="bg-red-50 border border-red-200 rounded-2xl p-5">
-                                                <div className="flex gap-3">
-                                                    <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-600 text-lg mt-0.5" />
-                                                    <div>
-                                                        <h4 className="text-red-900 font-bold text-sm">Are you sure you want to deactivate?</h4>
-                                                        <p className="text-red-700 text-xs mt-1 leading-relaxed">
-                                                            Deactivating your account will temporarily disable your login access. You can reactivate by logging in again with OTP verification. Your data will be preserved.
-                                                        </p>
-                                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Option 1: Deactivate Card */}
+                                        <div className="border border-amber-200 bg-amber-50/50 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                                            <div className="space-y-3">
+                                                <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
+                                                    <FontAwesomeIcon icon={faExclamationTriangle} />
                                                 </div>
+                                                <div>
+                                                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 uppercase tracking-wider mb-2">Temporary</span>
+                                                    <h3 className="text-lg font-bold text-gray-900">Deactivate Account</h3>
+                                                </div>
+                                                <p className="text-xs text-gray-600 leading-relaxed">
+                                                    Disable account access while keeping all your orders, purchases, downloads, and profile data safely preserved in our database. You can reactivate at any time by logging in with phone OTP.
+                                                </p>
                                             </div>
                                             <button
                                                 type="button"
-                                                disabled={deactivateLoading}
-                                                onClick={handleDeactivateRequest}
-                                                className="w-full bg-red-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                                                onClick={() => openAccountModal('deactivate')}
+                                                className="mt-6 w-full py-3 px-4 rounded-xl bg-amber-600 text-white font-bold text-sm hover:bg-amber-700 transition-colors shadow-sm"
                                             >
-                                                <FontAwesomeIcon icon={faTrash} />
-                                                {deactivateLoading ? 'Sending OTP...' : 'Deactivate My Account'}
+                                                Deactivate Account
                                             </button>
                                         </div>
-                                    )}
+
+                                        {/* Option 2: Delete Card */}
+                                        <div className="border border-red-200 bg-red-50/50 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                                            <div className="space-y-3">
+                                                <div className="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl">
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </div>
+                                                <div>
+                                                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-200 text-red-900 uppercase tracking-wider mb-2">Permanent • Data Loss</span>
+                                                    <h3 className="text-lg font-bold text-gray-900">Delete Account</h3>
+                                                </div>
+                                                <p className="text-xs text-gray-600 leading-relaxed">
+                                                    Permanently delete your account and <strong>erase all associated data</strong> including profile information, complete order history, payment records, saved cart, and wishlist items. ⚠️ This action cannot be undone.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => openAccountModal('delete')}
+                                                className="mt-6 w-full py-3 px-4 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                                Delete Account Permanently
+                                            </button>
+                                        </div>
+                                    </div>
                                 </motion.div>
                             )}
+
+            {/* Account Deactivation / Deletion Confirmation Modal */}
+            {accountModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-gray-100 overflow-hidden"
+                    >
+                        <button
+                            type="button"
+                            onClick={closeAccountModal}
+                            disabled={actionLoading}
+                            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center transition-colors text-sm font-bold"
+                        >
+                            ✕
+                        </button>
+
+                        {actionDoneMsg ? (
+                            <div className="py-8 text-center space-y-4">
+                                <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 text-3xl flex items-center justify-center mx-auto">
+                                    ✓
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900">Action Confirmed</h3>
+                                <p className="text-sm text-gray-600 leading-relaxed">{actionDoneMsg}</p>
+                            </div>
+                        ) : accountActionType === 'deactivate' ? (
+                            <form onSubmit={handleAccountDeactivateSubmit} className="space-y-5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg">
+                                        <FontAwesomeIcon icon={faExclamationTriangle} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900">Deactivate Account</h3>
+                                        <p className="text-xs text-gray-500">Temporarily disable account access</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 leading-relaxed">
+                                    <strong>What happens when you deactivate?</strong><br />
+                                    • Your login access will be temporarily disabled.<br />
+                                    • Your profile, order history, and data remain safely saved.<br />
+                                    • You can reactivate anytime by logging in with phone OTP.<br />
+                                    • A confirmation email will be sent to your registered address.
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                        Reason for deactivating (Optional)
+                                    </label>
+                                    <textarea
+                                        rows={2}
+                                        value={actionReason}
+                                        onChange={e => setActionReason(e.target.value)}
+                                        placeholder="Tell us why you are deactivating your account..."
+                                        className="w-full text-xs text-black p-3 rounded-xl border border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none resize-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 mb-1">
+                                        Type <span className="font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">DEACTIVATE MY ACCOUNT</span> to confirm:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={confirmInput}
+                                        onChange={e => setConfirmInput(e.target.value)}
+                                        placeholder="DEACTIVATE MY ACCOUNT"
+                                        className="w-full text-xs text-black font-mono p-3 rounded-xl border border-gray-300 focus:border-amber-500 outline-none uppercase"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={closeAccountModal}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-3 border border-gray-300 text-gray-700 font-semibold text-xs rounded-xl hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={actionLoading || confirmInput.trim().toUpperCase() !== 'DEACTIVATE MY ACCOUNT'}
+                                        className="flex-1 py-3 bg-amber-600 text-white font-bold text-xs rounded-xl hover:bg-amber-700 disabled:opacity-40 transition-all"
+                                    >
+                                        {actionLoading ? 'Processing...' : 'Confirm Deactivation'}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleAccountDeleteSubmit} className="space-y-5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-lg">
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900">Delete Account Permanently</h3>
+                                        <p className="text-xs text-red-600 font-semibold">⚠️ Irreversible Action • Data Loss</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-xs text-red-900 leading-relaxed">
+                                    <strong className="text-red-700">Warning: Permanent Data Loss!</strong><br />
+                                    • ALL user profile details, email, and phone references will be erased.<br />
+                                    • Complete order history, purchases, invoice data, and digital tokens will be permanently removed.<br />
+                                    • Your active cart items and saved wishlist will be deleted.<br />
+                                    • A confirmation email will be sent to your address before completion.<br />
+                                    • <strong className="underline">This action cannot be undone or recovered under any circumstances.</strong>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                        Reason for deleting account (Optional)
+                                    </label>
+                                    <textarea
+                                        rows={2}
+                                        value={actionReason}
+                                        onChange={e => setActionReason(e.target.value)}
+                                        placeholder="Please share why you are deleting your account..."
+                                        className="w-full text-xs text-black p-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none resize-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 mb-1">
+                                        Type <span className="font-mono text-red-700 bg-red-100 px-1.5 py-0.5 rounded">DELETE MY ACCOUNT</span> to confirm:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={confirmInput}
+                                        onChange={e => setConfirmInput(e.target.value)}
+                                        placeholder="DELETE MY ACCOUNT"
+                                        className="w-full text-xs text-black font-mono p-3 rounded-xl border border-gray-300 focus:border-red-500 outline-none uppercase"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={closeAccountModal}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-3 border border-gray-300 text-gray-700 font-semibold text-xs rounded-xl hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={actionLoading || confirmInput.trim().toUpperCase() !== 'DELETE MY ACCOUNT'}
+                                        className="flex-1 py-3 bg-red-600 text-white font-bold text-xs rounded-xl hover:bg-red-700 disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                                    >
+                                        <FontAwesomeIcon icon={faTrash} />
+                                        {actionLoading ? 'Deleting Data...' : 'Delete Permanently'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </motion.div>
+                </div>
+            )}
+
 
                         </div>
                     </div>

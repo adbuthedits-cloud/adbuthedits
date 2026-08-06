@@ -64,7 +64,7 @@ export default function Footer() {
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
-                  href="https://www.instagram.com/adbuthproductions/"
+                  href="https://www.instagram.com/adbuthedits/"
                   aria-label="Follow Adbuth Verse on Instagram"
                   className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors"
                 >
@@ -73,7 +73,7 @@ export default function Footer() {
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
-                  href="https://www.youtube.com/@JayasAdbuth"
+                  href="https://www.youtube.com/@Adbuthedits"
                   aria-label="Subscribe to Adbuth Verse on YouTube"
                   className="w-8 h-8 rounded-full bg-[#7D287E] text-white flex items-center justify-center hover:bg-accent transition-colors"
                 >

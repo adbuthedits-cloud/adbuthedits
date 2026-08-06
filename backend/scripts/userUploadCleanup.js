@@ -43,7 +43,7 @@ const cleanupUserUploads = async () => {
             const user = item.order?.user;
             if (user && user.email) {
                 try {
-                    const html = getDeletionWarningTemplate(user.first_name, item.product?.title, item.order_id);
+                    const html = await getDeletionWarningTemplate(user.first_name, item.product?.title, item.order_id);
                     await sendReply({
                         to: user.email,
                         subject: `Action Required: Your files for Order #${item.order_id.substring(0,8)} expire in 72 hours`,
@@ -150,7 +150,7 @@ const cleanupUserUploads = async () => {
                 // Send Final Deletion Confirmation Email
                 if (user && user.email) {
                     try {
-                        const html = getDeletionConfirmedTemplate(user.first_name, item.product?.title);
+                        const html = await getDeletionConfirmedTemplate(user.first_name, item.product?.title);
                         await sendReply({
                             to: user.email,
                             subject: `Privacy Notice: Your temporary files have been deleted`,

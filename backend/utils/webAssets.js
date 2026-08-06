@@ -209,4 +209,4 @@ async function generateWebAsset(r2Key, mimeType, fileBuffer = null) {
     return outKey;
 }
 
-module.exports = { generateWebAsset, webpKey, webVideoKey };
+module.exports = { generateWebAsset, executeOptimization, webpKey, webVideoKey };

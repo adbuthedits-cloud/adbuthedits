@@ -44,6 +44,26 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
+    const DEFAULT_LOGO = 'https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png';
+    const [brandLogo, setBrandLogo] = useState(DEFAULT_LOGO);
+
+    useEffect(() => {
+        const fetchPublicSettings = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/settings/public`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.brand_logo) {
+                        setBrandLogo(data.brand_logo);
+                    }
+                }
+            } catch (e) {
+                /* fallback to default */
+            }
+        };
+        fetchPublicSettings();
+    }, []);
+
     useEffect(() => {
         const verifyToken = async () => {
             const token = localStorage.getItem('token');
@@ -204,15 +224,16 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    // Automatically trigger ProfileCompleteModal after a delay of landing on the page
+    // Automatically trigger ProfileCompleteModal after a delay of landing on non-auth pages
     useEffect(() => {
-        if (!loading && user && !isProfileComplete(user) && !showProfileModal && !modalDismissedThisSession.current) {
+        const isAuthPage = router.pathname === '/login' || router.pathname === '/signup';
+        if (!loading && user && !isProfileComplete(user) && !showProfileModal && !modalDismissedThisSession.current && !isAuthPage) {
             const timer = setTimeout(() => {
                 openProfileModal();
             }, 3000); // 3 seconds delay
             return () => clearTimeout(timer);
         }
-    }, [loading, user, showProfileModal, openProfileModal]);
+    }, [loading, user, showProfileModal, openProfileModal, router.pathname]);
 
     return (
         <AuthContext.Provider value={{
@@ -225,6 +246,8 @@ export const AuthProvider = ({ children }) => {
             refreshUser,
             openProfileModal,
             isProfileComplete,
+            brandLogo,
+            setBrandLogo,
         }}>
             {children}
 

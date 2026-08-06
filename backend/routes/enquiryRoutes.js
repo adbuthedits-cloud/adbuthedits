@@ -330,10 +330,13 @@ router.post('/:id/reply', authMiddleware, adminMiddleware, checkPermission('enqu
 
         // Send email if channel is 'email'
         if (channel === 'email') {
+            const { getBrandLogoUrl } = require('../utils/brandSettings');
+            const logoUrl = await getBrandLogoUrl();
             const htmlBody = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
                     <div style="background: linear-gradient(135deg, #7D287E, #4a1050); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 22px;">Adbuth Productions</h1>
+                        <img src="${logoUrl}" alt="Adbuth Verse" style="height:48px;width:auto;display:block;margin:0 auto 8px;image-rendering:-webkit-optimize-contrast;" />
+                        <h1 style="color: white; margin: 0; font-size: 22px;">Adbuth Verse</h1>
                         <p style="color: rgba(255,255,255,0.8); margin: 6px 0 0; font-size: 13px;">Response to your enquiry</p>
                     </div>
                     <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #eee;">
@@ -342,7 +345,7 @@ router.post('/:id/reply', authMiddleware, adminMiddleware, checkPermission('enqu
                             ${message.replace(/\n/g, '<br/>')}
                         </div>
                         <p style="color: #999; font-size: 12px; margin-top: 20px;">
-                            Replied by <strong>${adminName}</strong> (${adminRole}) · Adbuth Productions
+                            Replied by <strong>${adminName}</strong> (${adminRole}) · Adbuth Verse
                             <br/>If you have further questions, reply to this email.
                         </p>
                         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />

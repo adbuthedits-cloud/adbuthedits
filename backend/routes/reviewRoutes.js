@@ -100,11 +100,12 @@ router.post('/', authMiddleware, upload.fields([
                     const { transporter, senders } = require('../utils/emailService');
                     const { getReviewThankYouTemplate } = require('../utils/emailTemplates');
                     
+                    const templateHtml = await getReviewThankYouTemplate(user.first_name, product.title);
                     await transporter.sendMail({
                         from: `"Adbuth Support" <${senders.support}>`,
                         to: user.email,
                         subject: `Thank you for reviewing ${product.title}!`,
-                        html: getReviewThankYouTemplate(user.first_name, product.title)
+                        html: templateHtml
                     });
                     console.log(`[Review Email] Thank you mail sent to ${user.email}`);
                 }

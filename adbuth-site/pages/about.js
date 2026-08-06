@@ -72,7 +72,8 @@ export default function About() {
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority={index < 4}
+                  priority={true}
+                  fetchPriority={(index % officeImages.length) === 0 ? "high" : "auto"}
                 />
               </div>
             ))}
@@ -262,7 +263,6 @@ export default function About() {
                       { name: "Rajesh Alathore", role: "Senior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Rajesh.webp" },
                       { name: "Vikram Kishore", role: "Senior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Vikram%20Kishore.webp" },
                       { name: "Sukumar", role: "Senior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Sukumar.webp" },
-                      { name: "Sai Chaitanya", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Sai%20Chaitanya.webp" },
                     ].map((member, i) => (
                       <div
                         key={`row1-${repeatIndex}-${i}`}
@@ -293,8 +293,6 @@ export default function About() {
                       { name: "Simhadri", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Simahadri.webp" },
                       { name: "Praneeth", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Praneeth%20..webp" },
                       { name: "Yaswanth Kumar", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Yaswanth%20Kumar.webp" },
-                      { name: "Yaseen Shareef", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Yassen%20Shareef.webp" },
-                      { name: "Shah Basha", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Shah%20basha.webp" },
                       { name: "Prudhivi Raj", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/prudhvi%20raj.webp" },
                       { name: "Venkata Lokesh", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Venkata%20Lokesh.webp" },
                     ].map((member, i) => (
@@ -323,12 +321,9 @@ export default function About() {
                 { name: "Rajesh Alathore", role: "Senior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Rajesh.webp" },
                 { name: "Vikram Kishore", role: "Senior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Vikram%20Kishore.webp" },
                 { name: "Sukumar", role: "Senior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Sukumar.webp" },
-                { name: "Sai Chaitanya", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Sai%20Chaitanya.webp" },
                 { name: "Simhadri", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Simahadri.webp" },
                 { name: "Praneeth", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Praneeth%20..webp" },
                 { name: "Yaswanth Kumar", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Yaswanth%20Kumar.webp" },
-                { name: "Yaseen Shareef", role: "Junior Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Yassen%20Shareef.webp" },
-                { name: "Shah Basha", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Shah%20basha.webp" },
                 { name: "Prudhivi Raj", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/prudhvi%20raj.webp" },
                 { name: "Venkata Lokesh", role: "Editor", image: "https://assets.adbuthverse.com/website-assets/pages/about/Venkata%20Lokesh.webp" },
               ].map((member, i) => (

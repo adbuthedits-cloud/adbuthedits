@@ -98,9 +98,9 @@ export default function ContactUs() {
                         <p className="text-gray-400 text-sm md:text-base lg:mb-16 md:mb-16 mb-12">For all the Post video editing services</p>
 
                         <div className="flex gap-6 text-2xl">
-                            <a target='_blank' href="https://www.instagram.com/adbuthproductions/" className="hover:text-pink-500 transition-colors"><FontAwesomeIcon icon={faInstagram} /></a>
+                            <a target='_blank' href="https://www.instagram.com/adbuthedits/" className="hover:text-pink-500 transition-colors"><FontAwesomeIcon icon={faInstagram} /></a>
                             <a target='_blank' href="https://www.facebook.com/jayasadbuthproductionsllp/" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faFacebook} /></a>
-                            <a target='_blank' href="https://www.youtube.com/@JayasAdbuth" className="hover:text-red-500 transition-colors"><FontAwesomeIcon icon={faYoutube} /></a>
+                            <a target='_blank' href="https://www.youtube.com/@Adbuthedits" className="hover:text-red-500 transition-colors"><FontAwesomeIcon icon={faYoutube} /></a>
                             <a target='_blank' href="https://www.linkedin.com/in/jayasadbuth/" className="hover:text-blue-500 transition-colors"><FontAwesomeIcon icon={faLinkedin} /></a>
                         </div>
                     </div>

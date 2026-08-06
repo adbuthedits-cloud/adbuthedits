@@ -124,7 +124,7 @@ function Countdown({ seconds, onExpire }) {
 export default function Signup() {
     const { seoData } = useSeo('signup');
     const router = useRouter();
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, brandLogo } = useAuth();
 
     // Step: 'register' | 'verify_email'
     const [step, setStep] = useState('register');
@@ -145,12 +145,27 @@ export default function Signup() {
     // ── OTP state
     const [otpValue, setOtpValue] = useState('');
     const [otpTimer, setOtpTimer] = useState(0);
+    const [emailResendCooldown, setEmailResendCooldown] = useState(0);
 
     // ── Firebase Phone OTP state (for signup Step 3)
     const [phoneOtpValue, setPhoneOtpValue] = useState('');
     const [phoneTimer, setPhoneTimer] = useState(0);
     const [confirmationResult, setConfirmationResult] = useState(null);
-    const recaptchaContainerRef = useRef(null);
+    const [phoneResendCooldown, setPhoneResendCooldown] = useState(0);
+
+    useEffect(() => {
+        if (emailResendCooldown > 0) {
+            const timer = setTimeout(() => setEmailResendCooldown(prev => prev - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [emailResendCooldown]);
+
+    useEffect(() => {
+        if (phoneResendCooldown > 0) {
+            const timer = setTimeout(() => setPhoneResendCooldown(prev => prev - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [phoneResendCooldown]);
     const recaptchaVerifierRef = useRef(null);
 
     // ── Consent
@@ -185,38 +200,41 @@ export default function Signup() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Cleanup reCAPTCHA verifier
+    // Cleanup reCAPTCHA verifier — also removes the dynamic container from DOM
     const cleanupRecaptcha = () => {
         try {
             if (recaptchaVerifierRef.current) {
                 recaptchaVerifierRef.current.clear();
-                recaptchaVerifierRef.current = null;
             }
+        } catch (e) { /* ignore */ }
+        recaptchaVerifierRef.current = null;
+        // Remove any dynamic container appended to body
+        try {
+            document.querySelectorAll('[data-recaptcha-signup]').forEach(el => el.remove());
         } catch (e) { /* ignore */ }
     };
 
     // Cleanup on unmount
     useEffect(() => {
-        return () => {
-            cleanupRecaptcha();
-        };
+        return () => { cleanupRecaptcha(); };
     }, []);
 
-    // Setup invisible reCAPTCHA
+    // Setup invisible reCAPTCHA — creates a brand-new DOM element each time, never reuses existing ones
     const setupRecaptcha = async () => {
+        cleanupRecaptcha(); // always destroy first
         try {
-            if (recaptchaVerifierRef.current) return recaptchaVerifierRef.current;
-
             const { RecaptchaVerifier } = await import('firebase/auth');
             const { auth } = await import('../lib/firebase');
 
-            const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            // Always create a new element appended to body — Firebase never sees a previously-used element
+            const container = document.createElement('div');
+            container.setAttribute('data-recaptcha-signup', 'true');
+            document.body.appendChild(container);
+
+            const verifier = new RecaptchaVerifier(auth, container, {
                 size: 'invisible',
                 callback: () => { /* reCAPTCHA solved */ },
-                'expired-callback': () => {
-                    setError('reCAPTCHA expired. Please try again.');
-                    cleanupRecaptcha();
-                }
+                'expired-callback': () => { cleanupRecaptcha(); },
             });
 
             await verifier.render();
@@ -224,7 +242,8 @@ export default function Signup() {
             return verifier;
         } catch (err) {
             console.error('[reCAPTCHA] Setup error:', err);
-            throw new Error('reCAPTCHA setup failed. Please refresh the page.');
+            cleanupRecaptcha();
+            throw new Error('reCAPTCHA setup failed. Please try again.');
         }
     };
 
@@ -324,6 +343,7 @@ export default function Signup() {
             setRegisteredEmail(email);
             setStep('verify_email');
             setOtpTimer(600);
+            setEmailResendCooldown(10);
             setSuccess('OTP sent! Please check your email to complete registration.');
         } catch (err) {
             setError(err.message);
@@ -357,6 +377,7 @@ export default function Signup() {
             // Update the pending token with the new OTP
             setPendingToken(data.pendingToken);
             setOtpTimer(600);
+            setEmailResendCooldown(10);
             setOtpValue('');
             setSuccess('New OTP sent to your email!');
         } catch (err) { setError(err.message); }
@@ -393,33 +414,57 @@ export default function Signup() {
     };
 
     // ── Firebase Phone OTP: Send SMS
-    const handleSendPhoneOtp = async (e) => {
+    const handleSendPhoneOtp = async (e, isRetry = false) => {
         e?.preventDefault();
+        const cleaned = phone.replace(/[\s\-()]/g, '');
+
+        // ── Local validation BEFORE touching reCAPTCHA
+        if (!cleaned) {
+            return setError('Please enter your phone number.');
+        }
+        if (!/^\d{7,15}$/.test(cleaned)) {
+            return setError('Invalid phone number. Enter digits only, e.g. 9876543210 (7–15 digits).');
+        }
+
         setError(''); setSuccess(''); setIsSubmitting(true);
 
         try {
             const { signInWithPhoneNumber } = await import('firebase/auth');
             const { auth } = await import('../lib/firebase');
 
-            const appVerifier = await setupRecaptcha();
-            const fullPhone = `${countryCode}${phone.replace(/[\s\-()]/g, '')}`;
+            const appVerifier = await setupRecaptcha(); // only called when phone is valid
+            const fullPhone = `${countryCode}${cleaned}`;
 
             const result = await signInWithPhoneNumber(auth, fullPhone, appVerifier);
             setConfirmationResult(result);
             setPhoneOtpValue('');
             setPhoneTimer(120); // 2 minutes
+            setPhoneResendCooldown(10);
             setSuccess(`SMS verification code sent to ${fullPhone}`);
         } catch (err) {
-            console.error('[Firebase Phone Signup] Send error:', err);
-            cleanupRecaptcha();
+            console.error('[Firebase Phone Signup] Send error:', err.code, err.message);
+            cleanupRecaptcha(); // always reset so next click starts completely fresh
+
+            // Auto-retry once on credential expiry / captcha failure (e.g. after picture puzzle solve or enterprise fallback)
+            if (!isRetry && (err.code === 'auth/invalid-app-credential' || err.code === 'auth/captcha-check-failed')) {
+                console.log('[Firebase Phone Signup] Credential expired after captcha, auto-retrying with fresh verifier...');
+                setIsSubmitting(false);
+                return handleSendPhoneOtp(null, true);
+            }
+
+            if (err.code === 'auth/too-many-requests') {
+                setPhoneResendCooldown(300);
+            }
+
             const fbErrors = {
-                'auth/invalid-phone-number': 'Invalid phone number format.',
-                'auth/too-many-requests': 'Too many attempts. Please wait.',
-                'auth/quota-exceeded': 'SMS quota exceeded.',
-                'auth/network-request-failed': 'Network error.',
+                'auth/invalid-phone-number': 'Invalid phone number format. Please check and try again.',
+                'auth/too-many-requests': 'Too many SMS attempts. The Send button is locked for 5 minutes.',
+                'auth/quota-exceeded': 'SMS quota exceeded. Try again later.',
+                'auth/network-request-failed': 'Network error. Check your connection.',
+                'auth/invalid-app-credential': 'reCAPTCHA session expired. Please click Send OTP again.',
                 'auth/internal-error': 'Phone authentication is not configured yet.',
             };
-            setError(fbErrors[err.code] || err.message || 'Failed to send SMS. Try again.');
+            setError(fbErrors[err.code] || err.message || 'Failed to send SMS. Please try again.');
         }
         setIsSubmitting(false);
     };
@@ -452,7 +497,13 @@ export default function Signup() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             setSuccess('Phone verified! Welcome to Adbuthverse 🎉');
-            setTimeout(() => { window.location.href = '/'; }, 1200);
+            const intended = localStorage.getItem('intendedDestination');
+            if (intended) {
+                localStorage.removeItem('intendedDestination');
+                setTimeout(() => { window.location.href = intended; }, 1200);
+            } else {
+                setTimeout(() => { window.location.href = '/'; }, 1200);
+            }
         } catch (err) {
             console.error('[Firebase Phone Signup] Verify error:', err);
             const fbErrors = {
@@ -468,7 +519,13 @@ export default function Signup() {
     // ── Skip verification (use current authToken)
     const handleSkipVerification = () => {
         localStorage.setItem('token', authToken);
-        window.location.href = '/';
+        const intended = localStorage.getItem('intendedDestination');
+        if (intended) {
+            localStorage.removeItem('intendedDestination');
+            window.location.href = intended;
+        } else {
+            window.location.href = '/';
+        }
     };
 
     const currentCountry = countryOptions.find(c => c.code === countryCode) || countryOptions[0];
@@ -494,7 +551,7 @@ export default function Signup() {
                 <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
                     <Link href="/" className="flex items-center gap-2">
                         <div className="relative lg:w-36 md:w-28 sm:w-24 w-28 h-auto aspect-[3/1]">
-                            <Image src="https://assets.adbuthverse.com/website-assets/brand/logo.webp"
+                            <Image src={brandLogo || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/Adbuth%20Verse_web_1785827817455.webp"}
                                 alt="logo" fill style={{ objectFit: 'contain' }} className="drop-shadow-md" priority />
                         </div>
                     </Link>
@@ -517,20 +574,19 @@ export default function Signup() {
 
                         <div className="relative bg-neutral-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl overflow-hidden w-full flex flex-col">
 
-                            {/* Alert Messages */}
+                            {/* Alert Messages — single AnimatePresence child to satisfy mode="wait" */}
                             <AnimatePresence mode="wait">
-                                {error && (
-                                    <motion.div key="err"
+                                {(error || success) && (
+                                    <motion.div
+                                        key={error ? 'err' : 'ok'}
                                         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                        className="bg-red-900/30 border border-red-500/30 text-red-300 px-4 py-2.5 rounded-xl text-xs text-center mb-4">
-                                        {error}
-                                    </motion.div>
-                                )}
-                                {success && (
-                                    <motion.div key="ok"
-                                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                        className="bg-green-900/30 border border-green-500/30 text-green-300 px-4 py-2.5 rounded-xl text-xs text-center mb-4 flex items-center justify-center gap-2">
-                                        <FontAwesomeIcon icon={faCheckCircle} /> {success}
+                                        className={`px-4 py-2.5 rounded-xl text-xs text-center mb-4 flex items-center justify-center gap-2 ${
+                                            error
+                                                ? 'bg-red-900/30 border border-red-500/30 text-red-300'
+                                                : 'bg-green-900/30 border border-green-500/30 text-green-300'
+                                        }`}>
+                                        {!error && <FontAwesomeIcon icon={faCheckCircle} />}
+                                        {error || success}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -703,10 +759,10 @@ export default function Signup() {
 
                                             <div className="flex items-center justify-between text-xs text-white/40 px-1 mb-4">
                                                 <span>Expires in: <Countdown seconds={otpTimer} onExpire={() => setError('OTP expired. Please resend.')} /></span>
-                                                <button id="resend-signup-otp-btn" type="button" disabled={isSubmitting}
+                                                <button id="resend-signup-otp-btn" type="button" disabled={isSubmitting || emailResendCooldown > 0}
                                                     onClick={handleResendOtp}
                                                     className="text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50">
-                                                    <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> Resend OTP
+                                                    <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> {emailResendCooldown > 0 ? `Resend OTP (${emailResendCooldown}s)` : 'Resend OTP'}
                                                 </button>
                                             </div>
 
@@ -773,10 +829,10 @@ export default function Signup() {
 
                                                 <div className="flex items-center justify-between text-xs text-white/40 px-1 mb-4">
                                                     <span>Expires in: <Countdown seconds={phoneTimer} onExpire={() => setError('Code expired. Please resend.')} /></span>
-                                                    <button id="resend-signup-phone-otp-btn" type="button" disabled={isSubmitting}
+                                                    <button id="resend-signup-phone-otp-btn" type="button" disabled={isSubmitting || phoneResendCooldown > 0}
                                                         onClick={handleSendPhoneOtp}
                                                         className="text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50">
-                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> Resend SMS
+                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> {phoneResendCooldown > 0 ? `Resend SMS (${phoneResendCooldown}s)` : 'Resend SMS'}
                                                     </button>
                                                 </div>
 
@@ -803,8 +859,6 @@ export default function Signup() {
                     </div>
                 </motion.div>
             </div>
-            {/* Firebase Recaptcha Container */}
-            <div id="recaptcha-container"></div>
         </div>
     );
 }

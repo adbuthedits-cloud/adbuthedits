@@ -505,7 +505,7 @@ export default function ReviewSection({ products_id }) {
                                                             }`}>
                                                             {reply.role === 'admin' || reply.role === 'system' ? (
                                                                 <div className="relative w-[60%] h-[60%] opacity-80">
-                                                                    <Image src="https://assets.adbuthverse.com/website-assets/brand/logo.webp" alt="Adbuth Logo" fill className="object-contain" unoptimized />
+                                                                     <Image src="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/Adbuth%20Verse_web_1785827817455.webp" alt="Adbuth Logo" fill className="object-contain" unoptimized />
                                                                 </div>
                                                             ) : (
                                                                 <FontAwesomeIcon icon={faUserCircle} className="text-base" />
