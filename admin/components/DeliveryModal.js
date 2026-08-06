@@ -20,7 +20,7 @@ export default function DeliveryModal({ isOpen, onClose, orderId, itemId, onSucc
             formData.append('file', file);
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            await axios.post(`${apiUrl}/api/admin/orders/items/${itemId}/deliver`,
+            await axios.post(`${apiUrl}/api/admin/orders/${orderId}/items/${itemId}/deliver`,
                 formData,
                 {
                     headers: {

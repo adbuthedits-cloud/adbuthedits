@@ -105,16 +105,25 @@ export default function CustomizationForm({ schema, data, onChange, index = 0, i
                                             {label}
                                         </label>
 
-                                        {type === 'text' && (
+                                        {(type === 'text' || type === 'string') && (
                                             <div className="relative">
                                                 <input
                                                     type="text"
                                                     placeholder={label}
                                                     value={val}
                                                     onChange={(e) => onChange(groupName, label, e.target.value)}
-                                                    className="w-full border border-gray-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                                                    className="w-full bg-white border border-gray-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm text-gray-900 placeholder:text-gray-400"
                                                 />
                                             </div>
+                                        )}
+
+                                        {type === 'textarea' && (
+                                            <textarea
+                                                placeholder={label}
+                                                value={val}
+                                                onChange={(e) => onChange(groupName, label, e.target.value)}
+                                                className="w-full bg-white border border-gray-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm text-gray-900 placeholder:text-gray-400 min-h-[100px] resize-y"
+                                            />
                                         )}
 
                                         {type === 'date' && (
@@ -122,7 +131,7 @@ export default function CustomizationForm({ schema, data, onChange, index = 0, i
                                                 type="date"
                                                 value={val}
                                                 onChange={(e) => onChange(groupName, label, e.target.value)}
-                                                className="w-full border border-gray-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all font-sans text-sm text-gray-900"
+                                                className="w-full bg-white border border-gray-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all font-sans text-sm text-gray-900"
                                             />
                                         )}
 
@@ -131,7 +140,7 @@ export default function CustomizationForm({ schema, data, onChange, index = 0, i
                                                 type="time"
                                                 value={val}
                                                 onChange={(e) => onChange(groupName, label, e.target.value)}
-                                                className="w-full border border-gray-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all font-sans text-sm text-gray-900"
+                                                className="w-full bg-white border border-gray-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all font-sans text-sm text-gray-900"
                                             />
                                         )}
 

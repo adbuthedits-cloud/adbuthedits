@@ -822,9 +822,18 @@ function Products() {
                                             {/* Title & Rating Row */}
                                             <div className="flex justify-between items-start gap-2">
                                                 <div className="flex-1">
-                                                    <span className="text-[13px] font-mono text-[#a78bfa]/60 block mb-1 uppercase tracking-tighter">
-                                                        {product.internal_sku || 'NO-SKU'}
-                                                    </span>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-[13px] font-mono text-[#a78bfa]/60 uppercase tracking-tighter">
+                                                            {product.internal_sku || 'NO-SKU'}
+                                                        </span>
+                                                        <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                            (product.video && product.video.length > 0) || product.assetType?.code === 'VI' || (product.assetType?.name && product.assetType.name.toLowerCase().includes('video'))
+                                                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                                                : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                                        }`}>
+                                                            {(product.video && product.video.length > 0) || product.assetType?.code === 'VI' || (product.assetType?.name && product.assetType.name.toLowerCase().includes('video')) ? '🎬 Video' : '📸 Poster'}
+                                                        </span>
+                                                    </div>
                                                     <h3 className="font-bold text-gray-100 text-[15px] leading-snug line-clamp-2 group-hover:text-[#a78bfa] transition-colors cursor-pointer">
                                                         {product.title}
                                                     </h3>

@@ -129,7 +129,7 @@ function Countdown({ seconds, onExpire }) {
 export default function Login() {
     const { seoData } = useSeo('login');
     const router = useRouter();
-    const { login, user, loading: authLoading, openProfileModal, refreshUser } = useAuth();
+    const { login, user, loading: authLoading, openProfileModal, refreshUser, brandLogo } = useAuth();
     const isLoginAction = useRef(false);
     const isForgotTransition = useRef(false);
 
@@ -152,6 +152,7 @@ export default function Login() {
     const [otpTimer, setOtpTimer] = useState(0);
     const [emailPendingToken, setEmailPendingToken] = useState(null); // for new user email OTP flow
     const [isNewEmailUser, setIsNewEmailUser] = useState(false);
+    const [emailResendCooldown, setEmailResendCooldown] = useState(0);
 
     // ── Firebase Phone OTP state
     const [countryCode, setCountryCode] = useState('+91');
@@ -160,6 +161,21 @@ export default function Login() {
     const [phoneStep, setPhoneStep] = useState('input'); // 'input' | 'verify'
     const [phoneTimer, setPhoneTimer] = useState(0);
     const [confirmationResult, setConfirmationResult] = useState(null);
+    const [phoneResendCooldown, setPhoneResendCooldown] = useState(0);
+
+    useEffect(() => {
+        if (emailResendCooldown > 0) {
+            const timer = setTimeout(() => setEmailResendCooldown(prev => prev - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [emailResendCooldown]);
+
+    useEffect(() => {
+        if (phoneResendCooldown > 0) {
+            const timer = setTimeout(() => setPhoneResendCooldown(prev => prev - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [phoneResendCooldown]);
     const recaptchaContainerRef = useRef(null);
 
     // ── Shared state
@@ -172,13 +188,54 @@ export default function Login() {
     // Beams config
     const [beamConfig, setBeamConfig] = useState({ beamWidth: 3, beamHeight: 30, beamNumber: 20, scale: 0.2 });
 
+    // Capture intended destination from document.referrer if not set
     useEffect(() => {
-        if (!authLoading && user && !isLoginAction.current) router.replace('/');
+        if (typeof window !== 'undefined') {
+            const currentIntended = localStorage.getItem('intendedDestination');
+            if (!currentIntended || currentIntended === '/login' || currentIntended === '/signup') {
+                if (document.referrer) {
+                    try {
+                        const refUrl = new URL(document.referrer);
+                        if (refUrl.origin === window.location.origin && !['/login', '/signup'].includes(refUrl.pathname)) {
+                            localStorage.setItem('intendedDestination', refUrl.pathname + refUrl.search);
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!authLoading && user && !isLoginAction.current) {
+            const intended = localStorage.getItem('intendedDestination');
+            if (intended && intended !== '/login' && intended !== '/signup') {
+                localStorage.removeItem('intendedDestination');
+                router.replace(intended);
+            } else {
+                router.replace('/');
+            }
+        }
     }, [user, authLoading]);
 
     useEffect(() => {
-        const { token, error: qErr } = router.query;
-        if (token) { localStorage.setItem('token', token); window.location.href = '/'; }
+        if (typeof window === 'undefined') return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = router.query.token || searchParams.get('token');
+        const qErr = router.query.error || searchParams.get('error');
+        const qReturnTo = router.query.returnTo || searchParams.get('returnTo');
+
+        if (token) {
+            localStorage.setItem('token', token);
+            isLoginAction.current = true;
+            refreshUser();
+            const intended = qReturnTo || localStorage.getItem('intendedDestination');
+            if (intended && intended !== '/login' && intended !== '/signup') {
+                localStorage.removeItem('intendedDestination');
+                window.location.href = intended;
+            } else {
+                window.location.href = '/';
+            }
+        }
         if (qErr) {
             let msg = 'Social login error';
             if (qErr === 'google_failed') msg = 'Google authentication failed';
@@ -215,39 +272,33 @@ export default function Login() {
     // Cleanup on page unmount
     useEffect(() => { return () => destroyRecaptcha(); }, []);
 
-    // ── Fully destroy the reCAPTCHA widget and clear the container
+    // ── Destroy old reCAPTCHA verifier and remove its container from DOM
     const destroyRecaptcha = () => {
         try {
             if (window.recaptchaVerifier) {
                 window.recaptchaVerifier.clear();
-                window.recaptchaVerifier = null;
             }
-        } catch (e) {
-            window.recaptchaVerifier = null;
-        }
+        } catch (e) { /* ignore */ }
+        window.recaptchaVerifier = null;
+        // Remove any dynamic container appended to body
         try {
-            const el = document.getElementById('recaptcha-container');
-            if (el) {
-                el.innerHTML = '';
-                const newEl = el.cloneNode(false);
-                el.parentNode?.replaceChild(newEl, el);
-            }
+            document.querySelectorAll('[data-recaptcha-login]').forEach(el => el.remove());
         } catch (e) { /* ignore */ }
     };
 
-    // ── Create a fresh invisible reCAPTCHA verifier or reuse existing
+    // ── Create a fresh invisible reCAPTCHA verifier using a brand-new DOM element each time
     const initRecaptcha = async () => {
-        if (window.recaptchaVerifier) {
-            return window.recaptchaVerifier;
-        }
+        destroyRecaptcha(); // always clean up first
 
         const { RecaptchaVerifier } = await import('firebase/auth');
         const { auth } = await import('../lib/firebase');
 
-        const el = document.getElementById('recaptcha-container');
-        if (el) el.innerHTML = '';
+        // Create a completely new element appended to body — never reuses any existing element
+        const container = document.createElement('div');
+        container.setAttribute('data-recaptcha-login', 'true');
+        document.body.appendChild(container);
 
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, container, {
             size: 'invisible',
             callback: () => { /* solved */ },
             'expired-callback': () => { destroyRecaptcha(); },
@@ -258,7 +309,26 @@ export default function Login() {
     };
 
     // ── Social login handlers
-    const handleGoogleLogin = () => { window.location.href = `${API_URL}/api/auth/google`; };
+    const handleGoogleLogin = () => {
+        let returnTo = '';
+        if (typeof window !== 'undefined') {
+            const currentIntended = localStorage.getItem('intendedDestination');
+            if (currentIntended && currentIntended !== '/login' && currentIntended !== '/signup') {
+                returnTo = currentIntended;
+            } else if (document.referrer) {
+                try {
+                    const refUrl = new URL(document.referrer);
+                    if (refUrl.origin === window.location.origin && !['/login', '/signup'].includes(refUrl.pathname)) {
+                        returnTo = refUrl.pathname + refUrl.search;
+                    }
+                } catch (e) {}
+            }
+        }
+        const authUrl = returnTo
+            ? `${API_URL}/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`
+            : `${API_URL}/api/auth/google`;
+        window.location.href = authUrl;
+    };
 
     // Helper to validate email or phone number format
     const validateEmailOrPhone = (val) => {
@@ -371,7 +441,7 @@ export default function Login() {
             } else {
                 setSuccess('OTP sent! Check your email.');
             }
-            setOtpStep('verify'); setEmailOtpValue(''); setOtpTimer(600);
+            setOtpStep('verify'); setEmailOtpValue(''); setOtpTimer(600); setEmailResendCooldown(10);
         } catch (err) { setError(err.message); }
         setIsSubmitting(false);
     };
@@ -455,17 +525,25 @@ export default function Login() {
     };
 
     // ── Firebase Phone OTP: Send SMS
-    const handleSendPhoneOtp = async (e) => {
+    const handleSendPhoneOtp = async (e, isRetry = false) => {
         e?.preventDefault();
         const cleaned = phoneNumber.replace(/[\s\-()]/g, '');
-        if (!cleaned) return setError('Please enter your phone number.');
+
+        // ── Local validation BEFORE touching reCAPTCHA
+        if (!cleaned) {
+            return setError('Please enter your phone number.');
+        }
+        if (!/^\d{7,15}$/.test(cleaned)) {
+            return setError('Invalid phone number. Enter digits only, e.g. 9876543210 (7–15 digits).');
+        }
+
         setError(''); setSuccess(''); setIsSubmitting(true);
 
         try {
             const { signInWithPhoneNumber } = await import('firebase/auth');
             const { auth } = await import('../lib/firebase');
 
-            const appVerifier = await initRecaptcha();
+            const appVerifier = await initRecaptcha(); // only called when phone is valid
             const fullPhone = `${countryCode}${cleaned}`;
 
             const result = await signInWithPhoneNumber(auth, fullPhone, appVerifier);
@@ -473,16 +551,41 @@ export default function Login() {
             setPhoneStep('verify');
             setPhoneOtpValue('');
             setPhoneTimer(120);
+            setPhoneResendCooldown(10);
             setSuccess(`SMS sent to ${fullPhone}`);
 
         } catch (err) {
             console.error('[Phone OTP] Send error:', err.code, err.message);
-            destroyRecaptcha();
+            destroyRecaptcha(); // always reset so next click starts completely fresh
+
+            // Auto-retry once on credential expiry / captcha failure (e.g. after picture puzzle solve or enterprise fallback)
+            if (!isRetry && (err.code === 'auth/invalid-app-credential' || err.code === 'auth/captcha-check-failed')) {
+                console.log('[Phone OTP] Credential expired after captcha, auto-retrying with fresh verifier...');
+                setIsSubmitting(false);
+                return handleSendPhoneOtp(null, true);
+            }
+
+            // After retry also failed with invalid-app-credential:
+            // Google has flagged this browser session. Auto-switch to Email OTP to unblock the user.
+            if (isRetry && (err.code === 'auth/invalid-app-credential' || err.code === 'auth/captcha-check-failed')) {
+                setError('Phone verification is temporarily blocked by Google reCAPTCHA (too many test attempts). Switching to Email OTP…');
+                setTimeout(() => {
+                    setActiveTab('email_otp');
+                    setError('Phone OTP is temporarily blocked. Please sign in with Email OTP instead.');
+                }, 2000);
+                setIsSubmitting(false);
+                return;
+            }
+
+            if (err.code === 'auth/too-many-requests') {
+                setPhoneResendCooldown(300); // lock Send button for 5 min
+            }
+
             const msg = {
                 'auth/invalid-phone-number': 'Invalid phone number. Use digits only e.g. 9876543210.',
-                'auth/too-many-requests': 'Too many SMS attempts for this phone number. Please wait 5 minutes, or switch to the Email OTP tab above.',
-                'auth/captcha-check-failed': 'reCAPTCHA failed. Refresh the page and try again.',
-                'auth/invalid-app-credential': 'reCAPTCHA not configured in Firebase Console. Check setup.',
+                'auth/too-many-requests': 'Too many SMS attempts. The Send button is locked for 5 minutes. Please use Email OTP instead.',
+                'auth/captcha-check-failed': 'reCAPTCHA failed. Please try again.',
+                'auth/invalid-app-credential': 'reCAPTCHA verification failed. Please try again or use Email OTP.',
                 'auth/quota-exceeded': 'SMS quota exceeded. Try again later.',
                 'auth/network-request-failed': 'Network error. Check your internet connection.',
                 'auth/missing-phone-number': 'Please enter your phone number.',
@@ -512,7 +615,7 @@ export default function Login() {
             const res = await fetch(`${API_URL}/api/otp/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken, purpose: 'login' }),
+                body: JSON.stringify({ idToken, purpose: 'login_or_register' }),
             });
 
             let data;
@@ -592,7 +695,7 @@ export default function Login() {
                 <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
                     <Link href="/" className="flex items-center gap-2">
                         <div className="relative lg:w-36 md:w-28 sm:w-24 w-28 h-auto aspect-[3/1]">
-                            <Image src="https://assets.adbuthverse.com/website-assets/brand/logo.webp"
+                            <Image src={brandLogo || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/website-assets/brand/Adbuth%20Verse_web_1785827817455.webp"}
                                 alt="logo" fill style={{ objectFit: 'contain' }} className="drop-shadow-md" priority />
                         </div>
                     </Link>
@@ -638,21 +741,19 @@ export default function Login() {
                                 ))}
                             </div>
 
-                            {/* Alert Messages */}
+                            {/* Alert Messages — single AnimatePresence child to satisfy mode="wait" */}
                             <AnimatePresence mode="wait">
-                                {error && (
-                                    <motion.div key="err"
+                                {(error || success) && (
+                                    <motion.div
+                                        key={error ? 'err' : 'ok'}
                                         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                                        className="bg-red-900/30 border border-red-500/30 text-red-300 px-4 py-2.5 rounded-xl text-xs text-center mb-4">
-                                        {error}
-                                    </motion.div>
-                                )}
-                                {success && (
-                                    <motion.div key="ok"
-                                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                                        className="bg-green-900/30 border border-green-500/30 text-green-300 px-4 py-2.5 rounded-xl text-xs text-center mb-4 flex items-center justify-center gap-2">
-                                        <FontAwesomeIcon icon={faCheckCircle} />
-                                        {success}
+                                        className={`px-4 py-2.5 rounded-xl text-xs text-center mb-4 flex items-center justify-center gap-2 ${
+                                            error
+                                                ? 'bg-red-900/30 border border-red-500/30 text-red-300'
+                                                : 'bg-green-900/30 border border-green-500/30 text-green-300'
+                                        }`}>
+                                        {!error && <FontAwesomeIcon icon={faCheckCircle} />}
+                                        {error || success}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -747,10 +848,10 @@ export default function Login() {
                                                 <OtpInput length={6} value={emailOtpValue} onChange={v => { setEmailOtpValue(v); setError(''); }} />
                                                 <div className="flex items-center justify-between text-xs text-white/40 px-1">
                                                     <span>Expires in: <Countdown seconds={otpTimer} onExpire={() => setError('OTP expired. Please resend.')} /></span>
-                                                    <button id="resend-email-otp-btn" type="button" disabled={isSubmitting}
+                                                    <button id="resend-email-otp-btn" type="button" disabled={isSubmitting || emailResendCooldown > 0}
                                                         onClick={() => { setError(''); setSuccess(''); handleSendEmailOtp(); }}
                                                         className="text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50">
-                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> Resend
+                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> {emailResendCooldown > 0 ? `Resend (${emailResendCooldown}s)` : 'Resend'}
                                                     </button>
                                                 </div>
                                                 <button id="verify-email-otp-btn" type="submit" disabled={isSubmitting || emailOtpValue.length < 6}
@@ -854,10 +955,10 @@ export default function Login() {
                                                 <OtpInput length={6} value={phoneOtpValue} onChange={v => { setPhoneOtpValue(v); setError(''); }} />
                                                 <div className="flex items-center justify-between text-xs text-white/40 px-1">
                                                     <span>Expires in: <Countdown seconds={phoneTimer} onExpire={() => setError('OTP expired. Please resend.')} /></span>
-                                                    <button id="resend-phone-otp-btn" type="button" disabled={isSubmitting}
+                                                    <button id="resend-phone-otp-btn" type="button" disabled={isSubmitting || phoneResendCooldown > 0}
                                                         onClick={handleSendPhoneOtp}
                                                         className="text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50">
-                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> Resend
+                                                        <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" /> {phoneResendCooldown > 0 ? `Resend (${phoneResendCooldown}s)` : 'Resend'}
                                                     </button>
                                                 </div>
                                                 <button id="verify-phone-otp-btn" type="submit" disabled={isSubmitting || phoneOtpValue.length < 6}

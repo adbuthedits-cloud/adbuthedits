@@ -12,7 +12,6 @@ import dynamic from 'next/dynamic';
 import ImageStack from './ImageStack';
 import MediaLightbox from './MediaLightbox';
 import CustomizationForm from '../CustomizationForm';
-import PageLoader from '../PageLoader';
 import AvailableOffers from './AvailableOffers';
 import ProductCard from './ProductCard';
 import { useAuth } from '../../context/AuthContext';
@@ -167,6 +166,8 @@ export default function ProductDetailView({ slug, masterData }) {
         fetchData();
     }, [slug]);
 
+    const hasProcessedPendingCart = useRef(false);
+
     // Fetch Review Stats
     useEffect(() => {
         if (!product?.products_id) return;
@@ -188,73 +189,105 @@ export default function ProductDetailView({ slug, masterData }) {
         fetchReviewStats();
     }, [product?.products_id]);
 
-    if (loading) return (
-        <div className="min-h-screen bg-white">
-            <PageLoader />
-            <div className="h-[80vh] flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        </div>
-    );
+    // Restore pending customization & complete Add to Cart after login
+    useEffect(() => {
+        if (!user || !product || loading || hasProcessedPendingCart.current) return;
 
-    if (!product) return (
-        <div className="min-h-screen bg-white">
-            <div className="flex flex-col items-center justify-center h-[60vh]">
-                <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
-                <Link href="/shop" className="text-purple-600 hover:underline">Return to Shop</Link>
-            </div>
-        </div>
-    );
+        const pendingRaw = localStorage.getItem('pendingAddToCart');
+        if (!pendingRaw) return;
 
-    // Media Logic
-    const rawImages = Array.isArray(product.images) ? product.images.filter(url => url) : (product.images ? [product.images] : (product.thumbnail ? [product.thumbnail] : []));
-    const rawVideos = Array.isArray(product.video) ? product.video.filter(url => url) : (product.video ? [product.video] : []);
-    const isVideoUrl = (url) => /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
-    const mediaItems = [
-        ...rawImages.map(src => {
-            const type = isVideoUrl(src) ? 'video' : 'image';
-            return { src: type === 'video' ? cdnVideo(src) : cdnImage(src), type };
-        }),
-        ...rawVideos.map(src => ({ src: cdnVideo(src), type: 'video' }))
-    ];
-    const seen = new Set();
-    let prodMedia = mediaItems.filter(item => { if (seen.has(item.src)) return false; seen.add(item.src); return true; });
-    prodMedia.sort((a, b) => (a.type === 'video' ? -1 : 1) - (b.type === 'video' ? -1 : 1));
-    if (prodMedia.length === 0) prodMedia = [{ src: 'https://via.placeholder.com/500', type: 'image' }];
+        try {
+            const pending = JSON.parse(pendingRaw);
+            if (pending && pending.productId === product.products_id) {
+                hasProcessedPendingCart.current = true;
+                localStorage.removeItem('pendingAddToCart');
 
-    // Sharing Logic
-    const getShareUrl = () => typeof window !== 'undefined' ? window.location.href : '';
-    const shareText = `Check out this ${product.title} on Adbuth Edits!`;
-    const handleShare = (platform) => {
-        const url = encodeURIComponent(getShareUrl());
-        const text = encodeURIComponent(shareText);
-        let shareLink = '';
-        switch (platform) {
-            case 'whatsapp': shareLink = `https://wa.me/?text=${text}%20${url}`; break;
-            case 'twitter': shareLink = `https://twitter.com/intent/tweet?text=${text}&url=${url}`; break;
-            case 'facebook': shareLink = `https://www.facebook.com/sharer/sharer.php?u=${url}`; break;
-            default: break;
+                const restoredData = deserializeCustomisationData(pending.customisationData);
+                setCustomisationData(restoredData);
+                if (pending.quantity) setQuantity(pending.quantity);
+                if (pending.selectedLanguage) setSelectedLanguage(pending.selectedLanguage);
+
+                if (pending.autoSubmit) {
+                    toast.loading('Logged in! Completing your Add to Cart request...', { id: 'pending-cart' });
+                    setTimeout(() => {
+                        toast.dismiss('pending-cart');
+                        executeAddToCart(restoredData, pending.quantity || 1, pending.selectedLanguage || 'English');
+                    }, 400);
+                }
+            }
+        } catch (e) {
+            console.error('Error restoring pending add to cart:', e);
+            localStorage.removeItem('pendingAddToCart');
         }
-        if (shareLink) window.open(shareLink, '_blank');
-        setShowShareMenu(false);
+    }, [user, product, loading]);
+
+    // Helpers to serialize/deserialize customisationData (including File objects) for localStorage
+    const serializeCustomisationData = async (data) => {
+        if (!data) return {};
+        const result = {};
+        for (const [key, val] of Object.entries(data)) {
+            if (val instanceof File) {
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.readAsDataURL(val);
+                });
+                result[key] = { __isFile: true, name: val.name, type: val.type, dataUrl };
+            } else if (Array.isArray(val)) {
+                result[key] = await Promise.all(val.map(async item => {
+                    if (item instanceof File) {
+                        const dataUrl = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result);
+                            reader.readAsDataURL(item);
+                        });
+                        return { __isFile: true, name: item.name, type: item.type, dataUrl };
+                    }
+                    return item;
+                }));
+            } else {
+                result[key] = val;
+            }
+        }
+        return result;
     };
 
-    const copyToClipboard = () => {
-        const url = getShareUrl();
-        navigator.clipboard.writeText(url).then(() => {
-            setCopySuccess(true);
-            setShowShareMenu(false);
-            setTimeout(() => setCopySuccess(false), 2000);
-        });
+    const deserializeCustomisationData = (data) => {
+        if (!data) return {};
+        const result = {};
+        for (const [key, val] of Object.entries(data)) {
+            if (val && typeof val === 'object' && val.__isFile) {
+                const arr = val.dataUrl.split(',');
+                const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+                result[key] = new File([u8arr], val.name, { type: mime });
+            } else if (Array.isArray(val)) {
+                result[key] = val.map(item => {
+                    if (item && typeof item === 'object' && item.__isFile) {
+                        const arr = item.dataUrl.split(',');
+                        const mime = arr[0].match(/:(.*?);/)[1];
+                        const bstr = atob(arr[1]);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+                        return new File([u8arr], item.name, { type: mime });
+                    }
+                    return item;
+                });
+            } else {
+                result[key] = val;
+            }
+        }
+        return result;
     };
 
-    const handleAddToCart = async () => {
-        if (!user) {
-            const currentPath = window.location.pathname + window.location.search;
-            localStorage.setItem('intendedDestination', currentPath);
-            router.push('/login');
-            return;
-        }
+    const executeAddToCart = async (overrideData = null, overrideQty = null, overrideLang = null) => {
+        const dataToUse = overrideData || customisationData;
+        const qtyToUse = overrideQty || quantity;
+        const langToUse = overrideLang || selectedLanguage;
 
         setIsUploading(true);
         try {
@@ -263,7 +296,7 @@ export default function ProductDetailView({ slug, masterData }) {
 
             // 1. Collect all raw File objects from customization data
             const filesToUpload = [];
-            Object.values(customisationData).forEach(val => {
+            Object.values(dataToUse).forEach(val => {
                 if (Array.isArray(val)) {
                     val.forEach(item => { if (item instanceof File) filesToUpload.push(item); });
                 } else if (val instanceof File) {
@@ -299,7 +332,7 @@ export default function ProductDetailView({ slug, masterData }) {
                 : product.customization;
 
             const finalCustomizations = [];
-            for (let i = 0; i < quantity; i++) {
+            for (let i = 0; i < qtyToUse; i++) {
                 const itemData = {};
                 if (Array.isArray(customizationGroups)) {
                     customizationGroups.forEach(groupObj => {
@@ -308,7 +341,7 @@ export default function ProductDetailView({ slug, masterData }) {
                         itemData[groupName] = {};
                         fields.forEach(([label]) => {
                             const fieldKey = `item_${i}_${groupName}_${label}`;
-                            const rawValue = customisationData[fieldKey];
+                            const rawValue = dataToUse[fieldKey];
 
                             // Map local File objects to cloud result objects
                             if (Array.isArray(rawValue)) {
@@ -328,7 +361,7 @@ export default function ProductDetailView({ slug, masterData }) {
             const res = await fetch(`${apiUrl}/api/cart`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ product_id: product.products_id, customization: finalCustomizations, quantity: quantity, language: selectedLanguage })
+                body: JSON.stringify({ product_id: product.products_id, customization: finalCustomizations, quantity: qtyToUse, language: langToUse })
             });
 
             if (res.ok) {
@@ -347,6 +380,30 @@ export default function ProductDetailView({ slug, masterData }) {
         } finally {
             setIsUploading(false);
         }
+    };
+
+    const handleAddToCart = async () => {
+        if (!user) {
+            const currentPath = window.location.pathname + window.location.search;
+            localStorage.setItem('intendedDestination', currentPath);
+            try {
+                const serialized = await serializeCustomisationData(customisationData);
+                const pendingObj = {
+                    productId: product.products_id,
+                    slug: slug,
+                    customisationData: serialized,
+                    quantity: quantity,
+                    selectedLanguage: selectedLanguage,
+                    autoSubmit: true
+                };
+                localStorage.setItem('pendingAddToCart', JSON.stringify(pendingObj));
+            } catch (e) {
+                console.error('Failed to save pending add to cart data', e);
+            }
+            router.push('/login');
+            return;
+        }
+        return await executeAddToCart();
     };
 
     const handleFieldChange = (group, label, value) => {
@@ -377,19 +434,85 @@ export default function ProductDetailView({ slug, masterData }) {
         });
         return itemData;
     };
+    if (loading) {
+        return (
+            <div className="min-h-[75vh] w-full flex flex-col justify-center items-center py-10 px-4 sm:px-6 lg:px-8">
+                <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center animate-pulse">
+                    {/* Left: Media Stack Skeleton */}
+                    <div className="w-full aspect-[4/5] max-h-[480px] bg-gradient-to-br from-purple-50/80 to-purple-100/50 rounded-2xl border border-purple-100/80 flex flex-col items-center justify-center p-8 shadow-sm">
+                        <div className="w-14 h-14 rounded-full bg-white shadow-md flex items-center justify-center mb-4">
+                            <FontAwesomeIcon icon={faSpinner} spin className="text-purple-600 text-xl" />
+                        </div>
+                        <div className="h-3.5 w-36 bg-purple-200/60 rounded-full mb-2" />
+                        <div className="h-3 w-24 bg-purple-200/40 rounded-full" />
+                    </div>
+
+                    {/* Right: Product Info Skeleton */}
+                    <div className="space-y-6 flex flex-col justify-center">
+                        <div className="space-y-3">
+                            <div className="h-4 w-1/3 bg-gray-200/70 rounded-full" />
+                            <div className="h-9 w-4/5 bg-gray-200/90 rounded-xl" />
+                            <div className="h-7 w-1/4 bg-purple-200/80 rounded-lg mt-2" />
+                        </div>
+
+                        <div className="space-y-3 pt-4 border-t border-gray-100">
+                            <div className="h-4 w-full bg-gray-200/60 rounded-full" />
+                            <div className="h-4 w-5/6 bg-gray-200/60 rounded-full" />
+                            <div className="h-4 w-3/4 bg-gray-200/60 rounded-full" />
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                            <div className="h-12 flex-1 bg-purple-600/10 rounded-full border border-purple-200/50" />
+                            <div className="h-12 flex-1 bg-purple-600/20 rounded-full border border-purple-300/50" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    if (!product) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Product Not Found</h2>
+                <p className="text-gray-500 mb-6">The product you are looking for does not exist or has been removed.</p>
+                <Link href="/shop" className="px-6 py-3 bg-purple-700 text-white rounded-full font-medium hover:bg-purple-800 transition">
+                    Back to Shop
+                </Link>
+            </div>
+        );
+    }
+
+    const prodMedia = [
+        ...(Array.isArray(product.images) ? product.images.map(src => ({ src: cdnImage(src), type: 'image' })) : (product.images ? [{ src: cdnImage(product.images), type: 'image' }] : [])),
+        ...(Array.isArray(product.video) ? product.video.map(src => ({ src: cdnVideo(src), type: 'video' })) : (product.video ? [{ src: cdnVideo(product.video), type: 'video' }] : [])),
+    ];
+    if (prodMedia.length === 0 && product.thumbnail) {
+        prodMedia.push({ src: cdnImage(product.thumbnail), type: 'image' });
+    }
+
+    const handleCustomiseClick = () => {
+        if (!user) {
+            const currentPath = window.location.pathname + window.location.search;
+            localStorage.setItem('intendedDestination', currentPath);
+            toast.error('Please log in to customise your order.');
+            router.push('/login');
+            return;
+        }
+        setIsCustomiseModalOpen(true);
+    };
 
     return (
         <div className="min-h-screen bg-white text-gray-800">
             <SeoHead
                 data={{
-                    meta_title: product.meta_title,
-                    meta_description: product.meta_description,
-                    meta_keywords: product.meta_keywords || (product.tags ? Object.values(product.tags).join(', ') : ''),
+                    meta_title: product?.meta_title,
+                    meta_description: product?.meta_description,
+                    meta_keywords: product?.meta_keywords || (product?.tags ? Object.values(product.tags).join(', ') : ''),
                     og_image: prodMedia[0]?.src,
-                    canonical_url: product.canonical_url
+                    canonical_url: product?.canonical_url
                 }}
-                title={`${product.title} | Adbuth Edits`}
-                description={product.description && product.description.substring(0, 160)}
+                title={`${product?.title || 'Product'} | Adbuth Edits`}
+                description={product?.description && product.description.substring(0, 160)}
                 image={prodMedia[0]?.src}
             />
 
@@ -488,7 +611,7 @@ export default function ProductDetailView({ slug, masterData }) {
                                 </motion.button>
                                 <button onClick={handleAddToCart} className="flex-1 bg-purple-700 hover:bg-purple-800 text-white px-5 sm:px-8 py-3.5 sm:py-3 rounded-full text-base font-medium shadow-lg transition active:scale-[0.98]">Add to Cart</button>
                             </div>
-                            <button onClick={() => setIsCustomiseModalOpen(true)} className="w-full sm:flex-1 border border-purple-700 text-purple-700 px-5 sm:px-8 py-3.5 sm:py-3 rounded-full text-base font-medium hover:bg-purple-50 transition active:scale-[0.98]">Customise Now</button>
+                            <button onClick={handleCustomiseClick} className="w-full sm:flex-1 border border-purple-700 text-purple-700 px-5 sm:px-8 py-3.5 sm:py-3 rounded-full text-base font-medium hover:bg-purple-50 transition active:scale-[0.98]">Customise Now</button>
                         </div>
 
                         {/* Description Section */}

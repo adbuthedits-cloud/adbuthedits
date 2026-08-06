@@ -332,7 +332,9 @@ router.get('/google', (req, res, next) => {
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
         return res.redirect(`${FRONTEND_URL}/login?error=google_not_configured`);
     }
-    passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
+    const returnTo = req.query.returnTo || '';
+    const state = returnTo ? Buffer.from(returnTo).toString('base64url') : undefined;
+    passport.authenticate('google', { scope: ['profile', 'email'], state, session: false })(req, res, next);
 });
 router.get('/google/callback',
     (req, res, next) => {
@@ -345,10 +347,20 @@ router.get('/google/callback',
         })(req, res, next);
     },
     (req, res) => {
+        const rawState = req.query.state || '';
+        let returnTo = '';
+        if (rawState) {
+            try {
+                returnTo = Buffer.from(rawState, 'base64url').toString('utf8');
+            } catch (e) {}
+        }
         const payload = { user: { id: req.user.user_id, role: req.user.role, type: 'customer' } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, token) => {
             if (err) return res.redirect(`${FRONTEND_URL}/login?error=jwt_failed`);
-            res.redirect(`${FRONTEND_URL}/login?token=${token}`);
+            const redirectUrl = returnTo && !returnTo.includes('/login') && !returnTo.includes('/signup')
+                ? `${FRONTEND_URL}/login?token=${token}&returnTo=${encodeURIComponent(returnTo)}`
+                : `${FRONTEND_URL}/login?token=${token}`;
+            res.redirect(redirectUrl);
         });
     }
 );
@@ -822,13 +834,36 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
 router.post('/deactivate-account', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
+        const { reason } = req.body || {};
         const user = await User.findByPk(userId);
-        if (!user) return res.status(444).json({ msg: 'User not found' });
+        if (!user) return res.status(404).json({ msg: 'User not found' });
 
         await user.update({
             is_deactivated: true,
             deactivated_at: new Date()
         });
+
+        // Send deactivation notification email
+        const userEmail = user.email;
+        if (userEmail) {
+            try {
+                const { safeSendMail, senders } = require('../utils/emailService');
+                const { getAccountDeactivatedTemplate } = require('../utils/emailTemplates');
+                const { getBrandLogoUrl } = require('../utils/brandSettings');
+                const userName = user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Valued Customer';
+                const logoUrl = await getBrandLogoUrl();
+                const html = await getAccountDeactivatedTemplate(userName, reason, logoUrl);
+
+                await safeSendMail({
+                    from: `"Adbuth Verse Security" <${senders.system}>`,
+                    to: userEmail,
+                    subject: 'Your Adbuth Verse Account Has Been Deactivated',
+                    html
+                });
+            } catch (e) {
+                console.error('[deactivate-account] Email setup error:', e.message);
+            }
+        }
 
         res.json({
             success: true,
@@ -839,6 +874,99 @@ router.post('/deactivate-account', authMiddleware, async (req, res) => {
         res.status(500).json({ msg: 'Failed to deactivate account.' });
     }
 });
+
+/**
+ * POST /api/auth/delete-account
+ * Permanently deletes user account and all child data
+ */
+router.post('/delete-account', authMiddleware, async (req, res) => {
+    const sequelize = require('../config/database');
+    const t = await sequelize.transaction();
+    try {
+        const userId = req.user.id;
+        const { reason } = req.body || {};
+        const user = await User.findByPk(userId, { transaction: t });
+        if (!user) {
+            await t.rollback();
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        const userEmail = user.email;
+        const userName = user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Valued Customer';
+
+        const { Order, OrderItem, OrderTimeline, Payment, Cart, CartItem, Wishlist, Review, ReviewVote, CouponUsage } = require('../models');
+        const { Op } = require('sequelize');
+
+        // 1. Get user orders
+        const userOrders = await Order.findAll({ where: { user_id: userId }, attributes: ['order_id'], transaction: t });
+        const orderIds = userOrders.map(o => o.order_id);
+
+        if (orderIds.length > 0) {
+            // Delete OrderItems & Timelines
+            await OrderItem.destroy({ where: { order_id: { [Op.in]: orderIds } }, transaction: t });
+            await OrderTimeline.destroy({ where: { order_id: { [Op.in]: orderIds } }, transaction: t });
+        }
+
+        // Delete payments
+        await Payment.destroy({ where: { [Op.or]: [{ user_id: userId }, ...(orderIds.length ? [{ order_id: { [Op.in]: orderIds } }] : [])] }, transaction: t });
+
+        // Delete coupon usages
+        await CouponUsage.destroy({ where: { user_id: userId }, transaction: t });
+
+        // Delete orders
+        await Order.destroy({ where: { user_id: userId }, transaction: t });
+
+        // Delete cart & cart items
+        const userCart = await Cart.findOne({ where: { user_id: userId }, transaction: t });
+        if (userCart) {
+            await CartItem.destroy({ where: { cart_id: userCart.cart_id }, transaction: t });
+            await userCart.destroy({ transaction: t });
+        }
+
+        // Delete wishlist
+        await Wishlist.destroy({ where: { user_id: userId }, transaction: t });
+
+        // Delete review votes & reviews
+        await ReviewVote.destroy({ where: { user_id: userId }, transaction: t });
+        await Review.destroy({ where: { user_id: userId }, transaction: t });
+
+        // Delete user record
+        await user.destroy({ transaction: t });
+
+        await t.commit();
+
+        // Send deletion notification email
+        if (userEmail) {
+            try {
+                const { safeSendMail, senders } = require('../utils/emailService');
+                const { getAccountDeletedTemplate } = require('../utils/emailTemplates');
+                const { getBrandLogoUrl } = require('../utils/brandSettings');
+                const logoUrl = await getBrandLogoUrl();
+                const html = await getAccountDeletedTemplate(userName, reason, logoUrl);
+
+                await safeSendMail({
+                    from: `"Adbuth Verse Security" <${senders.system}>`,
+                    to: userEmail,
+                    subject: 'Your Adbuth Verse Account Has Been Permanently Deleted',
+                    html
+                });
+            } catch (e) {
+                console.error('[delete-account] Email setup error:', e.message);
+            }
+        }
+
+        res.json({
+            success: true,
+            msg: 'Your account and all associated data have been permanently deleted.'
+        });
+
+    } catch (err) {
+        await t.rollback();
+        console.error('[delete-account] Error:', err);
+        res.status(500).json({ msg: 'Failed to delete account. Please try again.' });
+    }
+});
+
 
 /**
  * POST /api/auth/reactivate-account
@@ -890,6 +1018,27 @@ router.post('/reactivate-account', async (req, res) => {
             otp_expires_at: null,
             otp_type: null
         });
+
+        // Send reactivation confirmation email
+        if (user.email) {
+            try {
+                const { safeSendMail, senders } = require('../utils/emailService');
+                const { getAccountReactivatedTemplate } = require('../utils/emailTemplates');
+                const { getBrandLogoUrl } = require('../utils/brandSettings');
+                const userName = user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Valued Customer';
+                const logoUrl = await getBrandLogoUrl();
+                const html = await getAccountReactivatedTemplate(userName, logoUrl);
+
+                await safeSendMail({
+                    from: `"Adbuth Verse Security" <${senders.system}>`,
+                    to: user.email,
+                    subject: 'Your Adbuth Verse Account Has Been Reactivated!',
+                    html
+                });
+            } catch (e) {
+                console.error('[reactivate-account] Email notification error:', e.message);
+            }
+        }
 
         // Issue JWT token
         const jwt = require('jsonwebtoken');

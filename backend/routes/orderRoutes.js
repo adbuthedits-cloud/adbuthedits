@@ -332,7 +332,12 @@ router.post('/verify-payment', auth, async (req, res) => {
                     name: user.first_name,
                     orderId: order.order_id,
                     orderRef: order.order_id.substring(0, 8).toUpperCase(),
-                    totalAmount: finalAmount
+                    totalAmount: finalAmount,
+                    items: cart.items.map(i => ({
+                        title: i.product?.title || 'Product',
+                        quantity: i.quantity || 1,
+                        price: i.product?.price || 0
+                    }))
                 }).catch(mailErr => {
                     console.error('[Order Placement Mail Error]', mailErr.message);
                 });

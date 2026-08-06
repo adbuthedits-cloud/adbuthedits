@@ -133,7 +133,7 @@ export default function ReviewForm({ products_id, onReviewSubmitted }) {
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="What did you like or dislike?"
-                    className="w-full h-32 p-4 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none resize-none"
+                    className="w-full h-32 p-4 bg-gray-50 text-gray-900 border border-transparent rounded-xl focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none resize-none"
                     required
                 />
             </div>

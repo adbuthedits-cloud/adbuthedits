@@ -30,7 +30,7 @@ const faqs = [
 
 export async function getStaticProps() {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
     const res = await fetch(`${apiUrl}/api/blogs`);
     
     if (!res.ok) {

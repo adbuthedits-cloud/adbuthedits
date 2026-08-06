@@ -63,10 +63,22 @@ async function getEmailWrapper(title, statusPill, heading, description, bodyCont
 /**
  * Sends a premium "Order Placement Confirmation" email to the customer & admin alert.
  */
-async function sendOrderConfirmationEmail({ to, name, orderId, orderRef, totalAmount }) {
+async function sendOrderConfirmationEmail({ to, name, orderId, orderRef, totalAmount, items = [] }) {
     const orderUrl = `${SHOP_URL}/order/${orderId}`;
     const firstName = name || 'Valued Customer';
     const formattedRef = orderRef ? orderRef.toString().toUpperCase() : orderId.substring(0, 8).toUpperCase();
+
+    const itemsTableHtml = Array.isArray(items) && items.length > 0 ? `
+      <tr>
+        <td colspan="2" style="padding:12px 0 8px;border-bottom:1px solid #f3e8ff;font-weight:700;color:#7D287E;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;">Order Items Breakdown</td>
+      </tr>
+      ${items.map(item => `
+        <tr>
+          <td style="padding:6px 0;border-bottom:1px solid #f3e8ff;font-weight:500;color:#4a3f5a;">${item.title} <span style="color:#9ca3af;">(x${item.quantity || 1})</span></td>
+          <td style="padding:6px 0;border-bottom:1px solid #f3e8ff;text-align:right;font-weight:700;color:#1e152a;">₹${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+        </tr>
+      `).join('')}
+    ` : '';
 
     const statusPill = `
       <span style="display:inline-block;background-color:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;padding:6px 16px;border-radius:100px;letter-spacing:1px;text-transform:uppercase;border:1px solid #dcfce7;">
@@ -94,8 +106,9 @@ async function sendOrderConfirmationEmail({ to, name, orderId, orderRef, totalAm
                 <td style="padding:8px 0;border-bottom:1px solid #f3e8ff;font-weight:500;color:#6b5f7d;">Order Reference</td>
                 <td style="padding:8px 0;border-bottom:1px solid #f3e8ff;text-align:right;font-weight:700;color:#7D287E;font-family:monospace;">#${formattedRef}</td>
               </tr>
+              ${itemsTableHtml}
               <tr>
-                <td style="padding:8px 0;border-bottom:1px solid #f3e8ff;font-weight:500;color:#6b5f7d;">Amount Paid</td>
+                <td style="padding:8px 0;border-bottom:1px solid #f3e8ff;font-weight:500;color:#6b5f7d;">Total Amount Paid</td>
                 <td style="padding:8px 0;border-bottom:1px solid #f3e8ff;text-align:right;font-weight:700;color:#1e152a;">₹${totalAmount.toLocaleString()}</td>
               </tr>
               <tr>
