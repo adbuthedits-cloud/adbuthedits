@@ -1,5 +1,5 @@
 const { transporter, senders } = require('./emailService');
-const TRANSPARENT_LOGO_URL = 'https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png';
+const { getBrandLogoUrl, DEFAULT_BRAND_LOGO } = require('./brandSettings');
 
 /**
  * Sends a professional onboarding welcome email to a new staff member.
@@ -8,7 +8,7 @@ const TRANSPARENT_LOGO_URL = 'https://assets.adbuthverse.com/brand/AdbuthVerse%2
 async function sendStaffWelcomeEmail({ to, firstName, lastName, staffId, username, password, role }) {
     const roleLabel = role ? (role.charAt(0).toUpperCase() + role.slice(1)) : 'Staff Member';
     const adminUrl = process.env.ADMIN_URL || 'https://admin.adbuthverse.com';
-    const logoUrl = TRANSPARENT_LOGO_URL;
+    const logoUrl = await getBrandLogoUrl();
     const staffName = `${firstName || ''} ${lastName || ''}`.trim() || 'Team Member';
 
     const html = `
