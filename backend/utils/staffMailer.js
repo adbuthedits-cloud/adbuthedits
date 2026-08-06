@@ -1,6 +1,5 @@
 const { transporter, senders } = require('./emailService');
 const TRANSPARENT_LOGO_URL = 'https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png';
-const { getBrandLogoUrl } = require('./brandSettings');
 
 /**
  * Sends a professional onboarding welcome email to a new staff member.
