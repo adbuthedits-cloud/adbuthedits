@@ -143,6 +143,7 @@ const safeSendMail = async (mailOptions) => {
 const sendFormConfirmationEmail = async ({ to, name, formType }) => {
     if (!to) return;
     const recipientName = name || 'Valued Customer';
+    const senderEmail = senders.support || process.env.EMAIL_USER || 'support@adbuthverse.com';
     const TRANSPARENT_LOGO_URL = 'https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png';
     const logoUrl = TRANSPARENT_LOGO_URL;
 
