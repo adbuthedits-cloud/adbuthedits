@@ -1956,7 +1956,7 @@ router.post('/orders/:orderId/items/:itemId/deliver', checkPermission('orders', 
         const order = orderItem.order;
         if (order?.user?.email) {
             const orderRef = order.order_id.substring(0, 8).toUpperCase();
-            const orderUrl = `${process.env.SHOP_URL || 'http://localhost:3000'}/order/${order.order_id}`;
+            const orderUrl = `${process.env.FRONTEND_URL || 'https://www.adbuthverse.com'}/order/${order.order_id}`;
             try {
                 await sendDeliveryEmail({
                     to: order.user.email,
