@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 export const PageTransition = ({ children }) => {
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.99 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.05 }}
         >
             {children}
         </motion.div>
@@ -38,62 +38,40 @@ export const TableSkeleton = () => (
     </div>
 );
 
-export const FadeIn = ({ children, delay = 0 }) => (
+export const FadeIn = ({ children }) => (
     <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.05 }}
     >
         {children}
     </motion.div>
 );
 
-export const SlideIn = ({ children, direction = 'left', delay = 0 }) => {
-    // Professional subtle micro-displacements
-    const directions = {
-        left: { x: -8 },
-        right: { x: 8 },
-        up: { y: -8 },
-        down: { y: 8 }
-    };
-
+export const SlideIn = ({ children }) => {
     return (
         <motion.div
-            initial={{ opacity: 0, ...directions[direction], scale: 0.995 }}
-            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            transition={{
-                duration: 0.5,
-                delay,
-                ease: [0.22, 1, 0.36, 1]
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.05 }}
         >
             {children}
         </motion.div>
     );
 };
 
-export const ScaleIn = ({ children, delay = 0 }) => (
+export const ScaleIn = ({ children }) => (
     <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.05 }}
     >
         {children}
     </motion.div>
 );
 
-export const TableRowFade = ({ children, index = 0, className = "" }) => (
-    <motion.tr
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{
-            duration: 0.4,
-            delay: index * 0.05,
-            ease: [0.22, 1, 0.36, 1]
-        }}
-        className={`hover:bg-[#2d1b4e]/30 transition-colors ${className}`}
-    >
+export const TableRowFade = ({ children, className = "" }) => (
+    <tr className={`hover:bg-[#2d1b4e]/30 transition-colors ${className}`}>
         {children}
-    </motion.tr>
+    </tr>
 );

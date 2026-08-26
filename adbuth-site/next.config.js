@@ -6,6 +6,12 @@ const nextConfig = {
     poweredByHeader: false,
     transpilePackages: ['@fortawesome/fontawesome-svg-core'],
 
+    // Limit concurrency and worker threads to prevent high RAM/CPU usage during dev compilation
+    experimental: {
+        workerThreads: false,
+        cpus: 1
+    },
+
     // Images served from Cloudflare R2 CDN — keep unoptimized to avoid OOM on Render's 512MB limit.
     // Cloudflare handles compression and resizing natively.
     images: {

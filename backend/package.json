@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "node --max-old-space-size=1024 ./node_modules/nodemon/bin/nodemon.js server.js",
     "seed": "node scripts/seed.js",
     "test": "jest --detectOpenHandles --runInBand"
   },

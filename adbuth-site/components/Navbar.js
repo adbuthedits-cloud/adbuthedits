@@ -11,7 +11,6 @@ import { useAuth } from '../context/AuthContext'
 export default function Navbar({ highlight = '', isdark = true, headerClass = "", position = "absolute" }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const [desktopServicesOpen, setDesktopServicesOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [videosOpen, setVideosOpen] = useState(false)
@@ -63,14 +62,6 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
     })
   }
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   // Lock body scroll when menu is open
   useEffect(() => {
     if (open) {
@@ -82,79 +73,57 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
 
   const menuVariants = {
     initial: {
-      clipPath: "circle(30px at calc(100% - 40px) 40px)",
       opacity: 0,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 40
-      }
     },
     animate: {
-      clipPath: "circle(150% at calc(100% - 40px) 40px)",
       opacity: 1,
       transition: {
-        type: "spring",
-        stiffness: 20,
-        restDelta: 2
+        duration: 0
       }
     },
     exit: {
-      clipPath: "circle(150% at calc(100% - 40px) 40px)",
       opacity: 0,
       transition: {
-
-        type: "spring",
-        stiffness: 200,
-        damping: 20
+        duration: 0
       }
     }
   }
 
   const linkVariants = {
-    initial: { opacity: 0, y: 20 },
+    initial: { opacity: 1, y: 0 },
     animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: 20 }
+    exit: { opacity: 1, y: 0 }
   }
 
   const dropdownVariants = {
     hidden: {
       opacity: 0,
-      y: 10,
-      scale: 0.95,
-      transition: {
-        staggerChildren: 0.1,
-        staggerDirection: -1
-      }
+      scale: 1,
     },
     visible: {
       opacity: 1,
-      y: 0,
       scale: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1
+        duration: 0
       }
     },
     exit: {
       opacity: 0,
-      y: 10,
-      scale: 0.95,
+      scale: 1,
       transition: {
-        staggerChildren: 0.05,
-        staggerDirection: -1
+        duration: 0
       }
     }
   }
 
   const dropdownItemVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -10 }
+    hidden: { opacity: 1 },
+    visible: { opacity: 1 },
+    exit: { opacity: 1 }
   }
 
   return (
-    <header className={`w-full top-0 left-0 z-50 transition-all duration-300 ${position} ${headerClass}`}>
+    <header className={`w-full top-0 left-0 z-50 ${position} ${headerClass}`}>
       <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
@@ -407,7 +376,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
         {/* Mobile Toggle Button */}
         <div className="lg:hidden">
           <button
-            className={`p-2 z-50 relative focus:outline-none ${open ? 'text-white' : (scrolled || !isdark ? 'text-black' : 'text-white')}`}
+            className={`p-2 z-50 relative focus:outline-none ${open ? 'text-white' : (!isdark ? 'text-black' : 'text-white')}`}
             onClick={() => setOpen(v => !v)}
             aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={open}

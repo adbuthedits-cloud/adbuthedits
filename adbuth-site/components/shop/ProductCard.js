@@ -28,9 +28,29 @@ function isNewProduct(updatedAt) {
     return diffDays <= NEW_BADGE_DAYS;
 }
 
+function getAssetTypeName(product, masterData) {
+    if (!product) return null;
+
+    const rawName = product.assetType?.name ||
+        (typeof product.assetType === 'string' ? product.assetType : null) ||
+        product.asset_type?.name ||
+        (typeof product.asset_type === 'string' ? product.asset_type : null) ||
+        product.asset_type_name;
+
+    if (rawName) return rawName;
+
+    const typeId = product.asset_type_id || product.assetType?.type_id;
+    if (typeId && masterData?.types?.length) {
+        const found = masterData.types.find(t => t.type_id === typeId);
+        if (found?.name) return found.name;
+    }
+
+    return null;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-export default function ProductCard({ product, index = 0 }) {
+export default function ProductCard({ product, index = 0, masterData }) {
     const { toggleWishlist, isInWishlist } = useWishlist();
     const productId = product?.products_id || product?.id;
     const wishlisted = isInWishlist(productId);
@@ -211,10 +231,24 @@ export default function ProductCard({ product, index = 0 }) {
 
                 {/* Discount Badge */}
                 {hasDiscount && (
-                    <div className="absolute bottom-0 left-0 bg-black/60 text-white px-2.5 py-0.5 z-10 rounded-full ml-2 my-2">
-                        <span className="text-[10px] font-bold tracking-tight">{discountPct}% OFF</span>
+                    <div className="absolute bottom-0 left-0 ml-2 my-2 px-2.5 py-0.5 bg-black text-white rounded-full border border-white/10 z-10 flex items-center justify-center">
+                        <span className="text-[10px] font-bold tracking-tight uppercase leading-none">{discountPct}% OFF</span>
                     </div>
                 )}
+
+                {/* Asset Type Badge — opposite side of discount */}
+                {(() => {
+                    const assetTypeName = getAssetTypeName(product, masterData);
+                    if (!assetTypeName) return null;
+                    return (
+                        <div className="absolute bottom-0 right-0 mr-2 my-2 px-2.5 py-0.5 bg-black text-white rounded-full border border-white/10 z-10 flex items-center justify-center">
+                            <span className="text-[10px] font-bold tracking-tight uppercase leading-none">
+                                {assetTypeName}
+                            </span>
+                        </div>
+                    );
+                })()}
+
             </Link>
 
             {/* ── Wishlist Button ─────────────────────────────────────────── */}

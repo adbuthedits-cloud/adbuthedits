@@ -206,7 +206,11 @@ export default function Login() {
     }, []);
 
     useEffect(() => {
-        if (!authLoading && user && !isLoginAction.current) {
+        if (typeof window === 'undefined') return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const hasDeactivatedError = searchParams.get('error') === 'account_deactivated' || router.query.error === 'account_deactivated';
+
+        if (!authLoading && user && !isLoginAction.current && !hasDeactivatedError && !deactivatedModalOpen) {
             const intended = localStorage.getItem('intendedDestination');
             if (intended && intended !== '/login' && intended !== '/signup') {
                 localStorage.removeItem('intendedDestination');
@@ -215,13 +219,13 @@ export default function Login() {
                 router.replace('/');
             }
         }
-    }, [user, authLoading]);
+    }, [user, authLoading, deactivatedModalOpen, router.query]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const searchParams = new URLSearchParams(window.location.search);
         const token = router.query.token || searchParams.get('token');
-        const qErr = router.query.error || searchParams.get('error');
+        const qErr = searchParams.get('error') || router.query.error;
         const qReturnTo = router.query.returnTo || searchParams.get('returnTo');
 
         if (token) {
@@ -240,9 +244,19 @@ export default function Login() {
             let msg = 'Social login error';
             if (qErr === 'google_failed') msg = 'Google authentication failed';
             else if (qErr === 'google_not_configured') msg = 'Google login is not configured in backend .env';
+            else if (qErr === 'account_deactivated') {
+                // Deactivated account — clear any stale local tokens & open reactivation modal
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                const deactivatedEmail = searchParams.get('deactivatedEmail') || router.query.deactivatedEmail || '';
+                setDeactivatedUserIdentifier(decodeURIComponent(deactivatedEmail));
+                setDeactivatedModalOpen(true);
+                return; // don't set generic error text
+            }
             setError(msg);
         }
     }, [router.query]);
+
 
     useEffect(() => {
         const handleResize = () => {

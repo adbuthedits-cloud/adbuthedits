@@ -47,6 +47,7 @@ function deserializeProducts(raw) {
         asset_variant_id: p[14],
         asset_orientation_id: p[15],
         language: p[16] || 'English',
+        assetType: p[17] ? { name: p[17] } : null,
     }));
 }
 
@@ -107,7 +108,7 @@ function ShopBanner({ masterData, activeParentSlug, onBrowseClick, isShopBase })
 }
 
 // ─── Product Grid ──────────────────────────────────────────────────────────────
-function ProductGrid({ products, loading }) {
+function ProductGrid({ products, loading, masterData }) {
     if (loading && !products.length) {
         return (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
@@ -126,7 +127,7 @@ function ProductGrid({ products, loading }) {
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
                 {products.map((p, index) => (
                     <div key={p.products_id || p.slug || index} className="h-full">
-                        <ProductCard product={p} index={index} />
+                        <ProductCard product={p} index={index} masterData={masterData} />
                     </div>
                 ))}
             </div>
@@ -135,7 +136,7 @@ function ProductGrid({ products, loading }) {
 }
 
 // ─── Empty State ───────────────────────────────────────────────────────────────
-function EmptyState({ onClear, allProducts }) {
+function EmptyState({ onClear, allProducts, masterData }) {
     return (
         <div>
             <div className="py-14 text-center bg-gray-50 border border-gray-100">
@@ -149,7 +150,7 @@ function EmptyState({ onClear, allProducts }) {
                 <div className="mt-10">
                     <h3 className="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Recommended For You</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                        {allProducts.slice(0, 12).map(p => <ProductCard key={p.products_id} product={p} />)}
+                        {allProducts.slice(0, 12).map(p => <ProductCard key={p.products_id} product={p} masterData={masterData} />)}
                     </div>
                 </div>
             )}
@@ -272,9 +273,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
     }, [displayCount]);
 
     useEffect(() => {
-        let scrollTimeout;
         const handleScroll = () => {
-            if (!document.body.classList.contains('is-scrolling')) document.body.classList.add('is-scrolling');
             // Only update saved position when on shop grid AND scroll is non-zero
             if (!isProductDetail && window.scrollY > 0) {
                 try {
@@ -282,11 +281,9 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                     sessionStorage.setItem('adbuth_shop_saved_scroll', String(window.scrollY));
                 } catch {}
             }
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => document.body.classList.remove('is-scrolling'), 150);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => { window.removeEventListener('scroll', handleScroll); clearTimeout(scrollTimeout); document.body.classList.remove('is-scrolling'); };
+        return () => window.removeEventListener('scroll', handleScroll);
     }, [isProductDetail]);
 
     // Sync filters when URL changes
@@ -481,7 +478,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                             {/* Product Grid or Empty */}
                             {filteredProducts.length > 0 ? (
                                 <>
-                                    <ProductGrid products={visibleProducts} loading={filterLoading} />
+                                    <ProductGrid products={visibleProducts} loading={filterLoading} masterData={masterData} />
 
                                     {/* Infinite scroll sentinel */}
                                     <div ref={setSentinelNode} className="w-full flex justify-center py-8">
@@ -501,6 +498,7 @@ export default function ShopPage({ initialProducts, masterData, maxPrice }) {
                                 !filterLoading && (
                                     <EmptyState
                                         allProducts={allProducts}
+                                        masterData={masterData}
                                         onClear={() => handleFilterChange('bulk', {
                                             parentCategory: [], assetCategory: [], assetSubCategory: [],
                                             assetType: [], assetVariant: [], orientation: [],
@@ -535,7 +533,10 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps() {
-    const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+    let API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+    if (API_URL.includes('localhost')) {
+        API_URL = API_URL.replace('localhost', '127.0.0.1');
+    }
     try {
         const [productsRes, masterRes, maxPriceRes] = await Promise.all([
             fetch(`${API_URL}/api/products`),
@@ -570,6 +571,7 @@ export async function getStaticProps() {
             p.asset_variant_id || null,
             p.asset_orientation_id || null,
             p.language || 'English',
+            p.assetType?.name || p.asset_type?.name || p.asset_type_name || null,
         ]);
 
         // Trim masterData to only required fields

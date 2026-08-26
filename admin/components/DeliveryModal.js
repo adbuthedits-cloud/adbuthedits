@@ -8,12 +8,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function DeliveryModal({ isOpen, onClose, orderId, itemId, onSuccess }) {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!file || !itemId) return;
 
         setLoading(true);
+        setErrorMsg('');
         try {
             const token = localStorage.getItem('admin_token');
             const formData = new FormData();
@@ -31,15 +33,18 @@ export default function DeliveryModal({ isOpen, onClose, orderId, itemId, onSucc
             );
 
             setFile(null);
+            setErrorMsg('');
             onSuccess();
             onClose();
         } catch (error) {
             console.error('Failed to deliver order', error);
-            alert('Failed to upload file. Please try again.');
+            const msg = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to upload file. Please try again.';
+            setErrorMsg(msg);
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <AnimatePresence>
@@ -108,6 +113,13 @@ export default function DeliveryModal({ isOpen, onClose, orderId, itemId, onSucc
                                         This file will be uploaded and the link emailed to the customer.
                                     </p>
                                 </div>
+
+                                {/* Error message */}
+                                {errorMsg && (
+                                    <div className="px-1 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 font-medium">
+                                        ⚠️ {errorMsg}
+                                    </div>
+                                )}
 
                                 <div className="pt-2">
                                     <button

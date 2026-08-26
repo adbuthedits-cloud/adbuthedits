@@ -231,7 +231,8 @@ export default function AdminLayout({ children }) {
     useEffect(() => {
         const token = getAuthToken();
         if (!token) {
-            router.push("/login");
+            logout();
+            window.location.href = "/login";
         } else {
             setIsAuthorized(true);
             const initialUser = getAuthUser();
@@ -256,9 +257,10 @@ export default function AdminLayout({ children }) {
                         }
                     }
                 } catch (e) {
-                    // Suppress network errors/cold starts from spamming console log
                     if (e.response?.status === 403 || e.response?.status === 401) {
                         console.warn("Silent session verification failed: unauthorized.");
+                        logout();
+                        window.location.href = "/login";
                     }
                 }
             };

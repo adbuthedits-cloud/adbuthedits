@@ -65,6 +65,51 @@ export default function Settings() {
 
     const [phoneResendCooldown, setPhoneResendCooldown] = useState(0);
 
+    // Cleanup reCAPTCHA verifier — removes dynamic container from DOM
+    const cleanupRecaptcha = () => {
+        try {
+            if (recaptchaVerifierRef.current) {
+                recaptchaVerifierRef.current.clear();
+            }
+        } catch (e) { /* ignore */ }
+        recaptchaVerifierRef.current = null;
+        try {
+            document.querySelectorAll('[data-recaptcha-settings]').forEach(el => el.remove());
+        } catch (e) { /* ignore */ }
+    };
+
+    // Setup invisible reCAPTCHA verifier
+    const getRecaptchaVerifier = async () => {
+        cleanupRecaptcha(); // always destroy existing first
+        try {
+            const { RecaptchaVerifier } = await import('firebase/auth');
+            const { auth } = await import('../lib/firebase');
+
+            const container = document.createElement('div');
+            container.setAttribute('data-recaptcha-settings', 'true');
+            document.body.appendChild(container);
+
+            const verifier = new RecaptchaVerifier(auth, container, {
+                size: 'invisible',
+                callback: () => { /* reCAPTCHA solved */ },
+                'expired-callback': () => { cleanupRecaptcha(); },
+            });
+
+            await verifier.render();
+            recaptchaVerifierRef.current = verifier;
+            return verifier;
+        } catch (err) {
+            console.error('[reCAPTCHA] Setup error:', err);
+            cleanupRecaptcha();
+            throw new Error('reCAPTCHA setup failed. Please try again.');
+        }
+    };
+
+    // Cleanup reCAPTCHA on component unmount
+    useEffect(() => {
+        return () => { cleanupRecaptcha(); };
+    }, []);
+
     useEffect(() => {
         if (phoneResendCooldown > 0) {
             const timer = setTimeout(() => setPhoneResendCooldown(prev => prev - 1), 1000);
@@ -192,6 +237,16 @@ export default function Settings() {
     };
 
 
+    // Password strength validator — same rules enforced on signup
+    const validatePasswordStrength = (pw) => {
+        if (pw.length < 8) return 'Password must be at least 8 characters long.';
+        if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
+        if (!/[a-z]/.test(pw)) return 'Password must contain at least one lowercase letter.';
+        if (!/[0-9]/.test(pw)) return 'Password must contain at least one number.';
+        if (!/[^A-Za-z0-9]/.test(pw)) return 'Password must contain at least one special character (e.g. @, #, !, $).';
+        return null;
+    };
+
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -199,6 +254,13 @@ export default function Settings() {
 
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             setMessage({ text: 'New passwords do not match', type: 'error' });
+            setLoading(false);
+            return;
+        }
+
+        const pwError = validatePasswordStrength(passwordData.newPassword);
+        if (pwError) {
+            setMessage({ text: pwError, type: 'error' });
             setLoading(false);
             return;
         }
@@ -751,9 +813,10 @@ export default function Settings() {
                                                             value={passwordData.newPassword}
                                                             onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                                                             className="w-full text-black px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
-                                                            placeholder="Minimum 6 characters"
+                                                            placeholder="Min 8 chars with uppercase, number & symbol"
                                                             required
                                                         />
+                                                        <p className="mt-1.5 text-[11px] text-gray-400">Min 8 chars · uppercase · lowercase · number · special char</p>
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
@@ -801,9 +864,10 @@ export default function Settings() {
                                                             value={passwordData.newPassword}
                                                             onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                                                             className="w-full text-black px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none"
-                                                            placeholder="Minimum 6 characters"
+                                                            placeholder="Min 8 chars with uppercase, number & symbol"
                                                             required
                                                         />
+                                                        <p className="mt-1.5 text-[11px] text-gray-400">Min 8 chars · uppercase · lowercase · number · special char</p>
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>

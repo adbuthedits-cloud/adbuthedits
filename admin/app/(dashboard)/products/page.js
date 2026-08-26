@@ -719,12 +719,7 @@ function Products() {
                                         initial={{ opacity: 0, y: 8, scale: 0.98 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={{
-                                            type: "spring",
-                                            damping: 15,
-                                            stiffness: 100,
-                                            delay: index * 0.03
-                                        }}
+                                        transition={{ duration: 0.05 }}
                                         whileHover={{ y: -6, transition: { duration: 0.2 } }}
                                         className={`bg-[#1E1628] rounded-[18px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-xl transition-all group relative border border-[#2d1b4e] hover:shadow-purple-900/10`}
                                     >

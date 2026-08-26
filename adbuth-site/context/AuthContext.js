@@ -106,6 +106,12 @@ export const AuthProvider = ({ children }) => {
                 if (!merged.email && currentUser.email) {
                     merged.email = currentUser.email;
                 }
+                if (!merged.firstName && currentUser.first_name && currentUser.first_name !== 'User') {
+                    merged.firstName = currentUser.first_name;
+                }
+                if (!merged.lastName && currentUser.last_name) {
+                    merged.lastName = currentUser.last_name;
+                }
                 if (!merged.phone && currentUser.phone_number) {
                     try {
                         const parsed = typeof currentUser.phone_number === 'string'

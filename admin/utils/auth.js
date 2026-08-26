@@ -1,6 +1,13 @@
 export const getAuthToken = () => {
     if (typeof window !== 'undefined') {
-        const localToken = localStorage.getItem('admin_token');
+        let localToken = localStorage.getItem('admin_token');
+        if (!localToken) {
+            const match = document.cookie.match(new RegExp('(?:^|; )admin_token=([^;]*)'));
+            if (match && match[1]) {
+                localToken = decodeURIComponent(match[1]);
+                localStorage.setItem('admin_token', localToken);
+            }
+        }
         if (localToken) {
             const expiry = localStorage.getItem('admin_token_expiry');
             if (expiry && Date.now() > parseInt(expiry, 10)) {
@@ -16,8 +23,18 @@ export const getAuthToken = () => {
 
 export const getAuthUser = () => {
     if (typeof window !== 'undefined') {
-        const user = localStorage.getItem('admin_user') || sessionStorage.getItem('admin_user');
-        return user ? JSON.parse(user) : null;
+        let user = localStorage.getItem('admin_user') || sessionStorage.getItem('admin_user');
+        if (!user) {
+            const match = document.cookie.match(new RegExp('(?:^|; )admin_user=([^;]*)'));
+            if (match && match[1]) {
+                try {
+                    const parsed = JSON.parse(decodeURIComponent(match[1]));
+                    localStorage.setItem('admin_user', JSON.stringify(parsed));
+                    return parsed;
+                } catch (e) {}
+            }
+        }
+        return user ? (typeof user === 'string' ? JSON.parse(user) : user) : null;
     }
     return null;
 };
@@ -63,6 +80,8 @@ export const logout = () => {
         localStorage.removeItem('admin_token_expiry');
         sessionStorage.removeItem('admin_token');
         sessionStorage.removeItem('admin_user');
+        document.cookie = "admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        document.cookie = "admin_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
         document.cookie = "admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         document.cookie = "admin_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }

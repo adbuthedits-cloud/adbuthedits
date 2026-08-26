@@ -65,13 +65,13 @@ export default function ProfileCompleteModal({ isOpen, prefill = {}, onComplete,
             setEmail(prefill.email || '');
             setCountryCode(prefill.phone?.code || '+91');
             setPhoneNum(prefill.phone?.number || '');
-            setFirstName('');
-            setLastName('');
+            setFirstName(prefill.firstName || '');
+            setLastName(prefill.lastName || '');
             setFieldErrors({});
             setGlobalError('');
             setDone(false);
         }
-    }, [isOpen, prefill?.email, prefill?.phone?.number]);
+    }, [isOpen, prefill?.email, prefill?.phone?.number, prefill?.firstName, prefill?.lastName]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

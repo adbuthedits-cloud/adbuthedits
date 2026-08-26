@@ -308,8 +308,17 @@ export default function Signup() {
             setError('Please enter a valid phone number.');
             return;
         }
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters.');
+        // Password strength validation
+        const pwRules = [
+            [password.length >= 8, 'Password must be at least 8 characters long.'],
+            [/[A-Z]/.test(password), 'Password must contain at least one uppercase letter.'],
+            [/[a-z]/.test(password), 'Password must contain at least one lowercase letter.'],
+            [/[0-9]/.test(password), 'Password must contain at least one number.'],
+            [/[^A-Za-z0-9]/.test(password), 'Password must contain at least one special character (e.g. @, #, !, $).'],
+        ];
+        const failedRule = pwRules.find(([ok]) => !ok);
+        if (failedRule) {
+            setError(failedRule[1]);
             return;
         }
 
@@ -658,6 +667,8 @@ export default function Signup() {
                                                     <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="text-xs" />
                                                 </button>
                                             </div>
+                                            <p className="text-white/30 text-[10px] mt-1">Min 8 chars · uppercase · lowercase · number · special char (@#!$...)</p>
+
 
                                             {/* Email Consent Checkbox */}
                                             <div className="mt-4">

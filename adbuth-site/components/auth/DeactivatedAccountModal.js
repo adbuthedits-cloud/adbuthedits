@@ -20,6 +20,12 @@ export default function DeactivatedAccountModal({ isOpen, userIdentifier, onReac
         }
     }, [resendCooldown]);
 
+    useEffect(() => {
+        if (isOpen && userIdentifier && step === 'info' && !submitting) {
+            handleSendOtp();
+        }
+    }, [isOpen, userIdentifier]);
+
     if (!isOpen) return null;
 
     const handleSendOtp = async () => {

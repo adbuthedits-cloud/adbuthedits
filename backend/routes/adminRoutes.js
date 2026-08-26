@@ -1912,10 +1912,23 @@ router.post('/orders/:orderId/items/:itemId/deliver', checkPermission('orders', 
         const orderItem = await OrderItem.findByPk(req.params.itemId, {
             include: [{
                 model: Order, as: 'order',
-                include: [{ model: User, as: 'user', attributes: ['email', 'first_name', 'last_name'] }]
+                include: [
+                    { model: User, as: 'user', attributes: ['email', 'first_name', 'last_name'] },
+                    { model: Admin, as: 'assignedEmployee', attributes: ['admin_id', 'first_name', 'last_name', 'role'] }
+                ]
             }]
         });
         if (!orderItem) return res.status(404).json({ error: 'Order Item not found' });
+
+        const order = orderItem.order;
+        const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'super_admin';
+        const adminId = req.user.admin_id || req.user.id;
+        const isAssigned = order && String(order.assigned_to) === String(adminId);
+
+        // Regular employees can only deliver their assigned orders; Super Admin can deliver any order
+        if (!isSuperAdmin && !isAssigned) {
+            return res.status(403).json({ error: 'Access denied. You can only deliver content for orders assigned to you.' });
+        }
 
         const deliveredAt = new Date();
         const expiresAt = new Date(deliveredAt);
@@ -1940,20 +1953,29 @@ router.post('/orders/:orderId/items/:itemId/deliver', checkPermission('orders', 
         }
 
         // Create DELIVERED timeline entry
-        const actorName = `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || 'Employee';
+        const actorName = `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || (isSuperAdmin ? 'Super Admin' : 'Employee');
+        const assignedEmployeeName = order?.assignedEmployee
+            ? `${order.assignedEmployee.first_name || ''} ${order.assignedEmployee.last_name || ''}`.trim()
+            : null;
+        const isOverrideDelivery = isSuperAdmin && order?.assigned_to && !isAssigned;
+
+        let notes = `File delivered for item #${req.params.itemId.substring(0, 8).toUpperCase()}. Download available until ${expiresAt.toLocaleDateString('en-IN')}.`;
+        if (isOverrideDelivery) {
+            notes = `Delivered by Super Admin ${actorName} (Order assigned to: ${assignedEmployeeName || 'Employee #' + order.assigned_to}). Download available until ${expiresAt.toLocaleDateString('en-IN')}.`;
+        }
+
         await OrderTimeline.create({
             order_id: orderItem.order_id,
-            admin_id: req.user.admin_id || req.user.id,
+            admin_id: adminId,
             actor_name: actorName,
-            actor_role: req.user.role || 'editor',
+            actor_role: req.user.role || (isSuperAdmin ? 'super_admin' : 'editor'),
             action: 'DELIVERED',
-            status_label: 'Order Delivered',
-            notes: `File delivered for item #${req.params.itemId.substring(0, 8).toUpperCase()}. Download available until ${expiresAt.toLocaleDateString('en-IN')}.`,
+            status_label: isOverrideDelivery ? 'Order Delivered by Super Admin' : 'Order Delivered',
+            notes: notes,
             event_at: deliveredAt,
         });
 
         // Send delivery email to customer
-        const order = orderItem.order;
         if (order?.user?.email) {
             const orderRef = order.order_id.substring(0, 8).toUpperCase();
             const orderUrl = `${process.env.FRONTEND_URL || 'https://www.adbuthverse.com'}/order/${order.order_id}`;
@@ -1987,12 +2009,48 @@ router.post('/orders/:orderId/items/:itemId/deliver', checkPermission('orders', 
 // Remove Delivery (Reset Status & Link)
 router.put('/orders/items/:itemId/remove-delivery', checkPermission('orders', 'edit'), async (req, res) => {
     try {
-        const orderItem = await OrderItem.findByPk(req.params.itemId);
+        const orderItem = await OrderItem.findByPk(req.params.itemId, {
+            include: [{
+                model: Order, as: 'order',
+                include: [{ model: Admin, as: 'assignedEmployee', attributes: ['admin_id', 'first_name', 'last_name', 'role'] }]
+            }]
+        });
         if (!orderItem) return res.status(404).json({ error: 'Order Item not found' });
+
+        const order = orderItem.order;
+        const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'super_admin';
+        const adminId = req.user.admin_id || req.user.id;
+        const isAssigned = order && String(order.assigned_to) === String(adminId);
+
+        if (!isSuperAdmin && !isAssigned) {
+            return res.status(403).json({ error: 'Access denied. You can only manage deliveries for orders assigned to you.' });
+        }
 
         orderItem.delivery_status = 'pending';
         orderItem.delivery_link = null;
         await orderItem.save();
+
+        const actorName = `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || (isSuperAdmin ? 'Super Admin' : 'Employee');
+        const assignedEmployeeName = order?.assignedEmployee
+            ? `${order.assignedEmployee.first_name || ''} ${order.assignedEmployee.last_name || ''}`.trim()
+            : null;
+        const isOverrideRemove = isSuperAdmin && order?.assigned_to && !isAssigned;
+
+        let notes = `Delivery removed for item #${req.params.itemId.substring(0, 8).toUpperCase()} by ${actorName}.`;
+        if (isOverrideRemove) {
+            notes = `Delivery removed by Super Admin ${actorName} (Order assigned to: ${assignedEmployeeName || 'Employee #' + order.assigned_to}).`;
+        }
+
+        await OrderTimeline.create({
+            order_id: orderItem.order_id,
+            admin_id: adminId,
+            actor_name: actorName,
+            actor_role: req.user.role || (isSuperAdmin ? 'super_admin' : 'editor'),
+            action: 'PROGRESS_UPDATE',
+            status_label: isOverrideRemove ? 'Delivery Reset by Super Admin' : 'Delivery Reset',
+            notes: notes,
+            event_at: new Date(),
+        });
 
         res.json({ success: true, message: 'Delivery removed successfully' });
     } catch (err) {

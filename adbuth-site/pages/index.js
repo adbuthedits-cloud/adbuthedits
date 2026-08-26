@@ -30,8 +30,19 @@ const faqs = [
 
 export async function getStaticProps() {
   try {
-    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
-    const res = await fetch(`${apiUrl}/api/blogs`);
+    let apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+    if (apiUrl.includes('localhost')) {
+      apiUrl = apiUrl.replace('localhost', '127.0.0.1');
+    }
+
+    let res;
+    try {
+      res = await fetch(`${apiUrl}/api/blogs`);
+    } catch (err) {
+      // Retry once after 500ms in case the backend server was still starting up
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      res = await fetch(`${apiUrl}/api/blogs`);
+    }
     
     if (!res.ok) {
       throw new Error(`API returned status ${res.status}`);
@@ -60,7 +71,7 @@ export async function getStaticProps() {
       revalidate: 60, // Refresh data at most every 60 seconds
     };
   } catch (error) {
-    console.error("Error fetching blogs for home page:", error);
+    console.error("Error fetching blogs for home page:", error?.message || error);
     return {
       props: {
         items: [],

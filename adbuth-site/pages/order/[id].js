@@ -247,7 +247,7 @@ function OrderItem({ item, idx }) {
                     {/* Customization form fields */}
                     {custEntries.length > 0 && (
                         <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Your Submitted Information</p>
+                            <p className="text-xs font-bold text-black uppercase tracking-wider mb-3">Your Submitted Information</p>
                             <div className="space-y-2">
                                 {custEntries.map(([key, val]) => (
                                     <div key={key} className="bg-white rounded-xl px-4 py-3 border border-gray-100">
@@ -499,8 +499,8 @@ export default function OrderDetailPage() {
                                     return (
                                         <div key={step.key} className="flex flex-col items-center relative z-10">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${done ? 'bg-purple-600 border-purple-600 text-white' :
-                                                    active ? 'bg-white border-purple-600 text-purple-600 shadow-lg shadow-purple-100' :
-                                                        'bg-white border-gray-200 text-gray-300'
+                                                active ? 'bg-white border-purple-600 text-purple-600 shadow-lg shadow-purple-100' :
+                                                    'bg-white border-gray-200 text-gray-300'
                                                 }`}>
                                                 {done
                                                     ? <FontAwesomeIcon icon={faCheckCircle} className="text-sm" />
@@ -639,13 +639,14 @@ export default function OrderDetailPage() {
                                 <select
                                     value={refundReason}
                                     onChange={(e) => setRefundReason(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:border-purple-600 transition-colors"
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold !text-black outline-none focus:border-purple-600 transition-colors"
+                                    style={{ color: '#000000', backgroundColor: '#f9fafb' }}
                                 >
-                                    <option value="Incorrect customization details">Incorrect customization details</option>
-                                    <option value="Technical download issue">Technical download issue</option>
-                                    <option value="Wrong item ordered">Wrong item ordered</option>
-                                    <option value="Delivered late">Delivered late</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Incorrect customization details" className="text-black bg-white" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Incorrect customization details</option>
+                                    <option value="Technical download issue" className="text-black bg-white" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Technical download issue</option>
+                                    <option value="Wrong item ordered" className="text-black bg-white" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Wrong item ordered</option>
+                                    <option value="Delivered late" className="text-black bg-white" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Delivered late</option>
+                                    <option value="Other" className="text-black bg-white" style={{ color: '#000000', backgroundColor: '#ffffff' }}>Other</option>
                                 </select>
                             </div>
                             <div>
@@ -655,7 +656,8 @@ export default function OrderDetailPage() {
                                     onChange={(e) => setRefundDetails(e.target.value)}
                                     placeholder="Please provide details about your refund request..."
                                     rows="4"
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-purple-600 transition-colors resize-none"
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm !text-black placeholder:text-gray-500 outline-none focus:border-purple-600 transition-colors resize-none"
+                                    style={{ color: '#000000', caretColor: '#000000', backgroundColor: '#f9fafb' }}
                                 />
                             </div>
                             <div className="pt-2">
@@ -691,19 +693,20 @@ export default function OrderDetailPage() {
                                     placeholder="Describe the exact changes you need (e.g. text replacements, color changes, custom requests)..."
                                     rows="5"
                                     required
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-purple-600 transition-colors resize-none"
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm !text-black placeholder:text-gray-500 outline-none focus:border-purple-600 transition-colors resize-none"
+                                    style={{ color: '#000000', caretColor: '#000000', backgroundColor: '#f9fafb' }}
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Upload Reference Files / Replacement Media</label>
                                 <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:border-purple-300 transition-colors relative cursor-pointer">
-                                    <input 
-                                        type="file" 
-                                        multiple 
+                                    <input
+                                        type="file"
+                                        multiple
                                         onChange={handleFileUpload}
                                         disabled={uploadingFile}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     />
                                     <p className="text-xs font-bold text-gray-700">Drag & drop files or click to browse</p>
                                     <p className="text-[10px] text-gray-400 mt-1">Supports JPEG, PNG, WEBP, GIF, MP4 (Max 50MB per file)</p>
@@ -717,9 +720,9 @@ export default function OrderDetailPage() {
                                         {uploadedUrls.map((url, idx) => (
                                             <div key={url} className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-100 text-xs">
                                                 <span className="truncate max-w-[280px] font-semibold text-gray-700">{url.split('/').pop().split('?')[0]}</span>
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => handleRemoveUploadedFile(idx)} 
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveUploadedFile(idx)}
                                                     className="w-6 h-6 rounded-lg hover:bg-red-50 text-red-500 flex items-center justify-center"
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} className="text-[10px]" />

@@ -11,7 +11,7 @@ import {
     faHashtag, faPhone, faEnvelope, faCircleDot, faClock, faUserShield
 } from '@fortawesome/free-solid-svg-icons';
 import DeliveryModal from '../../../../components/DeliveryModal';
-import { getAuthToken, getAuthUser } from '../../../../utils/auth';
+import { getAuthToken, getAuthUser, hasPermission } from '../../../../utils/auth';
 import withPermission from '../../../../components/withPermission';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -184,8 +184,9 @@ function InfoRow({ icon, label, value }) {
 
 function OrderDetails() {
     const authUser = getAuthUser() || {};
-    const canEdit = authUser.is_super_admin || authUser.permissions?.orders?.includes('edit');
-    const canDelete = authUser.is_super_admin || authUser.permissions?.orders?.includes('delete');
+    const isSuperAdmin = authUser.is_super_admin === true || authUser.is_super_admin === 1 || authUser.is_super_admin === 'true' || authUser.role === 'super_admin';
+    const canEdit = isSuperAdmin || hasPermission(authUser, 'orders', 'edit');
+    const canDelete = isSuperAdmin || hasPermission(authUser, 'orders', 'delete');
 
     const { id } = useParams();
     const router = useRouter();
@@ -416,7 +417,7 @@ function OrderDetails() {
                                                                         </button>
                                                                     )}
                                                                 </>
-                                                            ) : order.status === 'paid' && canEdit && (
+                                                            ) : (!['cancelled', 'failed'].includes(order.status) && canEdit) && (
                                                                 <button onClick={() => { setSelectedItemId(item.order_item_id); setIsDeliveryModalOpen(true); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 transition-all shadow-lg shadow-purple-900/20">
                                                                     <FontAwesomeIcon icon={faPaperPlane} /> Deliver Content
                                                                 </button>

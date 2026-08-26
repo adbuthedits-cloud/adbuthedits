@@ -50,7 +50,7 @@ export default function Login() {
                 localStorage.setItem('admin_token_expiry', expiryTime.toString());
             }
 
-            router.push('/');
+            window.location.href = '/';
         } catch (err) {
             setError(err.message);
         } finally {

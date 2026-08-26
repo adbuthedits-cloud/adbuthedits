@@ -129,43 +129,7 @@ router.put('/change-password', authMiddleware, async (req, res) => {
     }
 });
 
-// PUT /api/auth/update-profile
-router.put('/update-profile', authMiddleware, async (req, res) => {
-    try {
-        const { first_name, last_name } = req.body;
 
-        let targetAccount = null;
-        if (req.user.type === 'admin') {
-            targetAccount = await Admin.findByPk(req.user.id);
-        } else {
-            targetAccount = await User.findByPk(req.user.id);
-        }
-
-        if (!targetAccount) {
-            return res.status(404).json({ msg: 'Account not found' });
-        }
-
-        targetAccount.first_name = first_name || targetAccount.first_name;
-        targetAccount.last_name = last_name || targetAccount.last_name;
-        await targetAccount.save();
-
-        res.json({
-            msg: 'Profile updated successfully',
-            user: {
-                id: req.user.type === 'admin' ? targetAccount.admin_id : targetAccount.user_id,
-                email: targetAccount.email,
-                role: targetAccount.role,
-                first_name: targetAccount.first_name,
-                last_name: targetAccount.last_name,
-                name: `${targetAccount.first_name || ''} ${targetAccount.last_name || ''}`.trim()
-            }
-        });
-
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
-});
 
 // ─────────────────────────────────────────────────────────────────────────────────
 // PUT /api/auth/complete-profile
@@ -354,6 +318,13 @@ router.get('/google/callback',
                 returnTo = Buffer.from(rawState, 'base64url').toString('utf8');
             } catch (e) {}
         }
+
+        // If the account is deactivated, redirect to login with a deactivated flag
+        if (req.user._isDeactivated) {
+            const email = encodeURIComponent(req.user.email || '');
+            return res.redirect(`${FRONTEND_URL}/login?error=account_deactivated&deactivatedEmail=${email}`);
+        }
+
         const payload = { user: { id: req.user.user_id, role: req.user.role, type: 'customer' } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '24h' }, (err, token) => {
             if (err) return res.redirect(`${FRONTEND_URL}/login?error=jwt_failed`);
@@ -363,6 +334,7 @@ router.get('/google/callback',
             res.redirect(redirectUrl);
         });
     }
+
 );
 
 /* ── Facebook & Twitter OAuth routes disabled ──────────────────────────────────
@@ -756,7 +728,11 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
         const userId = req.user.id;
         const { first_name, last_name, email, phone_number } = req.body;
 
-        const currentUser = await User.findByPk(userId);
+        const isAdmin = req.user.type === 'admin';
+        const TargetModel = isAdmin ? Admin : User;
+        const pkField = isAdmin ? 'admin_id' : 'user_id';
+
+        const currentUser = await TargetModel.findByPk(userId);
         if (!currentUser) {
             return res.status(404).json({ msg: 'Account not found' });
         }
@@ -766,20 +742,21 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
         if (last_name !== undefined) updates.last_name = last_name;
 
         // Email change: verify it's different and check for conflicts
-        if (email !== undefined) {
-            if (email.toLowerCase().trim() === currentUser.email.toLowerCase().trim()) {
-                return res.status(400).json({ msg: 'New email address must be different from current email address.' });
+        if (email !== undefined && email.trim() !== '') {
+            const cleanEmail = email.toLowerCase().trim();
+            if (currentUser.email && cleanEmail === currentUser.email.toLowerCase().trim()) {
+                // Email is unchanged, allow update
+            } else {
+                const conflict = await User.findOne({ where: { email: cleanEmail, user_id: { [Op.ne]: userId } } });
+                if (conflict) {
+                    return res.status(409).json({ msg: 'This email is already registered with another account.' });
+                }
+                updates.email = cleanEmail;
             }
-
-            const conflict = await User.findOne({ where: { email, user_id: { [Op.ne]: userId } } });
-            if (conflict) {
-                return res.status(409).json({ msg: 'This email is already registered with another account.' });
-            }
-            updates.email = email;
         }
 
         // Phone change: verify it's different and check for conflicts
-        if (phone_number !== undefined) {
+        if (phone_number !== undefined && phone_number !== null) {
             const newPhone = typeof phone_number === 'string' ? JSON.parse(phone_number) : phone_number;
             const currentPhone = currentUser.phone_number ? (typeof currentUser.phone_number === 'string' ? JSON.parse(currentUser.phone_number) : currentUser.phone_number) : null;
             
@@ -802,16 +779,14 @@ router.put('/update-profile', authMiddleware, async (req, res) => {
             }
         }
 
-        await User.update(updates, { where: { user_id: userId } });
+        await TargetModel.update(updates, { where: { [pkField]: userId } });
 
-        const updated = await User.findByPk(userId, {
-            attributes: ['user_id', 'email', 'first_name', 'last_name', 'phone_number', 'role', 'profile_picture']
-        });
+        const updated = await TargetModel.findByPk(userId);
 
         return res.json({
-            msg: 'Profile updated!',
+            msg: 'Profile updated successfully!',
             user: {
-                id: updated.user_id,
+                id: updated.admin_id || updated.user_id,
                 email: updated.email,
                 first_name: updated.first_name,
                 last_name: updated.last_name,

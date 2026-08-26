@@ -623,6 +623,7 @@ function CreateProduct() {
             } else {
                 toast.success("Product created successfully!");
                 router.push("/products");
+                if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
             }
         } catch (error) {
             setUploadingThumbnail(false);
