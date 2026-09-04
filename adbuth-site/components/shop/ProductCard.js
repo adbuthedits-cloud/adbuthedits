@@ -9,7 +9,7 @@
  * - Click navigates to full product detail page
  */
 import Link from 'next/link';
-import { useState, useRef, useEffect, forwardRef, useMemo } from 'react';
+import { useState, useRef, useEffect, forwardRef, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as faHeartSolid, faStar } from '@fortawesome/free-solid-svg-icons';
@@ -286,11 +286,20 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
     const [lazyVideoSrc, setLazyVideoSrc] = useState(null);
     const [isHovered, setIsHovered] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
+    const isHoveredRef = useRef(false);
     const videoTimerRef = useRef(null);
     const videoElementRef = useRef(null);
     const localRef = useRef(null);
 
     const containerRef = forwardedRef || localRef;
+
+    const rawVideo = lazyVideoSrc ||
+        (Array.isArray(product?.video) && product?.video[0]
+            ? product.video[0]
+            : typeof product?.video === 'string' && product?.video
+                ? product.video
+                : product?.video_url || null);
+    const videoSrc = rawVideo ? cdnVideo(rawVideo) : null;
 
     useEffect(() => {
         setIsMounted(true);
@@ -314,42 +323,83 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
         }
     }, [isVisible, isPlaying]);
 
+    const playVideo = useCallback(() => {
+        const vid = videoElementRef.current;
+        if (!vid) return;
+        vid.muted = true;
+        vid.defaultMuted = true;
+        try {
+            const p = vid.play();
+            if (p !== undefined) {
+                p.catch(() => {
+                    if (isHoveredRef.current) {
+                        vid.muted = true;
+                        vid.play().catch(() => { });
+                    }
+                });
+            }
+        } catch { }
+    }, []);
+
     useEffect(() => {
         const vid = videoElementRef.current;
         if (!vid) return;
         if (isPlaying) {
-            const p = vid.play();
-            if (p !== undefined) p.catch(() => { });
+            playVideo();
         } else {
             vid.pause();
             vid.currentTime = 0;
         }
-    }, [isPlaying]);
+    }, [isPlaying, videoSrc, playVideo]);
 
     const handleMouseEnter = () => {
+        isHoveredRef.current = true;
         setIsHovered(true);
-        if (!lazyVideoSrc && !product.video?.[0] && !product.video_url && productId) {
-            fetch(`${API_URL}/api/products/${productId}`)
+
+        const vid = videoElementRef.current;
+        if (vid) {
+            vid.muted = true;
+            vid.defaultMuted = true;
+            if (vid.readyState >= 2) {
+                vid.play().catch(() => { });
+            } else {
+                vid.load();
+            }
+        }
+
+        if (!videoSrc && productId) {
+            const lookup = product?.slug || productId;
+            fetch(`${API_URL}/api/products/${lookup}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data?.video?.[0] || data?.video_url) {
-                        setLazyVideoSrc(cdnVideo(data.video?.[0] || data.video_url));
+                    const foundVid = Array.isArray(data?.video) ? data.video[0] : (data?.video || data?.video_url);
+                    if (foundVid) {
+                        setLazyVideoSrc(cdnVideo(foundVid));
                     }
                 })
                 .catch(() => { });
         }
+
         if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
         videoTimerRef.current = setTimeout(() => {
-            setIsPlaying(true);
-        }, 500);
+            if (isHoveredRef.current) {
+                setIsPlaying(true);
+            }
+        }, 50);
     };
 
     const handleMouseLeave = () => {
+        isHoveredRef.current = false;
         setIsHovered(false);
         setIsPlaying(false);
         if (videoTimerRef.current) {
             clearTimeout(videoTimerRef.current);
             videoTimerRef.current = null;
+        }
+        const vid = videoElementRef.current;
+        if (vid) {
+            vid.pause();
+            vid.currentTime = 0;
         }
     };
 
@@ -365,11 +415,6 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
     const eventSlug = product.assetCategory?.slug || 'general';
     const productSlug = product.slug || '';
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
-
-    const videoSrc = lazyVideoSrc ||
-        (product.video?.[0] || product.video_url
-            ? cdnVideo(product.video?.[0] || product.video_url)
-            : null);
 
     const hasDiscount = product.compared_price && product.compared_price > product.price;
     const discountPct = hasDiscount
@@ -408,7 +453,7 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
                     <img
                         src={thumbnail}
                         alt={product.title || 'Product Image'}
-                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-[1.04] ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                         loading={index < 8 ? 'eager' : 'lazy'}
                     />
                 ) : videoSrc ? (
@@ -430,11 +475,16 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
                     <video
                         ref={videoElementRef}
                         src={videoSrc}
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 z-10 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         muted
                         loop
                         playsInline
-                        preload="none"
+                        preload="auto"
+                        onCanPlay={() => {
+                            if (isHoveredRef.current || isPlaying) {
+                                playVideo();
+                            }
+                        }}
                     />
                 )}
 

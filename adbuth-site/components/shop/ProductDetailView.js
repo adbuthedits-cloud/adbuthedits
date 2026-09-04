@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +13,6 @@ import ImageStack from './ImageStack';
 import MediaLightbox from './MediaLightbox';
 import CustomizationForm from '../CustomizationForm';
 import AvailableOffers from './AvailableOffers';
-import ProductCard from './ProductCard';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import toast from 'react-hot-toast';
@@ -22,19 +21,185 @@ import { cdnImage, cdnVideo } from '../../utils/cdn';
 
 const ReviewSection = dynamic(() => import('../ReviewSection'), { loading: () => <p className="text-center py-10">Loading Reviews...</p> });
 
+// ─── Featured Template Card (New Design with Video Hover Support) ────────────
+function TemplateCard({ product }) {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const videoRef = useRef(null);
+    const isHoveredRef = useRef(false);
+    const hoverTimerRef = useRef(null);
+
+    const rawVideo = (Array.isArray(product?.video) && product?.video[0])
+        ? product.video[0]
+        : (typeof product?.video === 'string' && product?.video)
+            ? product.video
+            : product?.video_url || null;
+    const videoSrc = rawVideo ? cdnVideo(rawVideo) : null;
+
+    const playVideo = useCallback(() => {
+        const vid = videoRef.current;
+        if (!vid) return;
+        vid.muted = true;
+        vid.defaultMuted = true;
+        try {
+            const p = vid.play();
+            if (p !== undefined) {
+                p.catch(() => {
+                    if (isHoveredRef.current) {
+                        vid.muted = true;
+                        vid.play().catch(() => {});
+                    }
+                });
+            }
+        } catch {}
+    }, []);
+
+    useEffect(() => {
+        const vid = videoRef.current;
+        if (!vid) return;
+        if (isPlaying) {
+            playVideo();
+        } else {
+            vid.pause();
+            vid.currentTime = 0;
+        }
+    }, [isPlaying, videoSrc, playVideo]);
+
+    const handleMouseEnter = () => {
+        isHoveredRef.current = true;
+        const vid = videoRef.current;
+        if (vid) {
+            vid.muted = true;
+            vid.defaultMuted = true;
+            if (vid.readyState >= 2) {
+                vid.play().catch(() => {});
+            } else {
+                vid.load();
+            }
+        }
+        if (videoSrc) {
+            if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = setTimeout(() => {
+                if (isHoveredRef.current) {
+                    setIsPlaying(true);
+                }
+            }, 50);
+        }
+    };
+
+    const handleMouseLeave = () => {
+        isHoveredRef.current = false;
+        setIsPlaying(false);
+        if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = null;
+        }
+        const vid = videoRef.current;
+        if (vid) {
+            vid.pause();
+            vid.currentTime = 0;
+        }
+    };
+
+    if (!product) return null;
+
+    const parentSlug = product.parentCategory?.slug || 'all';
+    const eventSlug = product.assetCategory?.slug || 'general';
+    const productSlug = product.slug || product.products_id || '';
+    const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
+
+    const categoryName = product.assetSubCategory?.name || product.assetCategory?.name || product.assetType?.name || 'Template';
+    const rawImage = product.thumbnail || product.image || (product.files && product.files[0]?.file_url) || '';
+    const imageSrc = cdnImage(rawImage);
+
+    const hasDiscount = product.compared_price && product.compared_price > product.price;
+    const discountPct = hasDiscount
+        ? Math.round(((product.compared_price - product.price) / product.compared_price) * 100)
+        : 0;
+
+    return (
+        <Link
+            href={productUrl}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="w-[180px] sm:w-[220px] aspect-[3/4] flex-none snap-start block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100"
+        >
+            {imageSrc ? (
+                <img
+                    src={imageSrc}
+                    alt={product.title || 'Template'}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xs">
+                    No Preview
+                </div>
+            )}
+
+            {videoSrc && (
+                <video
+                    ref={videoRef}
+                    src={videoSrc}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 z-10 ${
+                        isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    onCanPlay={() => {
+                        if (isHoveredRef.current || isPlaying) {
+                            playVideo();
+                        }
+                    }}
+                />
+            )}
+
+            {/* Top Badges */}
+            <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-20 pointer-events-none">
+                {hasDiscount && (
+                    <span className="bg-purple-600/90 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                        {discountPct}% OFF
+                    </span>
+                )}
+            </div>
+
+            {/* Bottom Gradient & Text Details */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex items-end p-3.5 sm:p-4 z-20">
+                <div className="text-white w-full">
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wider text-[#E188E2] mb-1 font-bold line-clamp-1">
+                        {categoryName}
+                    </p>
+                    <h4 className="text-xs sm:text-sm font-bold whitespace-normal leading-snug line-clamp-2 mb-1.5 drop-shadow">
+                        {product.title}
+                    </h4>
+                    {product.price && (
+                        <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs sm:text-sm font-black text-white">₹{product.price}</span>
+                                {hasDiscount && (
+                                    <span className="text-[10px] text-gray-300 line-through">₹{product.compared_price}</span>
+                                )}
+                            </div>
+                            <span className="text-[9px] font-bold bg-white text-gray-900 px-2 py-0.5 rounded-full shadow-sm">
+                                View
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </Link>
+    );
+}
+
 // ─── Product Slider with Arrow Controls ───────────────────────────────────────
 function ProductSlider({ products, title }) {
     const sliderRef = useRef(null);
     const scroll = (dir) => {
         if (sliderRef.current) {
-            const firstChild = sliderRef.current.firstChild;
-            if (firstChild) {
-                const cardWidth = firstChild.getBoundingClientRect().width;
-                const gap = 16; // gap-4 is 1rem (16px)
-                sliderRef.current.scrollBy({ left: dir * (cardWidth + gap), behavior: 'smooth' });
-            } else {
-                sliderRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
-            }
+            const cardWidth = 220;
+            const gap = 16;
+            sliderRef.current.scrollBy({ left: dir * (cardWidth + gap), behavior: 'smooth' });
         }
     };
     return (
@@ -42,19 +207,64 @@ function ProductSlider({ products, title }) {
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-gray-900 uppercase tracking-tight">{title}</h3>
                 <div className="flex gap-2">
-                    <button onClick={() => scroll(-1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors">
+                    <button onClick={() => scroll(-1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors" aria-label="Scroll left">
                         <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
                     </button>
-                    <button onClick={() => scroll(1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors">
+                    <button onClick={() => scroll(1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors" aria-label="Scroll right">
                         <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
                     </button>
                 </div>
             </div>
             <div ref={sliderRef} className="flex overflow-x-auto gap-4 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth px-4 sm:mx-0 sm:px-0">
                 {products.map(p => (
-                    <div key={p.products_id} className="flex-none snap-start w-[160px] sm:w-[190px]">
-                        <ProductCard product={p} />
+                    <TemplateCard key={p.products_id} product={p} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ─── Occasion Slider with Arrow Controls ─────────────────────────────────────
+function OccasionSlider({ group, product }) {
+    const sliderRef = useRef(null);
+    const scroll = (dir) => {
+        if (sliderRef.current) {
+            const cardWidth = 220;
+            const gap = 16;
+            sliderRef.current.scrollBy({ left: dir * (cardWidth + gap), behavior: 'smooth' });
+        }
+    };
+    return (
+        <div className="animate-in mt-10 md:mt-16 fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-end justify-between mb-6 sm:mb-8">
+                <div>
+                    <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-gray-900 tracking-tighter uppercase">
+                        {group.name}
+                    </h2>
+                    <div className="h-1 w-10 sm:w-12 bg-purple-600 mt-2" />
+                </div>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href={`/shop?parentCategory=${product?.parentCategory?.slug || 'all'}&assetCategory=${product?.assetCategory?.slug || ''}&assetSubCategory=${group.slug}`}
+                        className="text-xs sm:text-sm font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 sm:gap-2 group transition-all"
+                    >
+                        VIEW ALL
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </Link>
+                    <div className="hidden sm:flex gap-1.5 ml-2">
+                        <button onClick={() => scroll(-1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors" aria-label="Scroll left">
+                            <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
+                        </button>
+                        <button onClick={() => scroll(1)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-purple-600 hover:text-purple-600 transition-colors" aria-label="Scroll right">
+                            <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
+                        </button>
                     </div>
+                </div>
+            </div>
+
+            <div ref={sliderRef} className="flex overflow-x-auto gap-4 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 pb-4">
+                {group.products.map(p => (
+                    <TemplateCard key={p.products_id} product={p} />
                 ))}
             </div>
         </div>
@@ -123,7 +333,19 @@ export default function ProductDetailView({ slug, masterData }) {
                     }
                 }
 
-                setRelatedProducts(related.filter(p => p.slug !== slug).slice(0, 10));
+                // 3. Fallback to general products if still few results
+                if (related.length < 5) {
+                    const genRes = await fetch(`${apiUrl}/api/products?limit=20`);
+                    if (genRes.ok) {
+                        const genData = await genRes.json();
+                        const seenIds = new Set(related.map(p => p.products_id));
+                        genData.forEach(p => {
+                            if (!seenIds.has(p.products_id) && p.slug !== slug) related.push(p);
+                        });
+                    }
+                }
+
+                setRelatedProducts(related.filter(p => p.slug !== slug).slice(0, 15));
 
                 // ─── Fetch & Group by Occasion (for section below reviews) ───
                 if (data.assetCategory?.asset_category_id) {
@@ -676,32 +898,8 @@ export default function ProductDetailView({ slug, masterData }) {
                     {/* Occasion-based Recommendations */}
                     {occasionGroups.length > 0 && (
                         <div className="mt-10 md:mt-20 space-y-10 md:space-y-16 px-4 sm:px-6 lg:px-8">
-                            {occasionGroups.map((group, idx) => (
-                                <div key={group.name} className="animate-in mt-10 md:mt-20 fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
-                                    <div className="flex items-end justify-between mb-6 sm:mb-8">
-                                        <div>
-                                            <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-gray-900 tracking-tighter uppercase">
-                                                {group.name}
-                                            </h2>
-                                            <div className="h-1 w-10 sm:w-12 bg-purple-600 mt-2" />
-                                        </div>
-                                        <Link
-                                            href={`/shop?parentCategory=${product.parentCategory?.slug || 'all'}&assetCategory=${product.assetCategory?.slug || ''}&assetSubCategory=${group.slug}`}
-                                            className="text-xs sm:text-sm font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 sm:gap-2 group transition-all"
-                                        >
-                                            VIEW ALL
-                                            <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                        </Link>
-                                    </div>
-
-                                    <div className="flex overflow-x-auto gap-4 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
-                                        {group.products.map(p => (
-                                            <div key={p.products_id} className="w-[200px] sm:w-[240px] flex-none snap-start">
-                                                <ProductCard product={p} />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                            {occasionGroups.map((group) => (
+                                <OccasionSlider key={group.name} group={group} product={product} />
                             ))}
                         </div>
                     )}

@@ -49,6 +49,8 @@ function deserializeProducts(raw) {
         language: p[16] || 'English',
         assetType: p[17] ? { name: p[17] } : null,
         aspect_ratio: p[18] || null,
+        video: p[19] ? [p[19]] : null,
+        video_url: p[19] || null,
     }));
 }
 
@@ -347,9 +349,10 @@ function readFiltersFromQuery(query) {
 }
 
 // ─── Page Component ────────────────────────────────────────────────────────────
-export default function ShopPage({ initialProducts, masterData, maxPrice }) {
+export default function ShopPage({ initialProducts, masterData, maxPrice, initialSlug }) {
     const router = useRouter();
-    const { slug, ...queryParams } = router.query;
+    const { slug: querySlug, ...queryParams } = router.query;
+    const slug = querySlug || initialSlug;
 
     const slugArr = Array.isArray(slug) ? slug : (slug ? [slug] : []);
     const slugParentCategory = slugArr[0] === 'category' && slugArr[1] ? slugArr[1] : null;
@@ -679,7 +682,7 @@ export async function getStaticPaths() {
     return { paths: [], fallback: 'blocking' };
 }
 
-export async function getStaticProps() {
+export async function getStaticProps({ params = {} } = {}) {
     let API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
     if (API_URL.includes('localhost')) {
         API_URL = API_URL.replace('localhost', '127.0.0.1');
@@ -720,6 +723,7 @@ export async function getStaticProps() {
             p.language || 'English',
             p.assetType?.name || p.asset_type?.name || p.asset_type_name || null,
             p.aspect_ratio || p.aspectRatio || null,
+            (Array.isArray(p.video) ? p.video[0] : (p.video || p.video_url || null)) || null,
         ]);
 
         // Trim masterData to only required fields
@@ -746,7 +750,7 @@ export async function getStaticProps() {
         };
 
         return {
-            props: { initialProducts, masterData: trimmedMasterData, maxPrice: maxPriceData?.maxPrice || 10000 },
+            props: { initialProducts, masterData: trimmedMasterData, maxPrice: maxPriceData?.maxPrice || 10000, initialSlug: params?.slug || null },
             revalidate: 60,
         };
     } catch (err) {

@@ -304,11 +304,18 @@ router.get('/next-serial', async (req, res) => {
     }
 });
 
-// GET /api/products/:slug
+// GET /api/products/:slug (supports lookup by slug or UUID products_id)
 router.get('/:slug', cache('product', 1800), async (req, res) => {
     try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(req.params.slug);
+        const where = {
+            [Op.and]: [
+                isUUID ? { products_id: req.params.slug } : { slug: req.params.slug },
+                { is_draft: { [Op.not]: true } }
+            ]
+        };
         const product = await Product.findOne({
-            where: { slug: req.params.slug, is_draft: { [Op.not]: true } },
+            where,
             include: [
                 { model: Category, as: 'parentCategory' },
                 { model: AssetCategory, as: 'assetCategory' },
