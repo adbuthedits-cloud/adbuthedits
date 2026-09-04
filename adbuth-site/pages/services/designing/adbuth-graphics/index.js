@@ -67,37 +67,41 @@ export default function AdbuthGraphics() {
     const [scrollProgress, setScrollProgress] = useState(0);
 
     useEffect(() => {
+        let ticking = false;
         const handleScroll = () => {
-            if (!exploreRef.current) return;
-            const rect = exploreRef.current.getBoundingClientRect();
-            // maxScroll is the amount we can scroll within the wrapper (400vh total)
-            const maxScroll = rect.height - window.innerHeight;
-
-            if (maxScroll <= 0) return; // Only apply scrub logic if scrolling applies
-
-            let progress = 0;
-            if (rect.top <= 0) {
-                progress = Math.min(1, Math.max(0, Math.abs(rect.top) / maxScroll));
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    if (exploreRef.current) {
+                        const rect = exploreRef.current.getBoundingClientRect();
+                        const maxScroll = rect.height - window.innerHeight;
+                        if (maxScroll > 0) {
+                            let progress = 0;
+                            if (rect.top <= 0) {
+                                progress = Math.min(1, Math.max(0, Math.abs(rect.top) / maxScroll));
+                            }
+                            setScrollProgress(progress);
+                            const numTabs = 4;
+                            let index = Math.floor(progress * numTabs);
+                            if (index >= numTabs) index = numTabs - 1;
+                            setActiveTab((prevTab) => {
+                                const newTab = [
+                                    "Posters & Campaign Graphics",
+                                    "Social Media Creatives",
+                                    "Branding Designs",
+                                    "Thumbnails"
+                                ][index];
+                                return prevTab !== newTab ? newTab : prevTab;
+                            });
+                        }
+                    }
+                    ticking = false;
+                });
+                ticking = true;
             }
-            setScrollProgress(progress);
-
-            const numTabs = 4; // Since tabs.length is 4
-            let index = Math.floor(progress * numTabs);
-            if (index >= numTabs) index = numTabs - 1;
-
-            setActiveTab((prevTab) => {
-                const newTab = [
-                    "Posters & Campaign Graphics",
-                    "Social Media Creatives",
-                    "Branding Designs",
-                    "Thumbnails"
-                ][index];
-                return prevTab !== newTab ? newTab : prevTab;
-            });
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll(); // Trigger immediately to set initial state correctly
+        handleScroll();
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 

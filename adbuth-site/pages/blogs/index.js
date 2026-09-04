@@ -97,13 +97,20 @@ export default function Blogs() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save scroll position while scrolling on blog list
+  // Save scroll position while scrolling on blog list (debounced)
   useEffect(() => {
+    let timer = null;
     const onScroll = () => {
-      try { sessionStorage.setItem(SS_SCRL, String(window.scrollY)); } catch { /* */ }
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        try { sessionStorage.setItem(SS_SCRL, String(window.scrollY)); } catch { /* */ }
+      }, 100);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   // Restore scroll position when returning from a blog detail page

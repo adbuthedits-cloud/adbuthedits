@@ -22,6 +22,10 @@ module.exports = {
         dm: ['var(--font-dm-sans)', 'sans-serif'],
         montserrat: ['var(--font-montserrat)', 'sans-serif'],
       },
+      screens: {
+        '3xl': '1800px',
+        '4xl': '2200px',
+      },
       keyframes: {
         marquee: {
           '0%': { transform: 'translateX(0%)' },

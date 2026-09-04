@@ -1,4 +1,18 @@
 require('dotenv').config();
+
+// ─── Global Error Guards ──────────────────────────────────────────────────────
+// In production: log + exit so PM2/Docker can restart cleanly.
+// In development: just log, keep running (handles Redis 5.x BullMQ warnings).
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+process.on('uncaughtException', (err) => {
+    console.error('[Server] Uncaught Exception:', err.message);
+    if (IS_PROD) process.exit(1); // Let process manager restart
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('[Server] Unhandled Rejection:', reason?.message || reason);
+    if (IS_PROD) process.exit(1); // Let process manager restart
+});
 const express = require('express');
 const cors = require('cors');
 const sequelize = require('./config/database');
@@ -105,14 +119,23 @@ const startServer = async () => {
         console.error('Unable to connect to the database:', error);
     }
 
+    // Initialize user uploads cleanup on startup
     try {
-        // Initialize user uploads cleanup on startup
         cleanupUserUploads();
-
-        // Start BullMQ workers for order workflow & email throttling
-        startWorkers().catch(err => console.error('[Workers] Startup error:', err));
     } catch (err) {
-        console.error('Error starting workers/cleanup:', err);
+        console.error('[Cleanup] Error during upload cleanup:', err.message);
+    }
+
+    // Start BullMQ workers — non-fatal if Redis is unavailable/incompatible
+    try {
+        await startWorkers();
+        console.log('[Workers] BullMQ workers started successfully.');
+    } catch (err) {
+        console.warn(
+            '[Workers] BullMQ workers could not start (Redis may be unavailable or version < 6.2):',
+            err.message
+        );
+        console.warn('[Workers] Server will continue without background job processing.');
     }
 
     app.listen(PORT, () => {

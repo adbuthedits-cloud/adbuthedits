@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import SeoHead from '../../../../components/SeoHead';
-import ProductCard from '../../../../components/shop/ProductCard';
+import { cdnImage } from '../../../../utils/cdn';
 
 const featuredRow1 = [
     {
@@ -113,6 +113,53 @@ const featuredRow2 = [
     }
 ];
 
+function FeaturedTemplateCard({ product }) {
+    if (!product) return null;
+
+    const parentSlug = product.parentCategory?.slug || 'digital-invitations';
+    const eventSlug = product.assetCategory?.slug || 'personal-events';
+    const productSlug = product.slug || product.products_id;
+    const productUrl = product.url || `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
+
+    const categoryName = product.assetSubCategory?.name || product.assetCategory?.name || product.category || 'Template';
+    const rawImage = product.thumbnail || product.image || (product.files && product.files[0]?.file_url) || '';
+    const imageSrc = cdnImage(rawImage);
+
+    return (
+        <Link
+            href={productUrl}
+            className="w-full aspect-[3/4] block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100"
+        >
+            {imageSrc ? (
+                <img
+                    src={imageSrc}
+                    alt={product.title || 'Template'}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    onError={(e) => {
+                        e.target.src = "https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=2070&auto=format&fit=crop";
+                    }}
+                />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xs">
+                    No Preview
+                </div>
+            )}
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 md:p-6">
+                <div className="text-white w-full">
+                    <p className="text-[10px] md:text-xs uppercase tracking-widest text-[#E188E2] mb-1 font-semibold">
+                        {categoryName}
+                    </p>
+                    <h4 className="text-sm md:text-lg font-bold whitespace-normal leading-tight line-clamp-2">
+                        {product.title}
+                    </h4>
+                </div>
+            </div>
+        </Link>
+    );
+}
+
 const DigitalInvitations = ({ masterData, initialProducts }) => {
     const [activeOccasion, setActiveOccasion] = useState(0);
     const [duration, setDuration] = useState(35);
@@ -177,7 +224,17 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
         .sort((a, b) => b.products.length - a.products.length)
         .slice(0, 4);
 
-    const digitalTemplates = topDigitalSubCategories.map(sub => sub.products[0]).filter(Boolean);
+    let digitalTemplates = topDigitalSubCategories.map(sub => sub.products[0]).filter(Boolean);
+    if (digitalTemplates.length < 4 && digitalProducts.length > 0) {
+        const existingIds = new Set(digitalTemplates.map(p => p.products_id));
+        for (const p of digitalProducts) {
+            if (!existingIds.has(p.products_id)) {
+                digitalTemplates.push(p);
+                existingIds.add(p.products_id);
+                if (digitalTemplates.length >= 4) break;
+            }
+        }
+    }
 
     // Group greetings products by subcategory
     const greetingsProducts = initialProducts?.filter(p => p.parentCategory?.slug === 'greetings') || [];
@@ -201,7 +258,17 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
         .sort((a, b) => b.products.length - a.products.length)
         .slice(0, 4);
 
-    const greetingsTemplates = topGreetingsSubCategories.map(sub => sub.products[0]).filter(Boolean);
+    let greetingsTemplates = topGreetingsSubCategories.map(sub => sub.products[0]).filter(Boolean);
+    if (greetingsTemplates.length < 4 && greetingsProducts.length > 0) {
+        const existingIds = new Set(greetingsTemplates.map(p => p.products_id));
+        for (const p of greetingsProducts) {
+            if (!existingIds.has(p.products_id)) {
+                greetingsTemplates.push(p);
+                existingIds.add(p.products_id);
+                if (greetingsTemplates.length >= 4) break;
+            }
+        }
+    }
 
     const templateCategories = [
         {
@@ -364,9 +431,9 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                             <p className="text-gray-600 text-lg font-normal max-w-4xl">{cat.tagline}</p>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                             {cat.templates.map((product, idx) => (
-                                <ProductCard key={product.products_id || idx} product={product} />
+                                <FeaturedTemplateCard key={product.products_id || idx} product={product} />
                             ))}
                         </div>
 
@@ -402,7 +469,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                                 <Link
                                     key={`row1-${i}`}
                                     href={item.url}
-                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
+                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300"
                                 >
                                     <img
                                         src={item.image}
@@ -436,7 +503,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                                 <Link
                                     key={`row2-${i}`}
                                     href={item.url}
-                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
+                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300"
                                 >
                                     <img
                                         src={item.image}
@@ -557,7 +624,7 @@ const ScrollTriggerImage = ({ item, index, onInView }) => {
 };
 
 export async function getStaticProps(context) {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
     try {
         const [masterRes, productsRes] = await Promise.all([
             fetch(`${API_URL}/api/products/master-data`),

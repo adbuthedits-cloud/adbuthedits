@@ -8,7 +8,10 @@ export default function Document() {
       <Head>
         <link rel="icon" href="/favicon.png" />
 
-
+        {/* ── Google Fonts CDN Fallback (ensures Inter, Montserrat, DM Sans, Playfair always load) ── */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..900;1,9..40,400..900&family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:ital,wght@0,300..900;1,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
 
         {/* ── Preconnect to CDN origins for faster image/video loading ── */}
         <link rel="preconnect" href="https://assets.adbuthverse.com" crossOrigin="anonymous" />

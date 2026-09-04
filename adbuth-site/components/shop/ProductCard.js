@@ -1,22 +1,21 @@
 /**
  * ProductCard.js
- * 
- * A clean, professional product card with:
- * - No rounded corners (as per design spec)
- * - NEW badge only if product was updated within the last 15 days
- * - Heart/wishlist icon
- * - Star rating, price, title, description
- * - Links to /shop/category/[parent]/[event]/[slug]
+ *
+ * LightboxPro-style bento card:
+ * - Pure image block - no text footer below the image
+ * - Overlay details appear IMMEDIATELY on hover with a smooth slide-up animation
+ * - Video starts after 0.5s hover delay
+ * - Minimal, elegant overlay: title + price + type badge
+ * - Click navigates to full product detail page
  */
 import Link from 'next/link';
-import Image from 'next/image';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as faHeartSolid, faStar } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartOutline } from '@fortawesome/free-regular-svg-icons';
 import { cdnImage, cdnVideo } from '../../utils/cdn';
 import { useWishlist } from '../../context/WishlistContext';
-
 
 const NEW_BADGE_DAYS = 15;
 
@@ -30,101 +29,328 @@ function isNewProduct(updatedAt) {
 
 function getAssetTypeName(product, masterData) {
     if (!product) return null;
-
     const rawName = product.assetType?.name ||
         (typeof product.assetType === 'string' ? product.assetType : null) ||
         product.asset_type?.name ||
         (typeof product.asset_type === 'string' ? product.asset_type : null) ||
         product.asset_type_name;
-
     if (rawName) return rawName;
-
     const typeId = product.asset_type_id || product.assetType?.type_id;
     if (typeId && masterData?.types?.length) {
         const found = masterData.types.find(t => t.type_id === typeId);
         if (found?.name) return found.name;
     }
-
     return null;
+}
+
+export function getOrientation(product, masterData) {
+    if (!product) return 'portrait';
+    const orientId = product.asset_orientation_id;
+    const orient = masterData?.orientations?.find(
+        o => o.orientation_id === orientId || o.slug === orientId
+    );
+    const orientName = orient?.name?.toLowerCase() || '';
+    const orientCode = orient?.code?.toLowerCase() || '';
+
+    if (orientName.includes('horizontal') || orientCode === 'hor' || orientCode === 'h&v') return 'landscape';
+    if (orientName.includes('square') || orientCode === 'sq') return 'square';
+    if (orientName.includes('vertical') || orientCode === 'ver') return 'portrait';
+
+    if (orientId === 2 || orientId === '2') return 'landscape';
+    if (orientId === 3 || orientId === '3') return 'square';
+    if (orientId === 1 || orientId === '1') return 'portrait';
+
+    const thumb = (product.thumbnail || '').toLowerCase();
+    if (thumb.includes('landscape') || thumb.includes('banner') || thumb.includes('horizontal') || thumb.includes('/hor/')) return 'landscape';
+    if (thumb.includes('square') || thumb.includes('/sq/')) return 'square';
+    if (thumb.includes('vertical') || thumb.includes('/ver/')) return 'portrait';
+
+    const title = (product.title || '').toLowerCase();
+    if (title.includes('landscape') || title.includes('horizontal') || title.includes('website')) return 'landscape';
+    if (title.includes('square')) return 'square';
+
+    return 'portrait';
+}
+
+export function getVariationSeed(product, index) {
+    const idx = typeof index === 'number' ? index : 0;
+    const str = String(product?.products_id || product?.id || product?.slug || idx);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
+
+export function getRealAspectRatio(product, masterData) {
+    const raw = product?.aspect_ratio || product?.aspectRatio;
+    if (raw) {
+        const clean = String(raw).trim().toLowerCase().replace(/\s+/g, '');
+        if (clean === '16:9' || clean === '16/9') return '16 / 9';
+        if (clean === '9:16' || clean === '9/16' || clean === 'vertical') return '9 / 16';
+        if (clean === '1:1' || clean === '1/1' || clean === 'square') return '1 / 1';
+        if (clean === '4:3' || clean === '4/3') return '4 / 3';
+        if (clean === '3:4' || clean === '3/4') return '3 / 4';
+        if (clean === '4:5' || clean === '4/5') return '4 / 5';
+        if (clean === '5:4' || clean === '5/4') return '5 / 4';
+        if (clean === '21:9' || clean === '21/9') return '21 / 9';
+        if (clean === '3:2' || clean === '3/2') return '3 / 2';
+        if (clean === '2:3' || clean === '2/3') return '2 / 3';
+        if (clean === '2.35:1' || clean === '2.35/1') return '2.35 / 1';
+        if (clean.includes(':')) {
+            const [w, h] = clean.split(':');
+            if (Number(w) && Number(h)) return `${w} / ${h}`;
+        }
+        if (clean.includes('/')) {
+            const [w, h] = clean.split('/');
+            if (Number(w) && Number(h)) return `${w} / ${h}`;
+        }
+        const num = parseFloat(clean);
+        if (!isNaN(num) && num > 0) return `${num} / 1`;
+    }
+
+    const orient = getOrientation(product, masterData);
+    if (orient === 'landscape') return '16 / 9';
+    if (orient === 'square') return '1 / 1';
+    return '9 / 16';
+}
+
+export function parseAspectRatio(ratioStr, orientation) {
+    if (ratioStr) {
+        const str = String(ratioStr).trim().toLowerCase().replace(/\s+/g, '');
+        if (str === '16:9' || str === '16/9') return '16 / 9';
+        if (str === '9:16' || str === '9/16' || str === 'vertical') return '9 / 16';
+        if (str === '1:1' || str === '1/1' || str === 'square') return '1 / 1';
+        if (str === '4:3' || str === '4/3') return '4 / 3';
+        if (str === '3:4' || str === '3/4') return '3 / 4';
+        if (str === '4:5' || str === '4/5') return '4 / 5';
+        if (str === '5:4' || str === '5/4') return '5 / 4';
+        if (str === '21:9' || str === '21/9') return '21 / 9';
+        if (str === '3:2' || str === '3/2') return '3 / 2';
+        if (str === '2:3' || str === '2/3') return '2 / 3';
+        if (str === '2.35:1' || str === '2.35/1') return '2.35 / 1';
+        if (str.includes(':')) {
+            const [w, h] = str.split(':');
+            if (Number(w) && Number(h)) return `${w} / ${h}`;
+        }
+        if (str.includes('/')) {
+            const [w, h] = str.split('/');
+            if (Number(w) && Number(h)) return `${w} / ${h}`;
+        }
+        const num = parseFloat(str);
+        if (!isNaN(num) && num > 0) return `${num} / 1`;
+    }
+    if (orientation === 'landscape') return '16 / 9';
+    if (orientation === 'square') return '1 / 1';
+    return '9 / 16';
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// EXACT ASPECT RATIO MATH (5 columns, auto-rows-[127px], gap-3=12px at lg)
+//
+// col_width = (1200 - 4×12) / 5 = 230px (approx at lg)
+//
+// Landscape col-span-2 row-span-2: W=2×230+12=472px, H=2×127+12=266px → 472/266 = 1.78 ≈ 16:9 ✓
+// Portrait  col-span-1 row-span-3: W=230px,         H=3×127+24=405px → 230/405 = 0.568 ≈ 9:16 ✓
+// Square    col-span-1 row-span-2: W=230px,         H=2×127+12=266px → 230/266 = 0.865 ≈ 1:1  ✓
+//
+// Pattern: L(2,2rows) + P(1,3rows) + P(1,3rows) + P(1,3rows) = 5 cols
+// grid-flow-dense fills the 2-row gap in row3,col1-2 with the NEXT landscape automatically ✓
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Landscape scale variants
+const LANDSCAPE_SCALES = [
+    [4, 'col-span-4'], // 2× scale — fills 4 cols
+    [2, 'col-span-2'], // 1× default — fills 2 cols
+];
+
+function getLandscapeSpan(spaceLeft) {
+    for (const [c, sc] of LANDSCAPE_SCALES) {
+        if (c <= spaceLeft) return { cols: c, spanClass: sc };
+    }
+    return { cols: 2, spanClass: 'col-span-2' };
+}
+
+export function getOptimalColSpan(product, masterData, index = 0) {
+    const ratioStr = getRealAspectRatio(product, masterData);
+    const parts = ratioStr.split('/').map(s => parseFloat(s.trim()));
+    const ratio = (parts.length === 2 && parts[0] > 0 && parts[1] > 0) ? (parts[0] / parts[1]) : 0.5625;
+
+    // Extra-wide landscape (21:9, panoramic, etc.) → col-span-3
+    if (ratio >= 2.0) return { spanClass: 'col-span-3', cols: 3, type: 'landscape-wide', aspectRatio: ratioStr };
+    // Standard landscape (16:9, 3:2, 4:3, etc.) → col-span-2
+    if (ratio >= 1.25) return { spanClass: 'col-span-2', cols: 2, type: 'landscape', aspectRatio: ratioStr };
+    // Square (1:1) → col-span-1
+    if (ratio >= 0.85) return { spanClass: 'col-span-1', cols: 1, type: 'square', aspectRatio: ratioStr };
+    // Portrait (9:16, 4:5, etc.) → col-span-1
+    return { spanClass: 'col-span-1', cols: 1, type: 'portrait', aspectRatio: ratioStr };
+}
+
+export function optimizeBentoLayout(products, masterData, targetColumns = 5) {
+    if (!products || !products.length) return [];
+
+    const tagged = products.map((p, i) => ({
+        ...p,
+        _spanInfo: getOptimalColSpan(p, masterData, i),
+    }));
+
+    const L = tagged.filter(p => p._spanInfo.type === 'landscape');
+    const P = tagged.filter(p => p._spanInfo.type === 'portrait');
+    const S = tagged.filter(p => p._spanInfo.type === 'square');
+
+    // Patterns filling 5 columns cleanly
+    const result = [];
+    let cycle = 0;
+
+    while (L.length || P.length || S.length) {
+        const pat = cycle % 4;
+        cycle++;
+
+        if (pat === 0 && L.length >= 1 && P.length >= 3) {
+            result.push(L.shift(), P.shift(), P.shift(), P.shift());
+        } else if (pat === 1 && L.length >= 2 && P.length >= 1) {
+            result.push(L.shift(), L.shift(), P.shift());
+        } else if (pat === 2 && L.length >= 1 && P.length >= 3) {
+            result.push(P.shift(), P.shift(), P.shift(), L.shift());
+        } else if (pat === 3 && L.length >= 1 && S.length >= 3) {
+            result.push(L.shift(), S.shift(), S.shift(), S.shift());
+        } else {
+            let cols = 0;
+            while (cols < targetColumns) {
+                const spaceLeft = targetColumns - cols;
+                if (L.length && spaceLeft >= 2) {
+                    const span = getLandscapeSpan(spaceLeft);
+                    const item = L.shift();
+                    result.push({ ...item, _spanInfo: { ...item._spanInfo, ...span } });
+                    cols += span.cols;
+                } else if (P.length && spaceLeft >= 1) {
+                    result.push(P.shift()); cols += 1;
+                } else if (S.length && spaceLeft >= 1) {
+                    result.push(S.shift()); cols += 1;
+                } else if (L.length) {
+                    const span = getLandscapeSpan(Math.max(spaceLeft, 2));
+                    const item = L.shift();
+                    result.push({ ...item, _spanInfo: { ...item._spanInfo, ...span } });
+                    cols += span.cols;
+                } else if (P.length) { result.push(P.shift()); cols += 1; }
+                else if (S.length) { result.push(S.shift()); cols += 1; }
+                else break;
+            }
+        }
+    }
+
+    return result;
+}
+
+export function getRatioMultiplier(aspectRatioStr) {
+    if (!aspectRatioStr) return 1.77;
+    const parts = String(aspectRatioStr).split('/').map(s => parseFloat(s.trim()));
+    if (parts.length === 2 && parts[0] > 0 && parts[1] > 0) {
+        return parts[1] / parts[0];
+    }
+    return 1.77;
+}
+
+/**
+ * Returns width/height as a float for use in justified flex row layout.
+ * e.g. 16/9 ≈ 1.778, 9/16 ≈ 0.5625, 1/1 = 1.0
+ */
+export function getNumericRatio(product, masterData) {
+    const ratioStr = getRealAspectRatio(product, masterData);
+    const parts = ratioStr.split('/').map(s => parseFloat(s.trim()));
+    if (parts.length === 2 && parts[0] > 0 && parts[1] > 0) {
+        return parts[0] / parts[1];
+    }
+    return 0.5625; // default portrait 9/16
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-export default function ProductCard({ product, index = 0, masterData }) {
+const ProductCard = forwardRef(function ProductCard({ product, index = 0, masterData, initialRatio }, forwardedRef) {
     const { toggleWishlist, isInWishlist } = useWishlist();
     const productId = product?.products_id || product?.id;
-    const wishlisted = isInWishlist(productId);
-
-    // isPlaying: video is actively playing
-    const [isPlaying, setIsPlaying] = useState(false);
-    // isHovered: mouse is currently over the card
-    const [isHovered, setIsHovered] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
-    // Lazy-loaded video URL — fetched on first hover to keep page payload small
-    const [lazyVideoSrc, setLazyVideoSrc] = useState(null);
-    const [videoFetched, setVideoFetched] = useState(false);
-    const containerRef = useRef(null);
-    const videoRef = useRef(null);
+    const wishlisted = isMounted ? isInWishlist(productId) : false;
 
-    // ── Client-side mount + IntersectionObserver ──────────────────────────────
+    const thumbnail = product?.thumbnail ? cdnImage(product.thumbnail) : null;
+    // Use span chosen by optimizer (may be scaled-up landscape); fall back to default
+    const spanInfo = useMemo(() => {
+        const si = product?._spanInfo;
+        if (si?.spanClass) return si;
+        return getOptimalColSpan(product, masterData, index);
+    }, [product, masterData, index]);
+    const spanClass = spanInfo.spanClass;
+
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [lazyVideoSrc, setLazyVideoSrc] = useState(null);
+    const [isHovered, setIsHovered] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+    const videoTimerRef = useRef(null);
+    const videoElementRef = useRef(null);
+    const localRef = useRef(null);
+
+    const containerRef = forwardedRef || localRef;
+
     useEffect(() => {
         setIsMounted(true);
-        if (!containerRef.current) return;
+        const el = containerRef?.current;
+        if (!el) return;
         const observer = new IntersectionObserver(
             ([entry]) => setIsVisible(entry.isIntersecting),
             { rootMargin: '150px' }
         );
-        observer.observe(containerRef.current);
-        return () => observer.disconnect();
-    }, []);
+        observer.observe(el);
+        return () => {
+            observer.disconnect();
+            if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
+        };
+    }, [containerRef]);
 
-    // ── Stop video when scrolled off-screen ───────────────────────────────────
     useEffect(() => {
-        if (!isVisible && isPlaying) setIsPlaying(false);
+        if (!isVisible && isPlaying) {
+            setIsPlaying(false);
+            if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
+        }
     }, [isVisible, isPlaying]);
 
-    // ── Drive the <video> element ─────────────────────────────────────────────
     useEffect(() => {
-        const vid = videoRef.current;
+        const vid = videoElementRef.current;
         if (!vid) return;
         if (isPlaying) {
             const p = vid.play();
-            if (p !== undefined) p.catch(() => {});
+            if (p !== undefined) p.catch(() => { });
         } else {
             vid.pause();
             vid.currentTime = 0;
         }
     }, [isPlaying]);
 
-    // ── Lazy-fetch video URL on first hover ───────────────────────────────────
     const handleMouseEnter = () => {
         setIsHovered(true);
-        // Only fetch if no video data was included in the page props
-        if (!videoFetched && product.slug && !product.video?.[0] && !product.video_url) {
-            setVideoFetched(true);
-            fetch(`${API_URL}/api/products/${product.slug}`)
-                .then(r => r.ok ? r.json() : null)
+        if (!lazyVideoSrc && !product.video?.[0] && !product.video_url && productId) {
+            fetch(`${API_URL}/api/products/${productId}`)
+                .then(res => res.json())
                 .then(data => {
                     if (data?.video?.[0] || data?.video_url) {
                         setLazyVideoSrc(cdnVideo(data.video?.[0] || data.video_url));
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         }
+        if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
+        videoTimerRef.current = setTimeout(() => {
+            setIsPlaying(true);
+        }, 500);
     };
 
-    // ── Mouse leave: stop video + mark as not hovered ─────────────────────────
     const handleMouseLeave = () => {
         setIsHovered(false);
-        setIsPlaying(false); // always stop when pointer leaves
-    };
-
-    // ── Click play: start video, button hides automatically ───────────────────
-    const handlePlayClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsPlaying(true); // button hides because showPlayButton = isHovered && !isPlaying
+        setIsPlaying(false);
+        if (videoTimerRef.current) {
+            clearTimeout(videoTimerRef.current);
+            videoTimerRef.current = null;
+        }
     };
 
     if (!product) return null;
@@ -140,8 +366,6 @@ export default function ProductCard({ product, index = 0, masterData }) {
     const productSlug = product.slug || '';
     const productUrl = `/shop/category/${parentSlug}/${eventSlug}/${productSlug}`;
 
-    const thumbnail = product.thumbnail ? cdnImage(product.thumbnail) : null;
-    // lazyVideoSrc wins when lazy-loaded; fall back to inline props
     const videoSrc = lazyVideoSrc ||
         (product.video?.[0] || product.video_url
             ? cdnVideo(product.video?.[0] || product.video_url)
@@ -152,19 +376,22 @@ export default function ProductCard({ product, index = 0, masterData }) {
         ? Math.round(((product.compared_price - product.price) / product.compared_price) * 100)
         : 0;
 
-    // Button visibility (pure React state, no CSS group-hover tricks):
-    //   • Not hovered            → hidden
-    //   • Hovered + not playing  → visible (▶ play icon)
-    //   • Hovered + playing      → hidden  (video is showing, no UI clutter)
-    const showPlayButton = isHovered && !isPlaying && videoSrc;
+    const assetTypeName = getAssetTypeName(product, masterData);
 
     return (
-        <div
-            className="relative flex flex-col bg-white hover:shadow-md transition-shadow duration-200"
+        <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{
+                duration: 0.25,
+                ease: 'easeOut'
+            }}
+            className="group relative overflow-hidden w-full h-full rounded-[16px] bg-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-pointer"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            ref={containerRef}
         >
-            {/* ── Image / Video Container ─────────────────────────────────── */}
             <Link
                 href={productUrl}
                 onClick={() => {
@@ -172,36 +399,38 @@ export default function ProductCard({ product, index = 0, masterData }) {
                         try {
                             sessionStorage.setItem('adbuth_shop_saved_scroll', String(window.scrollY));
                             sessionStorage.setItem('adbuth_shop_from_detail', 'true');
-                        } catch {}
+                        } catch { }
                     }
                 }}
-                className="block relative overflow-hidden bg-gray-50"
-                style={{ aspectRatio: '3/4' }}
-                ref={containerRef}
+                className="block absolute inset-0 w-full h-full"
             >
-                {/* Thumbnail — fades out when video plays */}
                 {thumbnail ? (
-                    <Image
+                    <img
                         src={thumbnail}
                         alt={product.title || 'Product Image'}
-                        fill
-                        className={`object-contain transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                        priority={index < 8}
-                        suppressHydrationWarning
+                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-[1.04] ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+                        loading={index < 8 ? 'eager' : 'lazy'}
+                    />
+                ) : videoSrc ? (
+                    <video
+                        src={videoSrc}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="absolute inset-0 w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                        <span className="text-gray-300 text-[10px]">No Preview</span>
+                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">No Preview</span>
                     </div>
                 )}
 
-                {/* Video element — mounted client-side only, when in viewport */}
                 {isMounted && isVisible && videoSrc && (
                     <video
-                        ref={videoRef}
+                        ref={videoElementRef}
                         src={videoSrc}
-                        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         muted
                         loop
                         playsInline
@@ -209,111 +438,86 @@ export default function ProductCard({ product, index = 0, masterData }) {
                     />
                 )}
 
-                {/* ▶ Play button — only when hovered AND not playing */}
-                {showPlayButton && (
-                    <button
-                        onClick={handlePlayClick}
-                        aria-label="Play preview"
-                        className="absolute inset-0 m-auto w-12 h-12 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center z-20 shadow-lg border border-white/20 transition-colors duration-150"
+                <div
+                    className="absolute inset-0 flex flex-col justify-end z-20 pointer-events-none"
+                    style={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.28) 45%, transparent 100%)',
+                        opacity: isHovered ? 1 : 0,
+                        transition: 'opacity 0.18s ease-out',
+                    }}
+                >
+                    <div
+                        className="px-3 pb-3 pt-10"
+                        style={{
+                            transform: isHovered ? 'translateY(0)' : 'translateY(8px)',
+                            transition: 'transform 0.22s ease-out',
+                        }}
                     >
-                        <svg className="w-5 h-5 fill-white ml-0.5" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                        </svg>
-                    </button>
-                )}
+                        {assetTypeName && (
+                            <span className="block text-[9px] font-bold tracking-widest uppercase text-purple-300 mb-1">
+                                {assetTypeName}
+                            </span>
+                        )}
+                        <p className="text-white text-[13px] font-bold leading-snug line-clamp-1 mb-2 drop-shadow">
+                            {product.title}
+                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-white text-[13px] font-black">Rs.{product.price}</span>
+                                {hasDiscount && (
+                                    <span className="text-gray-300 text-[10px] line-through">Rs.{product.compared_price}</span>
+                                )}
+                                {rating && (
+                                    <span className="flex items-center gap-1 bg-white/15 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
+                                        <FontAwesomeIcon icon={faStar} className="text-yellow-400 text-[8px]" />
+                                        <span className="text-white text-[9px] font-bold">{rating}</span>
+                                        {reviewCount > 0 && (
+                                            <span className="text-gray-300 text-[8px]">({reviewCount})</span>
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-[10px] font-bold bg-white text-gray-900 px-3 py-1 rounded-full shadow-sm shrink-0">
+                                View
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </Link>
 
-                {/* NEW Badge */}
+            <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-30 pointer-events-none">
                 {isNew && (
-                    <span className="absolute top-2 left-0 bg-black text-white text-[9px] font-bold px-3 py-1 uppercase tracking-widest z-10">
+                    <span className="bg-black/75 backdrop-blur-md text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                         New
                     </span>
                 )}
-
-                {/* Discount Badge */}
                 {hasDiscount && (
-                    <div className="absolute bottom-0 left-0 ml-2 my-2 px-2.5 py-0.5 bg-black text-white rounded-full border border-white/10 z-10 flex items-center justify-center">
-                        <span className="text-[10px] font-bold tracking-tight uppercase leading-none">{discountPct}% OFF</span>
-                    </div>
+                    <span className="bg-purple-600/90 backdrop-blur-md text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        {discountPct}% OFF
+                    </span>
                 )}
+            </div>
 
-                {/* Asset Type Badge — opposite side of discount */}
-                {(() => {
-                    const assetTypeName = getAssetTypeName(product, masterData);
-                    if (!assetTypeName) return null;
-                    return (
-                        <div className="absolute bottom-0 right-0 mr-2 my-2 px-2.5 py-0.5 bg-black text-white rounded-full border border-white/10 z-10 flex items-center justify-center">
-                            <span className="text-[10px] font-bold tracking-tight uppercase leading-none">
-                                {assetTypeName}
-                            </span>
-                        </div>
-                    );
-                })()}
-
-            </Link>
-
-            {/* ── Wishlist Button ─────────────────────────────────────────── */}
             <button
                 onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (productId) {
-                        toggleWishlist(productId);
-                    }
+                    if (productId) toggleWishlist(productId);
                 }}
-                className="absolute top-2 right-2 z-20 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center hover:bg-white transition-all duration-300 shadow-sm group/wishlist"
+                className={`absolute top-2.5 right-2.5 z-30 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${wishlisted
+                    ? 'bg-white text-red-500 opacity-100 scale-100'
+                    : 'bg-black/40 hover:bg-white text-white hover:text-gray-900 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100'
+                    }`}
                 aria-label={wishlisted ? `Remove ${product.title} from wishlist` : `Add ${product.title} to wishlist`}
             >
                 <FontAwesomeIcon
                     icon={wishlisted ? faHeartSolid : faHeartOutline}
-                    className={`text-sm transition-transform duration-200 group-active/wishlist:scale-125 ${wishlisted ? 'text-red-500' : 'text-gray-900'}`}
+                    className={`text-xs transition-transform duration-200 active:scale-125 ${wishlisted ? 'text-red-500' : ''}`}
                     aria-hidden="true"
                 />
             </button>
-
-            {/* ── Product Info ────────────────────────────────────────────── */}
-            <Link
-                href={productUrl}
-                onClick={() => {
-                    if (typeof window !== 'undefined') {
-                        try {
-                            sessionStorage.setItem('adbuth_shop_saved_scroll', String(window.scrollY));
-                            sessionStorage.setItem('adbuth_shop_from_detail', 'true');
-                        } catch {}
-                    }
-                }}
-                className="flex flex-col p-3 flex-1"
-            >
-                <p className="text-[13px] font-semibold text-gray-900 leading-tight line-clamp-1 mb-1">
-                    {product.title}
-                </p>
-                {product.description && (
-                    <p className="text-[11px] text-gray-500 line-clamp-1 mb-2">
-                        {product.description}
-                    </p>
-                )}
-
-                {/* Rating */}
-                {rating && (
-                    <div className="flex items-center gap-1 mb-2">
-                        <FontAwesomeIcon icon={faStar} className="text-yellow-400 text-[10px]" />
-                        <span className="text-[11px] font-semibold text-gray-700">{rating}</span>
-                        {reviewCount > 0 && (
-                            <span className="text-[10px] text-gray-400">({reviewCount})</span>
-                        )}
-                    </div>
-                )}
-
-                {/* Price */}
-                <div className="flex items-baseline gap-2 mt-auto">
-                    <span className="text-[14px] font-bold text-gray-900">₹{product.price}</span>
-                    {hasDiscount && (
-                        <>
-                            <span className="text-[11px] text-gray-400 line-through">₹{product.compared_price}</span>
-                            <span className="text-[11px] font-bold text-green-600">{discountPct}% OFF</span>
-                        </>
-                    )}
-                </div>
-            </Link>
-        </div>
+        </motion.div>
     );
-}
+});
+
+export default ProductCard;

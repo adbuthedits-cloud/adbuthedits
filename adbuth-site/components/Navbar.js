@@ -123,16 +123,44 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
   }
 
   return (
-    <header className={`w-full top-0 left-0 z-50 ${position} ${headerClass}`}>
+    <header
+      className={`w-full top-0 left-0 z-50 ${position} ${headerClass}`}
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        willChange: 'transform',
+      }}
+    >
       <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <Image src={brandLogo || "https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png"} alt="Logo" className='lg:w-36 md:w-28 sm:w-24 w-28 object-contain' width={280} height={280} priority />
+            <img
+              src={brandLogo || "https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png"}
+              alt="Logo"
+              className="lg:w-36 md:w-28 sm:w-24 w-28 object-contain"
+              width={144}
+              height={36}
+              loading="eager"
+              decoding="sync"
+              fetchPriority="high"
+              style={{
+                transform: 'translateZ(0)',
+                WebkitTransform: 'translateZ(0)',
+              }}
+            />
           </Link>
         </div>
 
         {/* Desktop Menu */}
-        <nav className={`hidden lg:flex items-center gap-8 text-sm font-medium ${isdark ? 'text-white' : 'text-black'}`}>
+        <nav
+          className={`hidden lg:flex items-center gap-8 text-sm font-medium ${isdark ? 'text-white' : 'text-black'}`}
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+          }}
+        >
           <Link href="/about" className={`hover:text-purple-700 transition-colors ${highlight === 'about' ? 'text-purple-700' : ''}`}>About</Link>
 
           <div
@@ -374,7 +402,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
         </nav>
 
         {/* Mobile Toggle Button */}
-        <div className="lg:hidden">
+        <div className="lg:hidden" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
           <button
             className={`p-2 z-50 relative focus:outline-none ${open ? 'text-white' : (!isdark ? 'text-black' : 'text-white')}`}
             onClick={() => setOpen(v => !v)}
