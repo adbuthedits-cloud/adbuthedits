@@ -13,7 +13,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import Navbar from '../../components/Navbar';
 import ShopSidebar from '../../components/shop/ShopSidebar';
 import ShopTopBar from '../../components/shop/ShopTopBar';
 import ShopSearchBar from '../../components/shop/ShopSearchBar';
@@ -126,7 +125,7 @@ function SkeletonGrid() {
                 const colClass = isLandscape ? 'col-span-2 lg:col-span-3' : 'col-span-1';
                 const heightClass = isLandscape
                     ? 'h-[200px] sm:h-[285px] md:h-[300px] lg:h-[310px] xl:h-[310px] 2xl:h-[335px] min-[1800px]:h-[400px]'
-                    : 'h-[270px] sm:h-[285px] md:h-[300px] lg:h-[310px] xl:h-[310px] 2xl:h-[335px] min-[1800px]:h-[400px]';
+                    : 'aspect-[9/16] h-auto sm:aspect-auto sm:h-[285px] md:h-[300px] lg:h-[310px] xl:h-[310px] 2xl:h-[335px] min-[1800px]:h-[400px]';
                 return (
                     <div
                         key={sIdx}
@@ -191,7 +190,7 @@ function ProductGrid({ products, loading, masterData }) {
                         const colSpan = isLandscape ? 'col-span-2 lg:col-span-3' : 'col-span-1';
                         const heightClass = isLandscape
                             ? 'h-[200px] sm:h-[285px] md:h-[300px] lg:h-[310px] xl:h-[310px] 2xl:h-[335px] min-[1800px]:h-[400px]'
-                            : 'h-[270px] sm:h-[285px] md:h-[300px] lg:h-[310px] xl:h-[310px] 2xl:h-[335px] min-[1800px]:h-[400px]';
+                            : 'aspect-[9/16] h-auto sm:aspect-auto sm:h-[285px] md:h-[300px] lg:h-[310px] xl:h-[310px] 2xl:h-[335px] min-[1800px]:h-[400px]';
                         return (
                             <div key={p.products_id || p.slug || i} className={`${colSpan} ${heightClass}`}>
                                 <ProductCard
@@ -581,7 +580,6 @@ export default function ShopPage({ initialProducts, masterData, maxPrice, initia
     if (isProductDetail && productSlug) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar isdark={false} highlight='shop' />
                 <main className="pt-24">
                     <ProductDetailView slug={productSlug} masterData={masterData} />
                 </main>
@@ -598,7 +596,6 @@ export default function ShopPage({ initialProducts, masterData, maxPrice, initia
             </Head>
 
             <div className="min-h-screen bg-white">
-                <Navbar isdark={false} highlight='shop' />
                 <main className="pt-24">
                     {/* Main Shop Grid — Full width on wide screens: filter at side, products up to the right */}
                     <div id="shop-products" className="flex items-start w-full px-4 sm:px-6 lg:px-8 xl:px-10 pt-4 scroll-m-[100px]">

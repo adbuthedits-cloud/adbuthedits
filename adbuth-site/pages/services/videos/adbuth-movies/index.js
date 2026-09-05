@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import SeoHead from '../../../../components/SeoHead';
 import { cdnImage } from '../../../../utils/cdn';
@@ -239,8 +238,6 @@ export default function AdbuthMovies() {
                 description="At Adbuth Movies, we help filmmakers shape powerful stories through expert editing, cinematic color work, and technology-driven collaboration."
                 image={cdnImage("https://assets.adbuthverse.com/website-assets/shared/placeholder.webp")}
             />
-            <Navbar highlight="services" isdark={true} />
-
             <main className="relative pt-24 pb-20 z-10 bg-black">
                 {/* Hero Section */}
                 <section className="max-w-[1400px] mx-auto px-0  lg:px-24 flex flex-col lg:flex-row justify-start gap-3 h-auto lg:h-[110vh] ">

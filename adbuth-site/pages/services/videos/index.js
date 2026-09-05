@@ -3,7 +3,6 @@ import Link from 'next/link';
 import SeoHead from '../../../components/SeoHead';
 import { cdnImage, cdnVideo } from '../../../utils/cdn';
 import useSeo from '../../../hooks/useSeo';
-import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -117,11 +116,21 @@ const VideoPlayer = ({ src, buttonSize = "small" }) => {
     }, [src]);
 
     useEffect(() => {
+        let timer;
         if (isInView && videoRef.current) {
+            videoRef.current.currentTime = 0;
             videoRef.current.play().catch(() => {});
+            timer = setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.pause();
+                }
+            }, 10000);
         } else if (!isInView && videoRef.current) {
             videoRef.current.pause();
         }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
     }, [isInView]);
 
     const isLarge = buttonSize === "large";
@@ -133,12 +142,23 @@ const VideoPlayer = ({ src, buttonSize = "small" }) => {
                 src={isInView ? cdnVideo(src) : ""} 
                 className="w-full h-full object-cover absolute inset-0"
                 muted={isMuted}
-                loop
                 playsInline
                 preload="none"
+                onTimeUpdate={(e) => {
+                    if (e.target.currentTime >= 10) {
+                        e.target.pause();
+                    }
+                }}
             />
             <button 
-                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (videoRef.current && videoRef.current.paused) {
+                        videoRef.current.currentTime = 0;
+                        videoRef.current.play().catch(() => {});
+                    }
+                    setIsMuted(!isMuted); 
+                }}
                 className={`absolute ${isLarge ? 'bottom-6 right-6 w-10 h-10' : 'bottom-4 right-4 w-8 h-8'} z-20 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300`}
             >
                 <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className={isLarge ? 'text-xs' : 'text-[10px]'} />
@@ -166,8 +186,6 @@ export default function Videos() {
                 image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/shared/placeholder.webp")}
                 data={seoData}
             />
-            <Navbar highlight="services" />
-
             <main className="relative z-10">
 
                 {/* Hero Section */}

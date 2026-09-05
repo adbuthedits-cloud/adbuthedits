@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown, faShoppingBag, faUser, faHeart, faBoxOpen, faCog, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
 import { useAuth } from '../context/AuthContext'
 
+// Adbuth Navbar Component
 export default function Navbar({ highlight = '', isdark = true, headerClass = "", position = "absolute" }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -125,29 +126,21 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
   return (
     <header
       className={`w-full top-0 left-0 z-50 ${position} ${headerClass}`}
-      style={{
-        transform: 'translateZ(0)',
-        WebkitTransform: 'translateZ(0)',
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
-        willChange: 'transform',
-      }}
     >
       <div className="max-w-7xl md:mx-12 lg:mx-auto mx-auto flex items-center justify-between p-6 relative z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <img
-              src={brandLogo || "https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png"}
+            <Image
+              src={brandLogo || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp"}
               alt="Logo"
               className="lg:w-36 md:w-28 sm:w-24 w-28 object-contain"
-              width={144}
-              height={36}
-              loading="eager"
-              decoding="sync"
-              fetchPriority="high"
-              style={{
-                transform: 'translateZ(0)',
-                WebkitTransform: 'translateZ(0)',
+              width={280}
+              height={280}
+              priority
+              onError={() => {
+                if (brandLogo !== "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp") {
+                  // Fallback to active verified logo
+                }
               }}
             />
           </Link>
@@ -156,10 +149,6 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
         {/* Desktop Menu */}
         <nav
           className={`hidden lg:flex items-center gap-8 text-sm font-medium ${isdark ? 'text-white' : 'text-black'}`}
-          style={{
-            transform: 'translateZ(0)',
-            WebkitTransform: 'translateZ(0)',
-          }}
         >
           <Link href="/about" className={`hover:text-purple-700 transition-colors ${highlight === 'about' ? 'text-purple-700' : ''}`}>About</Link>
 
@@ -402,7 +391,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
         </nav>
 
         {/* Mobile Toggle Button */}
-        <div className="lg:hidden" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
+        <div className="lg:hidden">
           <button
             className={`p-2 z-50 relative focus:outline-none ${open ? 'text-white' : (!isdark ? 'text-black' : 'text-white')}`}
             onClick={() => setOpen(v => !v)}

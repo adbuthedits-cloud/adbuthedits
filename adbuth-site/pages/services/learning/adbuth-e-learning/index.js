@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SeoHead from '../../../../components/SeoHead';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -103,8 +102,6 @@ const ComingSoonELearning = () => {
     return (
         <div className="min-h-screen bg-[#0A0512] text-white flex flex-col justify-between font-sans relative overflow-hidden">
             <SeoHead page="service-learning-e-learning" title="Adbuth E-Learning | Coming Soon" description="Express your interest or ask any queries about our upcoming E-Learning programs." />
-            <Navbar highlight='services' isdark={true} />
-
             {/* Glowing background blobs */}
             <div className="absolute inset-0 pointer-events-none z-0">
                 <div className="absolute top-[20%] left-[-10%] w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-purple-900/15 rounded-full blur-[80px] md:blur-[150px]" />
@@ -551,8 +548,6 @@ export default function AdbuthELearning() {
     return (
         <div className="font-sans bg-[#F4F8F6] text-black overflow-x-hidden">
             <SeoHead page="service-learning-e-learning" title="Adbuth Learning | The Practical Way" />
-            <Navbar highlight='services' isdark={false} />
-
             <main className="pt-24 md:pt-24 pb-0" style={{ fontFamily: 'Outfit, sans-serif' }}>
 
                 {/* HERO SECTION */}

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -45,23 +44,32 @@ function readVisibleCount() {
 }
 
 export default function Blogs() {
-  const cachedPosts = readBlogsCache();
-  const cachedCats  = readCatsCache();
-  const [categories, setCategories] = useState(cachedCats || ['All']);
-  const [allPosts, setAllPosts] = useState(cachedPosts || []);
+  const [categories, setCategories] = useState(['All']);
+  const [allPosts, setAllPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [currentShareUrl, setCurrentShareUrl] = useState('');
-  const [visibleCount, setVisibleCount] = useState(readVisibleCount);
-  const [loading, setLoading] = useState(!cachedPosts || cachedPosts.length === 0);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [loading, setLoading] = useState(true);
   const isInitialMount = useRef(true);
 
   // Dynamic SEO
   const { seoData } = useSeo('blogs');
 
-  // Fetch Blogs and Categories from API (show cached immediately, refresh in background)
+  // Fetch Blogs and Categories from API (show cached immediately on client mount, refresh in background)
   useEffect(() => {
+    // Read cache on client mount after hydration has completed cleanly
+    const cachedPosts = readBlogsCache();
+    const cachedCats = readCatsCache();
+    const cachedVisible = readVisibleCount();
+    if (cachedVisible) setVisibleCount(cachedVisible);
+    if (cachedPosts && cachedPosts.length > 0) {
+      setAllPosts(cachedPosts);
+      if (cachedCats && cachedCats.length > 0) setCategories(cachedCats);
+      setLoading(false);
+    }
+
     const fetchData = async () => {
       // Only show loading spinner if nothing cached yet
       if (!cachedPosts || cachedPosts.length === 0) setLoading(true);
@@ -199,8 +207,6 @@ export default function Blogs() {
         author={seoData?.author || "Adbuth Verse"}
         data={seoData} // Pass full object for keywords, canonical
       />
-      <Navbar highlight="blogs" isdark={false} />
-
       <main>
 
         {/* Header Section */}

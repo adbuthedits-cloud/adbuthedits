@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { cdnImage } from '../../utils/cdn';
@@ -403,7 +402,6 @@ export default function OrderDetailPage() {
 
     if (authLoading || loading) return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
-            <Navbar isdark={false} />
             <main className="flex-grow flex items-center justify-center pt-32">
                 <FontAwesomeIcon icon={faSpinner} spin className="text-purple-600 text-4xl" />
             </main>
@@ -413,7 +411,6 @@ export default function OrderDetailPage() {
 
     if (error || !order) return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
-            <Navbar isdark={false} />
             <main className="flex-grow flex items-center justify-center pt-32 px-4">
                 <div className="text-center bg-white rounded-3xl p-12 shadow-sm border border-gray-100 max-w-md">
                     <FontAwesomeIcon icon={faBoxOpen} className="text-gray-300 text-5xl mb-4" />
@@ -441,7 +438,6 @@ export default function OrderDetailPage() {
 
     return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col">
-            <Navbar isdark={false} />
             <main className="flex-grow pt-32 pb-16 px-4">
                 <div className="max-w-4xl mx-auto">
                     <Link href="/orders" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-6 transition-colors">

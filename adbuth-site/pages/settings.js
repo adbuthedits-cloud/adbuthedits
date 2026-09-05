@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -322,8 +321,6 @@ export default function Settings() {
                 description={seoData?.meta_description || seoData?.description || "Manage your account settings."}
                 data={seoData}
             />
-            <Navbar isdark={false} />
-
             <main className="flex-grow pt-32 pb-12 px-4">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-3xl font-bold text-gray-900 mb-8">Account Settings</h1>

@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faTrash, faShoppingCart, faArrowRight, faHeartBroken } from '@fortawesome/free-solid-svg-icons';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/shop/ProductCard';
 import { useAuth } from '../context/AuthContext';
@@ -143,9 +142,6 @@ export default function Wishlist() {
                 description={seoData?.meta_description || seoData?.description || "Your saved items."}
                 data={seoData}
             />
-
-            <Navbar highlight="shop" isdark={false} />
-
             {isLoading ? (
                 <WishlistSkeleton />
             ) : (

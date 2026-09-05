@@ -1,6 +1,5 @@
 import { useRouter } from 'next/router'
 import { useState, useEffect } from 'react'
-import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -67,8 +66,6 @@ export default function BlogPost() {
         image={thumbnail}
         author={blog.author || "Adbuth Verse"}
       />
-      <Navbar highlight="blogs" />
-
       <main className="pt-24 min-h-screen">
 
         {/* Hero Section */}

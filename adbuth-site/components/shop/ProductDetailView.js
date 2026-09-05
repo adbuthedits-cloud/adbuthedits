@@ -24,9 +24,11 @@ const ReviewSection = dynamic(() => import('../ReviewSection'), { loading: () =>
 // ─── Featured Template Card (New Design with Video Hover Support) ────────────
 function TemplateCard({ product }) {
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const videoRef = useRef(null);
     const isHoveredRef = useRef(false);
     const hoverTimerRef = useRef(null);
+    const maxPlayTimerRef = useRef(null);
 
     const rawVideo = (Array.isArray(product?.video) && product?.video[0])
         ? product.video[0]
@@ -51,6 +53,16 @@ function TemplateCard({ product }) {
                 });
             }
         } catch {}
+
+        // Restrict video playback to 10 seconds max
+        if (maxPlayTimerRef.current) clearTimeout(maxPlayTimerRef.current);
+        maxPlayTimerRef.current = setTimeout(() => {
+            setIsPlaying(false);
+            if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+            }
+        }, 10000);
     }, []);
 
     useEffect(() => {
@@ -61,10 +73,15 @@ function TemplateCard({ product }) {
         } else {
             vid.pause();
             vid.currentTime = 0;
+            if (maxPlayTimerRef.current) {
+                clearTimeout(maxPlayTimerRef.current);
+                maxPlayTimerRef.current = null;
+            }
         }
     }, [isPlaying, videoSrc, playVideo]);
 
     const handleMouseEnter = () => {
+        setIsHovered(true);
         isHoveredRef.current = true;
         const vid = videoRef.current;
         if (vid) {
@@ -87,11 +104,16 @@ function TemplateCard({ product }) {
     };
 
     const handleMouseLeave = () => {
+        setIsHovered(false);
         isHoveredRef.current = false;
         setIsPlaying(false);
         if (hoverTimerRef.current) {
             clearTimeout(hoverTimerRef.current);
             hoverTimerRef.current = null;
+        }
+        if (maxPlayTimerRef.current) {
+            clearTimeout(maxPlayTimerRef.current);
+            maxPlayTimerRef.current = null;
         }
         const vid = videoRef.current;
         if (vid) {
@@ -121,7 +143,7 @@ function TemplateCard({ product }) {
             href={productUrl}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className="w-[180px] sm:w-[220px] aspect-[3/4] flex-none snap-start block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100"
+            className="w-[170px] sm:w-[220px] aspect-[9/16] sm:aspect-[3/4] flex-none snap-start block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100"
         >
             {imageSrc ? (
                 <img
@@ -136,7 +158,7 @@ function TemplateCard({ product }) {
                 </div>
             )}
 
-            {videoSrc && (
+            {(isHovered || isPlaying) && videoSrc && (
                 <video
                     ref={videoRef}
                     src={videoSrc}
@@ -144,12 +166,18 @@ function TemplateCard({ product }) {
                         isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                     muted
-                    loop
                     playsInline
-                    preload="auto"
+                    preload="metadata"
                     onCanPlay={() => {
                         if (isHoveredRef.current || isPlaying) {
                             playVideo();
+                        }
+                    }}
+                    onTimeUpdate={(e) => {
+                        if (e.target.currentTime >= 10) {
+                            e.target.pause();
+                            e.target.currentTime = 0;
+                            setIsPlaying(false);
                         }
                     }}
                 />

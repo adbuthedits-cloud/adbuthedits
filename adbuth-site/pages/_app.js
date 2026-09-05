@@ -34,22 +34,14 @@ function useScrollRestoration(router) {
     retryTimers.current = []
   }
 
-  // Scroll to target, retrying several times to handle layout shifts from
-  // lazy-loaded components, sticky sections, and async image loads
+  // Scroll to target cleanly using requestAnimationFrame without layout thrashing
   const restoreScroll = (target) => {
     clearRetries()
-    const attempt = () => window.scrollTo({ top: target, behavior: 'instant' })
-
-    // Immediate: 2 animation frames (handles most simple pages)
-    requestAnimationFrame(() => requestAnimationFrame(attempt))
-
-    // Delayed retries for pages with dynamic imports, sticky/parallax sections
-    ;[50, 150, 400, 800].forEach(delay => {
-      const id = setTimeout(() => {
-        if (Math.abs(window.scrollY - target) > 5) attempt()
-      }, delay)
-      retryTimers.current.push(id)
-    })
+    const attempt = () => {
+      window.scrollTo({ top: target, behavior: 'instant' })
+    }
+    // Perform restoration on the next animation frame
+    requestAnimationFrame(attempt)
   }
 
   useEffect(() => {
@@ -154,15 +146,71 @@ config.autoAddCss = false
 import { inter, playfair, dmSans, montserrat } from '../lib/fonts'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from '../components/ErrorBoundary'
+import Navbar from '../components/Navbar'
 
 // Lazy-load heavy non-critical components — keeps initial JS bundle lean
 const PromoPopup = dynamic(() => import('../components/PromoPopup'), { ssr: false })
 const ZohoSalesIQ = dynamic(() => import('../components/ZohoSalesIQ'), { ssr: false })
 
+// Route-based navbar configurations for persistent app layout
+const LIGHT_PAGES = [
+  '/shop',
+  '/wishlist',
+  '/cart',
+  '/checkout',
+  '/orders',
+  '/order',
+  '/settings',
+  '/privacy',
+  '/terms',
+  '/refund',
+  '/shipping',
+  '/enquiry-form',
+  '/services/designing/adbuth-e-invitations',
+  '/services/designing/adbuth-graphics',
+  '/services/learning',
+  '/services/learning/adbuth-dam',
+  '/services/videos/adbuth-ads',
+  '/services/videos/adbuth-corporate',
+]
+
+const getNavbarConfig = (pathname) => {
+  const isAuth = pathname === '/login' || pathname === '/signup'
+  if (isAuth) return { hide: true }
+
+  let highlight = ''
+  if (pathname.startsWith('/shop') || pathname === '/wishlist') highlight = 'shop'
+  else if (pathname.startsWith('/about')) highlight = 'about'
+  else if (pathname.startsWith('/services')) highlight = 'services'
+  else if (pathname.startsWith('/blogs')) highlight = 'blogs'
+  else if (pathname.startsWith('/contact')) highlight = 'contact'
+
+  const isLight =
+    pathname === '/blogs' ||
+    LIGHT_PAGES.some(p => pathname === p || pathname.startsWith(p + '/'))
+
+  return {
+    hide: false,
+    isdark: !isLight,
+    highlight,
+    position: 'absolute',
+    headerClass: '',
+  }
+}
+
 function MyApp({ Component, pageProps }) {
   const router = useRouter()
   const [isPageLoading, setIsPageLoading] = useState(false)
   const [loadDelayed, setLoadDelayed] = useState(false)
+
+  // Dynamic navbar configuration based on route + page-level overrides
+  const defaultNavbarConfig = getNavbarConfig(router.pathname)
+  const navbarConfig = {
+    ...defaultNavbarConfig,
+    ...(Component.navbarConfig || {}),
+    ...(pageProps.navbarConfig || {}),
+  }
+  const shouldHideNavbar = navbarConfig.hide || Component.hideNavbar || pageProps.hideNavbar
 
   // Restore scroll position on browser back/forward navigation
   useScrollRestoration(router)
@@ -198,9 +246,23 @@ function MyApp({ Component, pageProps }) {
           <Head>
             <title>ADBUTH Verse</title>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
+            {/* Pre-connect to CDNs to eliminate DNS + TLS latency for logo and assets */}
+            <link rel="preconnect" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" />
+            <link rel="preconnect" href="https://assets.adbuthverse.com" crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href="https://assets.adbuthverse.com" />
+            {/* Preload the active brand logo so it's in the browser cache before Navbar renders */}
+            <link
+              rel="preload"
+              as="image"
+              href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp"
+            />
           </Head>
 
           {isPageLoading && <PageLoader />}
+
+          {/* Persistent Navbar — stays in DOM across route transitions without remounting or flickering */}
+          {!shouldHideNavbar && <Navbar {...navbarConfig} />}
 
           <ErrorBoundary>
             <Component {...pageProps} />

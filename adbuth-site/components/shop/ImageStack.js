@@ -139,13 +139,17 @@ export default function ImageStack({ media, images = [], layout = 'vertical', pr
                                 <>
                                     <video
                                         ref={isCenter ? videoRef : null}
-                                        src={item.src}
+                                        src={isCenter ? item.src : ""}
                                         className="w-full h-full object-cover pointer-events-none"
                                         autoPlay={isCenter}
                                         muted={isMuted}
-                                        loop
                                         playsInline
-                                        preload="metadata"
+                                        preload={isCenter ? "metadata" : "none"}
+                                        onTimeUpdate={(e) => {
+                                            if (e.target.currentTime >= 10) {
+                                                e.target.pause();
+                                            }
+                                        }}
                                     />
                                     {isCenter && (
                                         <button

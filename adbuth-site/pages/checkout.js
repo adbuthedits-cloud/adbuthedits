@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import Script from 'next/script';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faShieldAlt, faCheckCircle, faArrowLeft, faTags, faTimes, faTag } from '@fortawesome/free-solid-svg-icons';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import SeoHead from '../components/SeoHead';
@@ -287,7 +286,6 @@ export default function Checkout() {
                 description={seoData?.meta_description || seoData?.description || "Complete your purchase securely."}
                 data={seoData}
             />
-            <Navbar isdark={false} />
             <Script src="https://checkout.razorpay.com/v1/checkout.js" />
             <Script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" />
 

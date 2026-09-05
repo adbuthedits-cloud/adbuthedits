@@ -288,6 +288,7 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
     const [isVisible, setIsVisible] = useState(false);
     const isHoveredRef = useRef(false);
     const videoTimerRef = useRef(null);
+    const maxPlayTimerRef = useRef(null);
     const videoElementRef = useRef(null);
     const localRef = useRef(null);
 
@@ -313,6 +314,7 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
         return () => {
             observer.disconnect();
             if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
+            if (maxPlayTimerRef.current) clearTimeout(maxPlayTimerRef.current);
         };
     }, [containerRef]);
 
@@ -320,6 +322,7 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
         if (!isVisible && isPlaying) {
             setIsPlaying(false);
             if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
+            if (maxPlayTimerRef.current) clearTimeout(maxPlayTimerRef.current);
         }
     }, [isVisible, isPlaying]);
 
@@ -339,6 +342,16 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
                 });
             }
         } catch { }
+
+        // Restrict video playback to at most 10 seconds
+        if (maxPlayTimerRef.current) clearTimeout(maxPlayTimerRef.current);
+        maxPlayTimerRef.current = setTimeout(() => {
+            setIsPlaying(false);
+            if (videoElementRef.current) {
+                videoElementRef.current.pause();
+                videoElementRef.current.currentTime = 0;
+            }
+        }, 10000);
     }, []);
 
     useEffect(() => {
@@ -349,6 +362,10 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
         } else {
             vid.pause();
             vid.currentTime = 0;
+            if (maxPlayTimerRef.current) {
+                clearTimeout(maxPlayTimerRef.current);
+                maxPlayTimerRef.current = null;
+            }
         }
     }, [isPlaying, videoSrc, playVideo]);
 
@@ -395,6 +412,10 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
         if (videoTimerRef.current) {
             clearTimeout(videoTimerRef.current);
             videoTimerRef.current = null;
+        }
+        if (maxPlayTimerRef.current) {
+            clearTimeout(maxPlayTimerRef.current);
+            maxPlayTimerRef.current = null;
         }
         const vid = videoElementRef.current;
         if (vid) {
@@ -461,8 +482,13 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
                         src={videoSrc}
                         autoPlay
                         muted
-                        loop
                         playsInline
+                        preload="metadata"
+                        onTimeUpdate={(e) => {
+                            if (e.target.currentTime >= 10) {
+                                e.target.pause();
+                            }
+                        }}
                         className="absolute inset-0 w-full h-full object-cover"
                     />
                 ) : (
@@ -471,18 +497,24 @@ const ProductCard = forwardRef(function ProductCard({ product, index = 0, master
                     </div>
                 )}
 
-                {isMounted && isVisible && videoSrc && (
+                {isMounted && isVisible && (isHovered || isPlaying) && videoSrc && (
                     <video
                         ref={videoElementRef}
                         src={videoSrc}
                         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 z-10 ${isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         muted
-                        loop
                         playsInline
-                        preload="auto"
+                        preload="metadata"
                         onCanPlay={() => {
                             if (isHoveredRef.current || isPlaying) {
                                 playVideo();
+                            }
+                        }}
+                        onTimeUpdate={(e) => {
+                            if (e.target.currentTime >= 10) {
+                                e.target.pause();
+                                e.target.currentTime = 0;
+                                setIsPlaying(false);
                             }
                         }}
                     />

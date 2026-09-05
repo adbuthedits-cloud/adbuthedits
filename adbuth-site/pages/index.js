@@ -1,5 +1,4 @@
 import dynamic from 'next/dynamic'
-import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 import SeoHead from '../components/SeoHead'
 import useSeo from '../hooks/useSeo'
@@ -85,7 +84,6 @@ export default function Home({ items }) {
   return (
     <div>
       <SeoHead page="home" />
-      <Navbar />
       <main className='bg-white'>
         <Hero />
         <WhatWeDo />

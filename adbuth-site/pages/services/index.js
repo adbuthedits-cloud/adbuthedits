@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import SeoHead from '../../components/SeoHead';
 import useSeo from '../../hooks/useSeo';
-import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { motion, AnimatePresence } from 'framer-motion';
 import ServiceDrawer from '../../components/ServiceDrawer';
@@ -87,8 +86,6 @@ export default function Services() {
         image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/index/service-video-editing.webp"}
         data={seoData}
       />
-      <Navbar highlight="services" isdark={true} />
-
       <main className="w-full md:pt-24 pt-20 ">
         {/* Header Section */}
         <section className="bg-white w-full px-10 md:px-24 pt-12 pb-10 bg-white  -mb-1 ">

@@ -2,7 +2,6 @@ import { useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import SeoHead from '../../../components/SeoHead';
-import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
@@ -127,8 +126,6 @@ export default function AdbuthLearning() {
                 image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/learning/index/services-e-learning.webp"}
                 data={seoData}
             />
-            <Navbar highlight='services' isdark={false} />
-
             <main className="pt-24">
                 {/* Hero Section */}
                 <section className="relative pt-24 md:pt-32 pb-0 md:pb-20 px-6 md:px-12 lg:px-20 bg-[#7D287E] text-center text-white min-h-[100svh] flex flex-col justify-center">

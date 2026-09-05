@@ -8,7 +8,6 @@ import Script from 'next/script';
 import CustomizationForm from '../components/CustomizationForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faTimes, faShoppingBag, faPen, faHeart, faPlus, faCheck, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -440,8 +439,6 @@ export default function Cart() {
                 description={seoData?.meta_description || seoData?.description || "Review your cart items."}
                 data={seoData}
             />
-            <Navbar isdark={false} />
-
             <main className="flex-grow pt-32 pb-12">
                 {renderContent()}
             </main>

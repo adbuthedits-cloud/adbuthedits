@@ -2,7 +2,6 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import { useRef, useEffect, useState } from 'react';
 import SeoHead from '../../../../components/SeoHead';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
@@ -289,8 +288,6 @@ export default function AdbuthDAM() {
     return (
         <div className="font-sans bg-white text-black">
             <SeoHead page="service-learning-dam" title="Adbuth DAM | Digital Asset Management" />
-            <Navbar highlight='services' isdark={false} />
-
             <main className='pt-24' style={{ fontFamily: 'DM Sans, sans-serif' }}>
                 {/* Hero Section */}
                 <section className="bg-[#7D287E] text-white pt-32 pb-24 md:py-24 px-6 md:px-12 lg:px-24 relative overflow-hidden">

@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SeoHead from '../../../../components/SeoHead';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,12 +16,22 @@ function VideoPlayer({ src, shouldPlay, className = "" }) {
 
     useEffect(() => {
         if (!videoRef.current) return;
+        let timer;
         if (shouldPlay) {
+            videoRef.current.currentTime = 0;
             videoRef.current.play().catch(() => { });
+            timer = setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.pause();
+                }
+            }, 10000);
         } else {
             videoRef.current.pause();
             videoRef.current.currentTime = 0;
         }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
     }, [shouldPlay]);
 
     return (
@@ -32,12 +41,23 @@ function VideoPlayer({ src, shouldPlay, className = "" }) {
                 src={cdnVideo(src)}
                 className="w-full h-full object-cover"
                 muted={isMuted}
-                loop
                 playsInline
                 preload="metadata"
+                onTimeUpdate={(e) => {
+                    if (e.target.currentTime >= 10) {
+                        e.target.pause();
+                    }
+                }}
             />
             <button
-                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (videoRef.current && videoRef.current.paused) {
+                        videoRef.current.currentTime = 0;
+                        videoRef.current.play().catch(() => {});
+                    }
+                    setIsMuted(!isMuted); 
+                }}
                 className="absolute bottom-4 right-4 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 pointer-events-auto"
             >
                 <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className="text-[10px]" />
@@ -94,8 +114,6 @@ export default function AdbuthCorporate() {
                 image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-corporate/simplified-communication.webp")}
                 data={seoData}
             />
-            <Navbar highlight="services" isdark={false} />
-
             <main className='pt-24'>
                 {/* Hero Section */}
                 <section className="bg-[#E5E5E5] lg:min-h-[100vh] min-h-[60vh] flex items-center md:items-end justify-center md:justify-start px-6 md:px-24 py-20 relative overflow-hidden">

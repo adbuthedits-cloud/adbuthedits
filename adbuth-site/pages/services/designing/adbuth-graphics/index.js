@@ -1,5 +1,4 @@
 import SeoHead from '../../../../components/SeoHead';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import useSeo from '../../../../hooks/useSeo';
 import { useState, useEffect, useRef } from 'react';
@@ -232,7 +231,6 @@ export default function AdbuthGraphics() {
 
 
             <main className="pt-24 md:pt-24 bg-white w-full flex-1" style={{ overflowX: 'clip' }}>
-                <Navbar isdark={false} highlight="services" />
                 {/* Hero Section w/ Gradient & 3D Carousel */}
                 <section
                     className="relative pt-10 md:pt-24 pb-32 md:pb-40 lg:pb-32 "

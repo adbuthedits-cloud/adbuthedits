@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { motion } from 'framer-motion';
 import { ServicesDesktop, ServicesMobile } from '../../../../components/MusicServices';
@@ -41,8 +40,6 @@ export default function AdbuthMusic() {
                 image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-music/music-banner.webp")}
                 data={seoData}
             />
-            <Navbar isdark={true} />
-
             {/* Hero Section */}
             <section className="relative h-[70vh] md:h-[100vh] flex items-center justify-center overflow-hidden" style={{ fontFamily: "DM Sans, sans-serif" }}>
                 {/* Background Image */}

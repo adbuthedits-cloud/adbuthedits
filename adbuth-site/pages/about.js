@@ -1,4 +1,3 @@
-import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
@@ -55,7 +54,6 @@ export default function About() {
 
       <main className="pt-24">
         {/* Slider Section - Infinite scroll with no gaps */}
-        <Navbar highlight="about" isdark={true} />
         <div className="w-full overflow-hidden bg-gray-950 relative h-[30vh] md:h-[60vh] flex items-center">
           <div
             className="flex w-max h-full animate-marquee"
@@ -73,7 +71,6 @@ export default function About() {
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   priority={true}
-                  fetchPriority={(index % officeImages.length) === 0 ? "high" : "auto"}
                 />
               </div>
             ))}

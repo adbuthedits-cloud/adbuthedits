@@ -1,4 +1,3 @@
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -128,7 +127,7 @@ function FeaturedTemplateCard({ product }) {
     return (
         <Link
             href={productUrl}
-            className="w-full aspect-[3/4] block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100"
+            className="w-full aspect-[9/16] md:aspect-[3/4] block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100"
         >
             {imageSrc ? (
                 <img
@@ -288,9 +287,6 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
     return (
         <div className="bg-white min-h-screen font-sans text-gray-900">
             <SeoHead page="service-design-invitations" title="Digital Invitations | Adbuth Verse" />
-
-            <Navbar highlight="services" isdark={false} />
-
             {/* Hero Section */}
             <div className="relative w-full h-[80vh] min-h-[750px] flex flex-col items-start justify-center text-left px-4  mb-10 overflow-hidden"
             >
@@ -469,7 +465,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                                 <Link
                                     key={`row1-${i}`}
                                     href={item.url}
-                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300"
+                                    className="w-[180px] h-[320px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300"
                                 >
                                     <img
                                         src={item.image}
@@ -503,7 +499,7 @@ const DigitalInvitations = ({ masterData, initialProducts }) => {
                                 <Link
                                     key={`row2-${i}`}
                                     href={item.url}
-                                    className="w-[180px] h-[240px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300"
+                                    className="w-[180px] h-[320px] md:w-[300px] md:h-[400px] flex-shrink-0 block relative overflow-hidden rounded-2xl group shadow-md hover:shadow-xl transition-all duration-300"
                                 >
                                     <img
                                         src={item.image}

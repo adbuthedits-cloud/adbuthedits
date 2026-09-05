@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Head from 'next/head';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -253,9 +252,6 @@ export default function EnquiryForm() {
             <Head>
                 <title>Start Your Project - Adbuth</title>
             </Head>
-
-            <Navbar isdark={false} />
-
             <main className="pt-28 md:pt-40 lg:pt-44 pb-10 md:pb-20 px-3 md:px-8">
                 <div className='bg-white pt-24 absolute top-0 left-0 w-full'></div>
                 <div className="max-w-6xl mx-auto">

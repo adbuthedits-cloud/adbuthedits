@@ -1,5 +1,4 @@
 import SeoHead from '../../../components/SeoHead';
-import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import useSeo from '../../../hooks/useSeo';
 import { motion } from 'framer-motion';
@@ -16,8 +15,6 @@ export default function Designing() {
                 image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/designing/index/designing_the_shapes.webp"}
                 data={seoData}
             />
-            <Navbar isdark={true} highlight="services" />
-
             <div style={{ fontFamily: "DM Sans, sans-serif" }}>
                 {/* Hero Section */}
                 <section className="pt-24 md:pt-32 pb-12 md:pb-24 max-w-[1440px] mx-auto overflow-hidden relative lg:min-h-[700px] xl:min-h-[800px] flex flex-col lg:flex-row items-center w-full">

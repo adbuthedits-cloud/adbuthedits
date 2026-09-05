@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -249,7 +248,6 @@ export default function Orders() {
                 description={seoData?.meta_description || 'Track your orders and download your files.'}
                 data={seoData}
             />
-            <Navbar isdark={false} />
             <main className="flex-grow pt-32 pb-12">{renderContent()}</main>
             <Footer />
 

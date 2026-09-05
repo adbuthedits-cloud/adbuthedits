@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SeoHead from '../../../../components/SeoHead';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useRef } from 'react';
@@ -60,11 +59,21 @@ export default function AdbuthPolitics() {
         const isInView = useInView(videoRef, { once: false, margin: "400px" });
 
         useEffect(() => {
+            let timer;
             if (isInView && videoRef.current) {
+                videoRef.current.currentTime = 0;
                 videoRef.current.play().catch(() => {});
+                timer = setTimeout(() => {
+                    if (videoRef.current) {
+                        videoRef.current.pause();
+                    }
+                }, 10000);
             } else if (!isInView && videoRef.current) {
                 videoRef.current.pause();
             }
+            return () => {
+                if (timer) clearTimeout(timer);
+            };
         }, [isInView]);
 
         return (
@@ -74,12 +83,23 @@ export default function AdbuthPolitics() {
                     src={isInView ? src : ""}
                     className="w-full h-full object-cover"
                     muted={isMuted}
-                    loop
                     playsInline
                     preload="none"
+                    onTimeUpdate={(e) => {
+                        if (e.target.currentTime >= 10) {
+                            e.target.pause();
+                        }
+                    }}
                 />
                 <button
-                    onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (videoRef.current && videoRef.current.paused) {
+                            videoRef.current.currentTime = 0;
+                            videoRef.current.play().catch(() => {});
+                        }
+                        setIsMuted(!isMuted); 
+                    }}
                     className="absolute bottom-4 right-4 z-30 bg-black/40 backdrop-blur-md border border-white/10 w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 pointer-events-auto"
                 >
                     <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} className="text-[10px]" />
@@ -98,8 +118,6 @@ export default function AdbuthPolitics() {
                     image={cdnImage(seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/shop/shop-banner.webp")}
                     data={seoData}
                 />
-                <Navbar highlight="services" isdark={!isMobile} />
-
                 {/* Split Background Layer */}
                 <div className="absolute inset-0 flex h-[870px]">
                     <div className="w-[40%] bg-white hidden md:block "></div>

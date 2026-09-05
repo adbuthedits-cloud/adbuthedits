@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faInstagram, faFacebook, faYoutube, faLinkedin } from '@fortawesome/free-brands-svg-icons';
@@ -88,8 +87,6 @@ export default function ContactUs() {
                 image={seoData?.og_image || "/images/contact-bg.jpg"}
                 data={seoData}
             />
-            <Navbar highlight="contact" isdark={true} />
-
             {/* Hero / Header Section */}
             <section className="text-white md:h-[50vh] lg:h-[80vh] h-[65vh]  flex md:items-end items-center px-6 pb-24 lg:px-20 md:px-16 relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${cdnImage("https://assets.adbuthverse.com/website-assets/pages/contact/contact-header-bg.webp")}')` }}>
                 <div className="max-w-7xl lg:mx-20 mx-0">

@@ -1,5 +1,4 @@
 import { Download, Mail } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SeoHead from '../components/SeoHead';
 import useSeo from '../hooks/useSeo';
@@ -58,9 +57,6 @@ export default function Shipping() {
                 description={seoData?.meta_description || seoData?.description || "Shipping and Delivery Policy for Adbuth Verse."}
                 data={seoData}
             />
-            
-            <Navbar isdark={false} highlight="" />
-
             {/* Header */}
             <div className="bg-white border-b border-slate-200 pt-32 pb-16">
                 <div className="max-w-6xl mx-auto px-6">

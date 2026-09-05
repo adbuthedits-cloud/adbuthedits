@@ -44,10 +44,22 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    const DEFAULT_LOGO = 'https://assets.adbuthverse.com/brand/AdbuthVerse%20(1)_1785841733705.png';
+    const DEFAULT_LOGO = 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp';
+
+    // Initialize with DEFAULT_LOGO so Server HTML and initial Client Hydration match perfectly
     const [brandLogo, setBrandLogo] = useState(DEFAULT_LOGO);
 
     useEffect(() => {
+        // Read cached logo immediately on client mount after hydration
+        try {
+            const cached = localStorage.getItem('brand_logo_url');
+            if (cached && cached.includes('AdbuthVerse')) {
+                localStorage.removeItem('brand_logo_url');
+            } else if (cached && cached.startsWith('http')) {
+                setBrandLogo(cached);
+            }
+        } catch {}
+
         const fetchPublicSettings = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/settings/public`);
@@ -55,6 +67,8 @@ export const AuthProvider = ({ children }) => {
                     const data = await res.json();
                     if (data.brand_logo) {
                         setBrandLogo(data.brand_logo);
+                        // Persist for instant display
+                        localStorage.setItem('brand_logo_url', data.brand_logo);
                     }
                 }
             } catch (e) {

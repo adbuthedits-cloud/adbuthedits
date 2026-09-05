@@ -1,6 +1,5 @@
 import SeoHead from '../../../../components/SeoHead';
 import Link from 'next/link';
-import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState } from 'react';
@@ -60,8 +59,6 @@ export default function AdbuthAds() {
                 image={seoData?.og_image || "https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-ads/ams-1.webp"}
                 data={seoData}
             />
-            <Navbar highlight="services" isdark={false} />
-
             <main className='pt-24' >
                 {/* Hero Section */}
                 <section className="bg-[#7D287E] min-h-[600px] md:min-h-[600px] lg:min-h-[700px] flex flex-col items-center justify-start text-center py-24 px-6 text-white relative">
@@ -116,10 +113,13 @@ export default function AdbuthAds() {
                                 src={cdnVideo("https://assets.adbuthverse.com/website-assets/pages/services/videos/adbuth-ads/Ads%20Video_web_1780192057567.mp4")}
                                 className="absolute inset-0 w-full h-full object-cover z-0"
                                 autoPlay
-                                loop
                                 muted
                                 playsInline
-
+                                onTimeUpdate={(e) => {
+                                    if (e.target.currentTime >= 10) {
+                                        e.target.pause();
+                                    }
+                                }}
                             />
 
                             {/* Scrolling PLAY Text */}
