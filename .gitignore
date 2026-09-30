@@ -38,3 +38,5 @@ backend/scratch/
 check_smtp.js
 test_register.js
 list_products.js
+
+handover-package/

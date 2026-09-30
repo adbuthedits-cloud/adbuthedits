@@ -12,10 +12,10 @@ export default function Footer() {
           <div className="space-y-4 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 justify-center md:justify-start" aria-label="Adbuth Verse - Home">
               <span className="font-bold text-md md:text-lg lg:text-xl tracking-wide text-[#7D287E]">
-                ADBUTH <span className="text-[#7D287E] font-bold text-[#FCD804]">VERSE</span>
+                ADBUTH <span className="font-bold text-[#7D287E]">VERSE</span>
               </span>
             </Link>
-            <p className="text-xs text-gray-500 leading-relaxed w-full lg:px-0 lg:max-w-xs text-center md:text-left">
+            <p className="text-xs text-gray-600 leading-relaxed w-full lg:px-0 lg:max-w-xs text-center md:text-left">
               Welcome to Adbuth Verse, a premier post
               production studio and your video editing partner!
             </p>
@@ -24,26 +24,26 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between lg:grid-cols-3 text-center md:text-left gap-10">
             {/* Menu Column */}
             <div>
-              <h6 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Menu</h6>
+              <h3 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Menu</h3>
               <ul className="space-y-2 text-xs text-gray-600 font-medium">
-                <li><Link href="/about" className="hover:text-[#7D287E] transition-colors">About</Link></li>
-                <li><Link href="/services" className="hover:text-[#7D287E] transition-colors">Services</Link></li>
+                <li><Link href="/about" prefetch={false} className="hover:text-[#7D287E] transition-colors">About</Link></li>
+                <li><Link href="/services" prefetch={false} className="hover:text-[#7D287E] transition-colors">Services</Link></li>
 
               </ul>
             </div>
 
             {/* Resources Column */}
             <div>
-              <h6 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Resources</h6>
+              <h3 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Resources</h3>
               <ul className="space-y-2 text-xs text-gray-600 font-medium">
-                <li><Link href="/contact-us" className="hover:text-[#7D287E] transition-colors">Contact Us</Link></li>
-                <li><Link href="/blogs" className="hover:text-[#7D287E] transition-colors">Blogs</Link></li>
+                <li><Link href="/contact-us" prefetch={false} className="hover:text-[#7D287E] transition-colors">Contact Us</Link></li>
+                <li><Link href="/blogs" prefetch={false} className="hover:text-[#7D287E] transition-colors">Blogs</Link></li>
               </ul>
             </div>
 
             {/* Contact Column */}
             <div>
-              <h6 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Get in touch</h6>
+              <h3 className="font-bold text-[#7D287E] mb-4 text-sm uppercase tracking-wider">Get in touch</h3>
               <div className="space-y-2 text-xs text-gray-600 font-medium">
                 {/* Fixed: removed square brackets from email href */}
                 <p><a href="mailto:contact@adbuthverse.com">contact@adbuthverse.com</a></p>
@@ -93,13 +93,13 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row flex-start items-center gap-4 text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+        <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row flex-start items-center gap-4 text-[11px] text-gray-500 font-medium uppercase tracking-wider">
           <p>© 2025 Adbuth Verse. All rights reserved.</p>
           <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-[#7D287E]">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-[#7D287E]">Terms of Use</Link>
-            <Link href="/refund" className="hover:text-[#7D287E]">Refund Policy</Link>
-            <Link href="/shipping" className="hover:text-[#7D287E]">Shipping Policy</Link>
+            <Link href="/privacy" prefetch={false} className="hover:text-[#7D287E]">Privacy Policy</Link>
+            <Link href="/terms" prefetch={false} className="hover:text-[#7D287E]">Terms of Use</Link>
+            <Link href="/refund" prefetch={false} className="hover:text-[#7D287E]">Refund Policy</Link>
+            <Link href="/shipping" prefetch={false} className="hover:text-[#7D287E]">Shipping Policy</Link>
           </div>
         </div>
       </div>

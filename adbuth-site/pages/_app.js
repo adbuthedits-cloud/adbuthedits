@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import '../styles/globals.css'
 import Head from 'next/head'
+import Script from 'next/script'
 import { useRouter } from 'next/router'
 import { AuthProvider } from '../context/AuthContext'
 import { WishlistProvider } from '../context/WishlistContext'
@@ -246,18 +247,34 @@ function MyApp({ Component, pageProps }) {
           <Head>
             <title>ADBUTH Verse</title>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
-            {/* Pre-connect to CDNs to eliminate DNS + TLS latency for logo and assets */}
-            <link rel="preconnect" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" crossOrigin="anonymous" />
-            <link rel="dns-prefetch" href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev" />
-            <link rel="preconnect" href="https://assets.adbuthverse.com" crossOrigin="anonymous" />
-            <link rel="dns-prefetch" href="https://assets.adbuthverse.com" />
             {/* Preload the active brand logo so it's in the browser cache before Navbar renders */}
             <link
               rel="preload"
               as="image"
-              href="https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp"
+              href="/brand/logo.webp"
             />
           </Head>
+
+          {/* ── Google Analytics GA4 (deferred after interactive so it doesn't block main thread) ── */}
+          <Script
+            id="gtm-script"
+            strategy="afterInteractive"
+            src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          />
+          <Script
+            id="gtm-init"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}', {
+                  page_path: window.location.pathname,
+                });
+              `,
+            }}
+          />
 
           {isPageLoading && <PageLoader />}
 

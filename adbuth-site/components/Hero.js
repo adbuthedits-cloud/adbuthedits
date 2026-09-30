@@ -9,10 +9,7 @@ const HERO_BG = cdnUrl("https://assets.adbuthverse.com/website-assets/pages/home
 
 export default function Hero() {
   return (
-    <section className="relative w-full lg:min-h-screen  mb-56 md:mb-12 lg:mb-0 flex items-center pt-32 pb-56 md:pb-24 lg:py-0 bg-[#0a0118] text-white">
-      <Head>
-        <link rel="preload" as="image" href={HERO_BG} fetchpriority="high" />
-      </Head>
+    <section className="relative w-full lg:min-h-screen mb-56 md:mb-12 lg:mb-0 flex items-center pt-32 pb-56 md:pb-24 lg:py-0 bg-[#0a0118] text-white">
       {/* Background Image */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Image
@@ -20,15 +17,11 @@ export default function Hero() {
           alt="Hero Background"
           fill
           priority
-          fetchpriority="high"
           quality={80}
           sizes="100vw"
           className="object-cover"
         />
       </div>
-
-      {/* Background Effects */}
-
 
       <div className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 px-6 md:px-14 lg:px-6 relative z-10 lg:pt-24">
 
@@ -86,13 +79,13 @@ function HeroCard() {
         </div>
 
         <div className="flex flex-col gap-3 md:gap-4 relative z-10">
-          <Link href="/services/videos" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
+          <Link href="/services/videos" prefetch={false} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 transition-colors text-[13px] md:text-xs lg:text-sm font-medium text-center">
             I want to edit a video
           </Link>
-          <Link href="/services/designing/adbuth-e-invitations" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
+          <Link href="/services/designing/adbuth-e-invitations" prefetch={false} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 transition-colors text-[13px] md:text-xs lg:text-sm font-medium text-center">
             I want to design a Digital Invitations
           </Link>
-          <Link href="/contact-us" className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center">
+          <Link href="/contact-us" prefetch={false} className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 transition-colors text-[13px] md:text-xs lg:text-sm font-medium text-center">
             Connect with our team
           </Link>
           <button
@@ -101,7 +94,7 @@ function HeroCard() {
                 window.$zoho.salesiq.floatwindow.visible('show');
               }
             }}
-            className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all text-[13px] md:text-xs lg:text-sm font-medium text-center cursor-pointer"
+            className="w-full py-2.5 px-4 md:py-3 md:px-6 rounded-full bg-gradient-to-r from-purple-900/40 to-purple-800/40 border border-purple-500 text-white hover:bg-purple-800/60 transition-colors text-[13px] md:text-xs lg:text-sm font-medium text-center cursor-pointer"
           >
             Message Adi
           </button>

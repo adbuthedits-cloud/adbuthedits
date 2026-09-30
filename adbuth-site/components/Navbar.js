@@ -131,15 +131,15 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src={brandLogo || "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp"}
-              alt="Logo"
+              src={brandLogo || "/brand/logo.webp"}
+              alt="Adbuth Verse Logo"
               className="lg:w-36 md:w-28 sm:w-24 w-28 object-contain"
               width={280}
-              height={280}
+              height={104}
               priority
               onError={() => {
-                if (brandLogo !== "https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp") {
-                  // Fallback to active verified logo
+                if (brandLogo !== "/brand/logo.webp") {
+                  // Fallback to active verified local logo
                 }
               }}
             />
@@ -150,7 +150,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
         <nav
           className={`hidden lg:flex items-center gap-8 text-sm font-medium ${isdark ? 'text-white' : 'text-black'}`}
         >
-          <Link href="/about" className={`hover:text-purple-700 transition-colors ${highlight === 'about' ? 'text-purple-700' : ''}`}>About</Link>
+          <Link href="/about" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'about' ? 'text-purple-700' : ''}`}>About</Link>
 
           <div
             className="relative group h-full flex items-center"
@@ -158,7 +158,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
             onMouseLeave={() => setDesktopServicesOpen(false)}
           >
             <div className="flex items-center gap-1 hover:text-purple-700 transition-colors py-4 cursor-pointer h-full">
-              <Link href="/services" className={`hover:text-purple-700 transition-colors ${highlight === 'services' ? 'text-purple-700' : ''}`}>
+              <Link href="/services" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'services' ? 'text-purple-700' : ''}`}>
                 Services <FontAwesomeIcon icon={faChevronDown} className={`text-xs transition-transform duration-300 ${desktopServicesOpen ? 'rotate-180' : ''}`} />
               </Link>
             </div>
@@ -183,7 +183,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                       onMouseLeave={() => setVideosOpen(false)}
                     >
                       <div className="w-full text-left px-4 py-2 hover:bg-gray-100 flex justify-between items-center text-sm cursor-pointer">
-                        <Link href="/services/videos" className="w-full flex justify-between items-center">Videos <FontAwesomeIcon icon={faChevronDown} className={`text-[10px] transition-transform duration-300 ${videosOpen ? '-rotate-180' : '-rotate-90'}`} /></Link>
+                        <Link href="/services/videos" prefetch={false} className="w-full flex justify-between items-center">Videos <FontAwesomeIcon icon={faChevronDown} className={`text-[10px] transition-transform duration-300 ${videosOpen ? '-rotate-180' : '-rotate-90'}`} /></Link>
                       </div>
                       <AnimatePresence>
                         {videosOpen && (
@@ -196,12 +196,12 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                           >
                             <div className="py-2 flex flex-col text-sm">
 
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-edits" className="px-4 py-2 hover:bg-gray-100 block">Adbuth Edits</Link></motion.div>
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-corporate" className="px-4 py-2 hover:bg-gray-100 block">Adbuth Corporate</Link></motion.div>
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-ads" className="px-4 py-2 hover:bg-gray-100 block">Adbuth Ads</Link></motion.div>
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-politics" className="px-4 py-2 hover:bg-gray-100 block">Adbuth Politics</Link></motion.div>
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-music" className="px-4 py-2 hover:bg-gray-100 block">Adbuth Music</Link></motion.div>
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-movies" className="px-4 py-2 hover:bg-gray-100 block">Adbuth Movies</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-edits" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth Edits</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-corporate" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth Corporate</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-ads" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth Ads</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-politics" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth Politics</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-music" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth Music</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/videos/adbuth-movies" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth Movies</Link></motion.div>
                             </div>
                           </motion.div>
                         )}
@@ -216,7 +216,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                       onMouseLeave={() => setDesigningOpen(false)}
                     >
                       <div className="w-full text-left px-4 py-2 hover:bg-gray-100 flex justify-between items-center text-sm cursor-pointer">
-                        <Link href="/services/designing" className="w-full flex justify-between items-center">Designing <FontAwesomeIcon icon={faChevronDown} className={`text-[10px] transition-transform duration-300 ${designingOpen ? '-rotate-180' : '-rotate-90'}`} /></Link>
+                        <Link href="/services/designing" prefetch={false} className="w-full flex justify-between items-center">Designing <FontAwesomeIcon icon={faChevronDown} className={`text-[10px] transition-transform duration-300 ${designingOpen ? '-rotate-180' : '-rotate-90'}`} /></Link>
                       </div>
                       <AnimatePresence>
                         {designingOpen && (
@@ -228,8 +228,8 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                             className="absolute left-full top-0 w-56 bg-white text-black rounded-md shadow-xl overflow-visible ml-1 z-[60]"
                           >
                             <div className="py-2 flex flex-col text-sm">
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/designing/adbuth-e-invitations" className="px-4 py-2 hover:bg-gray-100 block">Adbuth E-Invitations</Link></motion.div>
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/designing/adbuth-graphics" className="px-4 py-2 hover:bg-gray-100 block">Adbuth Graphics</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/designing/adbuth-e-invitations" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth E-Invitations</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/designing/adbuth-graphics" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth Graphics</Link></motion.div>
                             </div>
                           </motion.div>
                         )}
@@ -244,7 +244,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                       onMouseLeave={() => setLearningOpen(false)}
                     >
                       <div className="w-full text-left px-4 py-2 hover:bg-gray-100 flex justify-between items-center text-sm cursor-pointer">
-                        <Link href="/services/learning" className="w-full flex justify-between items-center">Learning <FontAwesomeIcon icon={faChevronDown} className={`text-[10px] transition-transform duration-300 ${learningOpen ? '-rotate-180' : '-rotate-90'}`} /></Link>
+                        <Link href="/services/learning" prefetch={false} className="w-full flex justify-between items-center">Learning <FontAwesomeIcon icon={faChevronDown} className={`text-[10px] transition-transform duration-300 ${learningOpen ? '-rotate-180' : '-rotate-90'}`} /></Link>
                       </div>
                       <AnimatePresence>
                         {learningOpen && (
@@ -256,8 +256,8 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                             className="absolute left-full top-0 w-56 bg-white text-black rounded-md shadow-xl overflow-visible ml-1 z-[60]"
                           >
                             <div className="py-2 flex flex-col text-sm">
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/learning/adbuth-dam" className="px-4 py-2 hover:bg-gray-100 block">Adbuth DAM</Link></motion.div>
-                              <motion.div variants={dropdownItemVariants}><Link href="/services/learning/adbuth-e-learning" className="px-4 py-2 hover:bg-gray-100 block">Adbuth E-Learning</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/learning/adbuth-dam" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth DAM</Link></motion.div>
+                              <motion.div variants={dropdownItemVariants}><Link href="/services/learning/adbuth-e-learning" prefetch={false} className="px-4 py-2 hover:bg-gray-100 block">Adbuth E-Learning</Link></motion.div>
                             </div>
                           </motion.div>
                         )}
@@ -270,10 +270,10 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
             </AnimatePresence>
           </div>
 
-          <Link href="/shop" className={`hover:text-purple-700 transition-colors ${highlight === 'shop' ? 'text-purple-700' : ''}`}>Shop</Link>
-          <Link href="/blogs" className={`hover:text-purple-700 transition-colors ${highlight === 'blogs' ? 'text-purple-700' : ''}`}>Blogs</Link>
+          <Link href="/shop" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'shop' ? 'text-purple-700' : ''}`}>Shop</Link>
+          <Link href="/blogs" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'blogs' ? 'text-purple-700' : ''}`}>Blogs</Link>
 
-          <Link href="/contact-us" className={`${highlight === 'contact' ? 'text-purple-700' : ''} px-6 py-2  rounded-full border-2 border-purple-700/80 hover:border-accent hover:text-accent transition-all duration-300 backdrop-blur-sm`}>
+          <Link href="/contact-us" prefetch={false} className={`${highlight === 'contact' ? 'text-purple-700' : ''} px-6 py-2  rounded-full border-2 border-purple-700/80 hover:border-accent hover:text-accent transition-all duration-300 backdrop-blur-sm`}>
             Contact Us
           </Link>
 
@@ -345,22 +345,22 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                           )}
                         </div>
                         <motion.div variants={dropdownItemVariants}>
-                          <Link href="/wishlist" className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+                          <Link href="/wishlist" prefetch={false} className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
                             <FontAwesomeIcon icon={faHeart} className="text-gray-400" /> Wishlist
                           </Link>
                         </motion.div>
                         <motion.div variants={dropdownItemVariants}>
-                          <Link href="/cart" className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+                          <Link href="/cart" prefetch={false} className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
                             <FontAwesomeIcon icon={faShoppingBag} className="text-gray-400" /> Cart
                           </Link>
                         </motion.div>
                         <motion.div variants={dropdownItemVariants}>
-                          <Link href="/orders" className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+                          <Link href="/orders" prefetch={false} className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
                             <FontAwesomeIcon icon={faBoxOpen} className="text-gray-400" /> Orders
                           </Link>
                         </motion.div>
                         <motion.div variants={dropdownItemVariants}>
-                          <Link href="/settings" className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+                          <Link href="/settings" prefetch={false} className="px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
                             <FontAwesomeIcon icon={faCog} className="text-gray-400" /> Settings
                           </Link>
                         </motion.div>
@@ -461,13 +461,13 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
               className="flex flex-col gap-6 text-white text-lg font-medium"
             >
               <motion.div variants={linkVariants}>
-                <Link href="/about" onClick={() => setOpen(false)}>About</Link>
+                <Link href="/about" prefetch={false} onClick={() => setOpen(false)}>About</Link>
               </motion.div>
 
               {/* Services Section */}
               <motion.div variants={linkVariants} className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <Link href="/services" onClick={() => setOpen(false)} className="flex-1">Services</Link>
+                  <Link href="/services" prefetch={false} onClick={() => setOpen(false)} className="flex-1">Services</Link>
                   <button
                     onClick={() => toggleSubmenu('services')}
                     className={`p-2 transition-transform duration-300 ${expandedMenus['services'] ? 'rotate-180' : ''}`}
@@ -488,7 +488,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                       {/* Videos */}
                       <div className="flex flex-col gap-2 pt-2">
                         <div className="flex items-center justify-between">
-                          <Link href="/services/videos" onClick={() => setOpen(false)} className="flex-1">Videos</Link>
+                          <Link href="/services/videos" prefetch={false} onClick={() => setOpen(false)} className="flex-1">Videos</Link>
                           <button
                             onClick={() => toggleSubmenu('videos')}
                             className={`p-2 transition-transform duration-300 ${expandedMenus['videos'] ? 'rotate-180' : ''}`}
@@ -505,12 +505,12 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                               className="overflow-hidden pl-4 flex flex-col gap-3 text-sm text-gray-400 border-l border-purple-700/30"
                             >
 
-                              <Link href="/services/videos/adbuth-edits" onClick={() => setOpen(false)}>Adbuth Edits</Link>
-                              <Link href="/services/videos/adbuth-corporate" onClick={() => setOpen(false)}>Adbuth Corporate</Link>
-                              <Link href="/services/videos/adbuth-ads" onClick={() => setOpen(false)}>Adbuth Ads</Link>
-                              <Link href="/services/videos/adbuth-politics" onClick={() => setOpen(false)}>Adbuth Politics</Link>
-                              <Link href="/services/videos/adbuth-music" onClick={() => setOpen(false)}>Adbuth Music</Link>
-                              <Link href="/services/videos/adbuth-movies" onClick={() => setOpen(false)}>Adbuth Movies</Link>
+                              <Link href="/services/videos/adbuth-edits" prefetch={false} onClick={() => setOpen(false)}>Adbuth Edits</Link>
+                              <Link href="/services/videos/adbuth-corporate" prefetch={false} onClick={() => setOpen(false)}>Adbuth Corporate</Link>
+                              <Link href="/services/videos/adbuth-ads" prefetch={false} onClick={() => setOpen(false)}>Adbuth Ads</Link>
+                              <Link href="/services/videos/adbuth-politics" prefetch={false} onClick={() => setOpen(false)}>Adbuth Politics</Link>
+                              <Link href="/services/videos/adbuth-music" prefetch={false} onClick={() => setOpen(false)}>Adbuth Music</Link>
+                              <Link href="/services/videos/adbuth-movies" prefetch={false} onClick={() => setOpen(false)}>Adbuth Movies</Link>
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -519,7 +519,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                       {/* Designing */}
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between">
-                          <Link href="/services/designing" onClick={() => setOpen(false)} className="flex-1">Designing</Link>
+                          <Link href="/services/designing" prefetch={false} onClick={() => setOpen(false)} className="flex-1">Designing</Link>
                           <button
                             onClick={() => toggleSubmenu('designing')}
                             className={`p-2 transition-transform duration-300 ${expandedMenus['designing'] ? 'rotate-180' : ''}`}
@@ -535,8 +535,8 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                               exit={{ height: 0, opacity: 0 }}
                               className="overflow-hidden pl-4 flex flex-col gap-3 text-sm text-gray-400 border-l border-purple-700/30"
                             >
-                              <Link href="/services/designing/adbuth-e-invitations" onClick={() => setOpen(false)}>Adbuth E-Invitations</Link>
-                              <Link href="/services/designing/adbuth-graphics" onClick={() => setOpen(false)}>Adbuth Graphics</Link>
+                              <Link href="/services/designing/adbuth-e-invitations" prefetch={false} onClick={() => setOpen(false)}>Adbuth E-Invitations</Link>
+                              <Link href="/services/designing/adbuth-graphics" prefetch={false} onClick={() => setOpen(false)}>Adbuth Graphics</Link>
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -545,7 +545,7 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                       {/* Learning */}
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between">
-                          <Link href="/services/learning" onClick={() => setOpen(false)} className="flex-1">Learning</Link>
+                          <Link href="/services/learning" prefetch={false} onClick={() => setOpen(false)} className="flex-1">Learning</Link>
                           <button
                             onClick={() => toggleSubmenu('learning')}
                             className={`p-2 transition-transform duration-300 ${expandedMenus['learning'] ? 'rotate-180' : ''}`}
@@ -561,8 +561,8 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
                               exit={{ height: 0, opacity: 0 }}
                               className="overflow-hidden pl-4 flex flex-col gap-3 text-sm text-gray-400 border-l border-purple-700/30"
                             >
-                              <Link href="/services/learning/adbuth-dam" onClick={() => setOpen(false)}>Adbuth DAM</Link>
-                              <Link href="/services/learning/adbuth-e-learning" onClick={() => setOpen(false)}>Adbuth E-Learning</Link>
+                              <Link href="/services/learning/adbuth-dam" prefetch={false} onClick={() => setOpen(false)}>Adbuth DAM</Link>
+                              <Link href="/services/learning/adbuth-e-learning" prefetch={false} onClick={() => setOpen(false)}>Adbuth E-Learning</Link>
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -574,15 +574,15 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
               </motion.div>
 
               <motion.div variants={linkVariants}>
-                <Link href="/shop" onClick={() => setOpen(false)}>Shop</Link>
+                <Link href="/shop" prefetch={false} onClick={() => setOpen(false)}>Shop</Link>
               </motion.div>
 
               <motion.div variants={linkVariants}>
-                <Link href="/blogs" onClick={() => setOpen(false)}>Blogs</Link>
+                <Link href="/blogs" prefetch={false} onClick={() => setOpen(false)}>Blogs</Link>
               </motion.div>
 
               <motion.div variants={linkVariants}>
-                <Link href="/contact-us" onClick={() => setOpen(false)} className="text-purple-700">Contact Us</Link>
+                <Link href="/contact-us" prefetch={false} onClick={() => setOpen(false)} className="text-purple-700">Contact Us</Link>
               </motion.div>
 
               {user ? (

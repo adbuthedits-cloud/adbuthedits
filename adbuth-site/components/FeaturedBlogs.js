@@ -28,7 +28,7 @@ export default function FeaturedBlogs({ items = [] }) {
           {/* Main Featured Cards */}
           <div className="w-full lg:w-[75%] flex flex-col md:flex-row gap-6">
             {featuredItems.map((b, i) => (
-              <Link href={`/blogs/${b.slug}`} key={b.slug} className="w-full  md:w-1/3 ">
+              <Link href={`/blogs/${b.slug}`} prefetch={false} key={b.slug} className="w-full  md:w-1/3 ">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -38,7 +38,7 @@ export default function FeaturedBlogs({ items = [] }) {
                 >
                   <Image
                     src={b.image}
-                    alt={b.title}
+                    alt={b.title || 'Blog thumbnail'}
                     fill
                     sizes="(max-width: 1024px) 100vw, 25vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -56,7 +56,7 @@ export default function FeaturedBlogs({ items = [] }) {
           {hasSidebar && (
             <div className="w-full lg:w-[25%] flex flex-col justify-between">
               {sidebarItems.map((b, i) => (
-                <Link href={`/blogs/${b.slug}`} key={b.slug}>
+                <Link href={`/blogs/${b.slug}`} prefetch={false} key={b.slug}>
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -67,7 +67,7 @@ export default function FeaturedBlogs({ items = [] }) {
                     <div className="relative aspect-square w-[7vw] flex-shrink-0 rounded-xl overflow-hidden shadow-sm">
                       <Image
                         src={b.image}
-                        alt="thumb"
+                        alt={b.title || 'Blog thumbnail'}
                         fill
                         sizes="96px"
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -86,7 +86,7 @@ export default function FeaturedBlogs({ items = [] }) {
         </div>
 
         <div className="mt-12 text-center">
-          <Link href="/blogs" className="inline-block px-8 py-3 rounded-full border border-black hover:bg-black hover:text-white transition-all font-medium">
+          <Link href="/blogs" prefetch={false} className="inline-block px-8 py-3 rounded-full border border-black hover:bg-black hover:text-white transition-all font-medium">
             View all
           </Link>
         </div>

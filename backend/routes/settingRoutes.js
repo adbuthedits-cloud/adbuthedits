@@ -70,13 +70,10 @@ router.post('/upload-logo', authMiddleware, adminMiddleware, uploadLogoMulter.si
 
         // Compress logo image to WebP using webAssets module (same module as Media Manager)
         if (req.file.mimetype && req.file.mimetype.startsWith('image/')) {
-            const expectedWebp = webpKey(req.file.key);
-            if (expectedWebp !== req.file.key) {
-                console.log(`[Upload Logo] Compressing ${req.file.key} to WebP: ${expectedWebp}...`);
-                const optimizedKey = await executeOptimization(req.file.key, req.file.mimetype);
-                if (optimizedKey) {
-                    finalKey = optimizedKey;
-                }
+            console.log(`[Upload Logo] Optimizing logo ${req.file.key}...`);
+            const optimizedKey = await executeOptimization(req.file.key, req.file.mimetype);
+            if (optimizedKey) {
+                finalKey = optimizedKey;
             }
         }
 

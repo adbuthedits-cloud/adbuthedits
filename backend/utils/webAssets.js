@@ -119,6 +119,7 @@ async function executeOptimization(r2Key, mimeType, fileBuffer = null) {
             console.log(`[WebAssets] 🖼  Compressing image to WebP (Quality: ${WEBP_QUALITY})...`);
 
             await sharp(inputPath)
+                .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
                 .webp({ quality: WEBP_QUALITY })
                 .toFile(outputPath);
 

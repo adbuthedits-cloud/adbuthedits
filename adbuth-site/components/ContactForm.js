@@ -87,7 +87,7 @@ export default function ContactForm() {
 
         {/* Right Form Card */}
         <div className="bg-white p-8 rounded-[2rem] shadow-xl max-w-md mx-auto lg:mx-0 lg:ml-auto w-full">
-          <h4 className="text-2xl md:text-3xl font-bold mb-2 text-black">Get in Touch</h4>
+          <h3 className="text-2xl md:text-3xl font-bold mb-2 text-black">Get in Touch</h3>
           <p className="text-gray-500 text-sm mb-8">You can reach us anytime</p>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-sm md:text-base">

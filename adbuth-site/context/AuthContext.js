@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    const DEFAULT_LOGO = 'https://pub-439d84178c4c4a779aaeb4ebd0df65c8.r2.dev/brand/logo-1785834385800-162717410.webp';
+    const DEFAULT_LOGO = '/brand/logo.webp';
 
     // Initialize with DEFAULT_LOGO so Server HTML and initial Client Hydration match perfectly
     const [brandLogo, setBrandLogo] = useState(DEFAULT_LOGO);
@@ -53,9 +53,9 @@ export const AuthProvider = ({ children }) => {
         // Read cached logo immediately on client mount after hydration
         try {
             const cached = localStorage.getItem('brand_logo_url');
-            if (cached && cached.includes('AdbuthVerse')) {
+            if (cached && (cached.includes('AdbuthVerse') || cached.includes('logo-1785834385800-162717410'))) {
                 localStorage.removeItem('brand_logo_url');
-            } else if (cached && cached.startsWith('http')) {
+            } else if (cached && (cached.startsWith('http') || cached.startsWith('/'))) {
                 setBrandLogo(cached);
             }
         } catch {}
@@ -66,9 +66,12 @@ export const AuthProvider = ({ children }) => {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.brand_logo) {
-                        setBrandLogo(data.brand_logo);
+                        const finalLogo = data.brand_logo.includes('logo-1785834385800-162717410')
+                            ? '/brand/logo.webp'
+                            : data.brand_logo;
+                        setBrandLogo(finalLogo);
                         // Persist for instant display
-                        localStorage.setItem('brand_logo_url', data.brand_logo);
+                        localStorage.setItem('brand_logo_url', finalLogo);
                     }
                 }
             } catch (e) {

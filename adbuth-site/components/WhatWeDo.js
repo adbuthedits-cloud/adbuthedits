@@ -71,10 +71,10 @@ const CardDesktop = ({ i, title, description, image, progress, total, color, ico
     const zIndex = total - i;
 
     return (
-        <Link href={link}>
+        <Link href={link} prefetch={false}>
             <motion.div
                 style={{ y, scale, opacity, zIndex, top: `calc(50% - 250px)`, borderColor: color, willChange: 'transform, opacity' }}
-                className={`absolute left-0 right-0 mx-auto w-[500px] aspect-square rounded-3xl overflow-hidden  origin-top border-[3px] cursor-pointer `}
+                className={`absolute left-0 right-0 mx-auto w-[500px] aspect-square rounded-3xl overflow-hidden origin-top border-[3px] cursor-pointer`}
             >
                 <div className="absolute inset-0">
                     <div className="relative w-full h-full">
@@ -83,8 +83,7 @@ const CardDesktop = ({ i, title, description, image, progress, total, color, ico
                             alt={title}
                             fill
                             sizes="(max-width: 1280px) 100vw, 500px"
-                            priority={i === 0}
-                            loading={i === 0 ? 'eager' : 'lazy'}
+                            loading="lazy"
                             className="object-cover transition-transform duration-700 hover:scale-105"
                         />
                     </div>
@@ -92,7 +91,7 @@ const CardDesktop = ({ i, title, description, image, progress, total, color, ico
                 </div>
                 <div className="absolute bottom-0 left-0 w-full p-10 flex flex-col justify-end h-full z-10">
                     <div className="relative w-10 h-10 mb-auto">
-                        <Image src={icons} fill alt="icons" className="object-contain" />
+                        <Image src={icons} fill alt={`${title} icon`} className="object-contain" loading="lazy" />
                     </div>
                     <h3 className="text-4xl font-bold text-white mb-4 leading-tight tracking-tight">{title}</h3>
                     <p className="text-[#E0E0E0] text-base leading-relaxed opacity-90">{description}</p>
@@ -130,10 +129,10 @@ const CardMobile = ({ i, title, description, image, progress, total, color, icon
     const zIndex = -10 + (total - i);
 
     return (
-        <Link href={link}>
+        <Link href={link} prefetch={false}>
             <motion.div
                 style={{ y, scale, opacity, zIndex, top: `30px`, borderColor: color, willChange: 'transform, opacity' }} // Fixed top
-                className={`absolute left-0 right-0 mx-auto  w-[98%]  aspect-square md:w-[80%]   rounded-3xl overflow-hidden  origin-top border-[3px] cursor-pointer `}
+                className={`absolute left-0 right-0 mx-auto w-[98%] aspect-square md:w-[80%] rounded-3xl overflow-hidden origin-top border-[3px] cursor-pointer`}
             >
                 <div className="absolute inset-0">
                     <div className="relative w-full h-full">
@@ -142,8 +141,7 @@ const CardMobile = ({ i, title, description, image, progress, total, color, icon
                             alt={title}
                             fill
                             sizes="(max-width: 480px) 95vw, (max-width: 768px) 80vw, 500px"
-                            priority={i === 0}
-                            loading={i === 0 ? 'eager' : 'lazy'}
+                            loading="lazy"
                             className="object-cover"
                         />
                     </div>
@@ -151,7 +149,7 @@ const CardMobile = ({ i, title, description, image, progress, total, color, icon
                 </div>
                 <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 flex flex-col justify-end h-full z-10">
                     <div className="relative w-8 h-8 md:w-10 md:h-10 mb-auto">
-                        <Image src={icons} fill alt="icons" className="object-contain" />
+                        <Image src={icons} fill alt={`${title} icon`} className="object-contain" loading="lazy" />
                     </div>
                     <h3 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight tracking-tight">{title}</h3>
                     <p className="text-[#E0E0E0] text-xs md:text-base leading-relaxed opacity-90">{description}</p>
