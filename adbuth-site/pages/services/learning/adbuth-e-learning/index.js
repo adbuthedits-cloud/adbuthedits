@@ -943,3 +943,8 @@ export default function AdbuthELearning() {
         </div>
     );
 }
+
+AdbuthELearning.navbarConfig = {
+    isdark: true
+};
+

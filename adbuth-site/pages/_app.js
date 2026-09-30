@@ -187,8 +187,9 @@ const getNavbarConfig = (pathname) => {
   else if (pathname.startsWith('/contact')) highlight = 'contact'
 
   const isLight =
-    pathname === '/blogs' ||
-    LIGHT_PAGES.some(p => pathname === p || pathname.startsWith(p + '/'))
+    pathname !== '/services/learning/adbuth-e-learning' &&
+    (pathname === '/blogs' ||
+      LIGHT_PAGES.some(p => pathname === p || (p !== '/services/learning' && pathname.startsWith(p + '/'))))
 
   return {
     hide: false,

@@ -150,15 +150,15 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
         <nav
           className={`hidden lg:flex items-center gap-8 text-sm font-medium ${isdark ? 'text-white' : 'text-black'}`}
         >
-          <Link href="/about" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'about' ? 'text-purple-700' : ''}`}>About</Link>
+          <Link href="/about" prefetch={false} className={`${isdark ? 'hover:text-purple-400' : 'hover:text-purple-700'} transition-colors ${highlight === 'about' ? (isdark ? 'text-purple-400 font-semibold' : 'text-purple-700') : ''}`}>About</Link>
 
           <div
             className="relative group h-full flex items-center"
             onMouseEnter={() => setDesktopServicesOpen(true)}
             onMouseLeave={() => setDesktopServicesOpen(false)}
           >
-            <div className="flex items-center gap-1 hover:text-purple-700 transition-colors py-4 cursor-pointer h-full">
-              <Link href="/services" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'services' ? 'text-purple-700' : ''}`}>
+            <div className={`flex items-center gap-1 ${isdark ? 'hover:text-purple-400' : 'hover:text-purple-700'} transition-colors py-4 cursor-pointer h-full`}>
+              <Link href="/services" prefetch={false} className={`${isdark ? 'hover:text-purple-400' : 'hover:text-purple-700'} transition-colors ${highlight === 'services' ? (isdark ? 'text-purple-400 font-semibold' : 'text-purple-700') : ''}`}>
                 Services <FontAwesomeIcon icon={faChevronDown} className={`text-xs transition-transform duration-300 ${desktopServicesOpen ? 'rotate-180' : ''}`} />
               </Link>
             </div>
@@ -270,10 +270,10 @@ export default function Navbar({ highlight = '', isdark = true, headerClass = ""
             </AnimatePresence>
           </div>
 
-          <Link href="/shop" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'shop' ? 'text-purple-700' : ''}`}>Shop</Link>
-          <Link href="/blogs" prefetch={false} className={`hover:text-purple-700 transition-colors ${highlight === 'blogs' ? 'text-purple-700' : ''}`}>Blogs</Link>
+          <Link href="/shop" prefetch={false} className={`${isdark ? 'hover:text-purple-400' : 'hover:text-purple-700'} transition-colors ${highlight === 'shop' ? (isdark ? 'text-purple-400 font-semibold' : 'text-purple-700') : ''}`}>Shop</Link>
+          <Link href="/blogs" prefetch={false} className={`${isdark ? 'hover:text-purple-400' : 'hover:text-purple-700'} transition-colors ${highlight === 'blogs' ? (isdark ? 'text-purple-400 font-semibold' : 'text-purple-700') : ''}`}>Blogs</Link>
 
-          <Link href="/contact-us" prefetch={false} className={`${highlight === 'contact' ? 'text-purple-700' : ''} px-6 py-2  rounded-full border-2 border-purple-700/80 hover:border-accent hover:text-accent transition-all duration-300 backdrop-blur-sm`}>
+          <Link href="/contact-us" prefetch={false} className={`${highlight === 'contact' ? (isdark ? 'text-purple-400 font-semibold' : 'text-purple-700') : (isdark ? 'text-white' : 'text-black')} px-6 py-2 rounded-full border-2 ${isdark ? 'border-purple-500/80 hover:border-purple-400' : 'border-purple-700/80 hover:border-accent'} hover:text-accent transition-all duration-300 backdrop-blur-sm`}>
             Contact Us
           </Link>
 
