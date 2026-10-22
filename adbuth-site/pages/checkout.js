@@ -231,6 +231,16 @@ export default function Checkout() {
                         if (verifyRes.ok) {
                             const verifyData = await verifyRes.json();
                             const orderId = verifyData.orderId;
+
+ // Track purchase only after backend payment verification
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+        window.gtag('event', 'purchase', {
+            transaction_id: String(orderId || response.razorpay_order_id),
+            currency: 'INR',
+            value: Number(orderData.amount) / 100
+        });
+    }
+                            
                             showToast('Order Placed Successfully!', 'success');
                             setTimeout(() => {
                                 router.push(`/orders?new_order_id=${orderId || ''}`);
