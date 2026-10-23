@@ -239,6 +239,12 @@ if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
         value: Number(verifyData.totalAmount)
     });
 }
+if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+  window.fbq('track', 'Purchase', {
+    value: Number(verifyData.totalAmount),
+    currency: verifyData.currency || 'INR'
+  });
+}                           
                             showToast('Order Placed Successfully!', 'success');
                             setTimeout(() => {
                                 router.push(`/orders?new_order_id=${orderId || ''}`);
