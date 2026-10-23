@@ -231,6 +231,14 @@ export default function Checkout() {
                         if (verifyRes.ok) {
                             const verifyData = await verifyRes.json();
                             const orderId = verifyData.orderId;
+                            // Track purchase only after backend payment verification
+if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    window.gtag('event', 'purchase', {
+        transaction_id: String(orderId),
+        currency: verifyData.currency || 'INR',
+        value: Number(verifyData.totalAmount)
+    });
+}
                             showToast('Order Placed Successfully!', 'success');
                             setTimeout(() => {
                                 router.push(`/orders?new_order_id=${orderId || ''}`);
