@@ -345,7 +345,9 @@ router.post('/verify-payment', auth, async (req, res) => {
 
             res.json({
                 msg: 'Payment verified and order placed successfully',
-                orderId: order.order_id
+    orderId: order.order_id,
+    totalAmount: order.total_amount,
+    currency: 'INR'
             });
 
         } catch (error) {
